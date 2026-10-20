@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#100d18">
+  <meta name="description" content="Pumpkin Smash! A mobile AR Halloween hunt. Explore your surroundings to find five hidden pumpkins.">
+  <title>Pumpkin Smash! — AR Halloween Hunt</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.88em' font-size='88'%3E🎃%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <main id="game" aria-label="Pumpkin Smash AR game">
+    <video id="camera" autoplay muted playsinline aria-label="Live camera view"></video>
+    <div id="demo-background" aria-hidden="true"></div>
+    <div id="atmosphere" aria-hidden="true"></div>
+    <div id="scene-root" aria-label="Animated Halloween characters"></div>
+
+    <section id="start-screen" class="screen-card-wrap">
+      <div class="start-card">
+        <div class="eyebrow"><span class="eyebrow-dot"></span> A SPOOKY LITTLE AR GAME</div>
+        <h1>PUMPKIN<br><span>SMASH!</span></h1>
+        <p class="intro">Five sneaky pumpkins are scattered all around you—not lined up on the screen. Move through a clear area, look around with your camera, and tap each pumpkin when you spot it!</p>
+        <div class="feature-row" aria-label="Game features">
+          <span>🦇 Bats</span><span>🧟 Zombies</span><span>💀 Skeletons</span><span>👻 Ghosts</span>
+        </div>
+        <button id="camera-start" class="button button-primary"><span>◉</span> PLAY IN AR</button>
+        <button id="demo-start" class="button button-secondary">TRY DEMO MODE</button>
+        <p id="start-note" class="small-note">Play in a clear, open area. Stop walking before tapping, and stay away from roads, stairs, and obstacles. Full walk-around tracking depends on your phone and browser.</p>
+      </div>
+    </section>
+
+    <section id="hud" class="hud hidden" aria-label="Game status">
+      <header class="top-bar">
+        <div class="brand"><span class="brand-pumpkin">🎃</span><div><div class="brand-title">PUMPKIN <b>SMASH!</b></div><div class="brand-subtitle">HALLOWEEN HUNT</div></div></div>
+        <div class="score-panel"><span class="score-label">PUMPKINS SMASHED</span><strong id="score">0 <i>/ 5</i></strong></div>
+        <button id="sound-toggle" class="icon-button" aria-label="Toggle sound" title="Toggle sound">♫</button>
+      </header>
+      <div id="hint-pill" class="hint-pill"><span class="pulse-dot"></span><span id="hint-text">Explore your space. Look around for the 5 hidden pumpkins!</span></div>
+      <div class="bottom-bar">
+        <div class="progress-wrap"><div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div><div class="progress-caption"><span>HAUNT-O-METER</span><span id="remaining">5 LEFT</span></div></div>
+        <button id="camera-switch" class="mini-button">↻ <span>CAMERA</span></button>
+        <button id="reset-button" class="mini-button">⟲ <span>RESET</span></button>
+      </div>
+      <div id="toast" class="toast" aria-live="polite"></div>
+    </section>
+
+    <section id="permission-screen" class="screen-card-wrap hidden">
+      <div class="message-card">
+        <div class="message-icon">📷</div>
+        <h2>Camera needed</h2>
+        <p id="permission-message">Allow camera access in your browser to play in AR.</p>
+        <button id="permission-retry" class="button button-primary">TRY AGAIN</button>
+        <button id="permission-demo" class="button button-secondary">PLAY DEMO INSTEAD</button>
+      </div>
+    </section>
+
+    <section id="win-screen" class="screen-card-wrap hidden">
+      <div class="win-card">
+        <div class="win-pumpkin">🎃</div>
+        <div class="eyebrow">THE HAUNT IS CLEARED</div>
+        <h2>YOU SMASHED<br><span>ALL 5!</span></h2>
+        <p>The pumpkins never stood a chance. Happy Halloween!</p>
+        <button id="play-again" class="button button-primary">PLAY AGAIN</button>
+        <button id="back-to-title" class="button button-secondary">BACK TO TITLE</button>
+      </div>
+    </section>
+
+    <div id="orientation-label" aria-hidden="true">↻ Move around safely and look in every direction</div>
+  </main>
+  <script type="module" src="game.js"></script>
+</body>
+</html>

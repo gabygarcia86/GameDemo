@@ -1885,12 +1885,15 @@ async function scanCameraForSkeleton() {
   skeletonScanBusy = true;
   try {
     if (!prepareVisionFrame()) return;
-    const detections = await skeletonDetector(visionCanvas, {
-      candidate_labels: [
-        "a Halloween skeleton decoration",
-        "a human skeleton model",
-        "a person wearing a skeleton costume",
-      ],
+    // Transformers.js zero-shot-object-detection expects labels as the SECOND
+    // argument and options as the THIRD. Passing one options object here causes
+    // inference to throw every scan cycle, which previously paused the scanner.
+    const candidateLabels = [
+      "a Halloween skeleton decoration.",
+      "a human skeleton model.",
+      "a person wearing a skeleton costume.",
+    ];
+    const detections = await skeletonDetector(visionCanvas, candidateLabels, {
       threshold: 0.3,
     });
     const hit = (Array.isArray(detections) ? detections : [])
@@ -1939,7 +1942,13 @@ async function scanCameraForSkeleton() {
     }
   } catch (error) {
     console.warn("Skeleton scan failed:", error);
-    toastMessage("AI scan paused. Check your connection and try again.");
+    // Show a short reason instead of blaming the connection for every error.
+    const detail = String(error?.message || error || "Unknown scanning error")
+      .replace(/https?:\/\/\S+/g, "model file")
+      .slice(0, 100);
+    toastMessage(`AI scan paused: ${detail}`);
+    hintText.textContent =
+      "AI scan paused. Check your connection and tap AI SCAN to retry. If it repeats, check the browser console for details.";
     stopSkeletonScan(false);
   } finally {
     skeletonScanBusy = false;

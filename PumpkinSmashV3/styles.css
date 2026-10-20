@@ -452,10 +452,13 @@ h1 span, h2 span {
   background: #fff3df;
   color: #492313;
   padding: 10px 16px;
-  border-radius: 999px;
+  border-radius: 14px;
   font-size: 12px;
   font-weight: 900;
-  white-space: nowrap;
+  white-space: normal;
+  text-align: center;
+  width: max-content;
+  max-width: calc(100vw - 32px);
   opacity: 0;
   transition: opacity .2s, transform .2s;
   pointer-events: none;

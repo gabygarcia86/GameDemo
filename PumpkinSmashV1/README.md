@@ -7,7 +7,7 @@ A mobile-friendly Halloween camera-overlay AR mini game built with HTML, CSS, Ja
 For the camera mode, serve the folder through HTTPS or localhost; browsers require a secure context and user permission for camera access. The easiest local test is VS Code's Live Server extension, or Python's built-in server:
 
 ```bash
-cd pumpkin-smash
+cd PumpkinSmashV1
 python -m http.server 8000
 ```
 

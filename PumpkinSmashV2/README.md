@@ -13,7 +13,7 @@ If tracked WebXR AR is unavailable, the game falls back to a live camera overlay
 For camera mode, serve the folder through HTTPS or localhost; browsers require a secure context and permission for camera access. The easiest local test is VS Code's Live Server extension, or Python's built-in server:
 
 ```bash
-cd PumpkinSmashV2
+cd pumpkin-smash
 python -m http.server 8000
 ```
 
@@ -27,7 +27,7 @@ Then open `http://localhost:8000` in a browser. For best testing of tracked AR, 
 4. Open the folder URL. For a project site it usually looks like `https://USERNAME.github.io/REPOSITORY/pumpkin-smash/`. For a user/organization site, it usually looks like `https://USERNAME.github.io/pumpkin-smash/`.
 5. Open the link directly on your phone and approve camera/motion permissions if prompted.
 
-Keep `index.html`, `styles.css`, `game.js`, and this README together. Three.js and its DeviceOrientationControls are loaded from jsDelivr, so a network connection is needed to load the modules.
+Keep `index.html`, `styles.css`, `game.js`, and this README together. Three.js is loaded from jsDelivr, so a network connection is needed to load the 3D engine. The orientation fallback is implemented locally because current Three.js versions no longer ship DeviceOrientationControls.
 
 ## Controls
 
@@ -53,6 +53,7 @@ pumpkin-smash/
 
 ## Troubleshooting
 
+- If the game reports that the 3D engine could not load, check your internet connection and whether jsDelivr is blocked, then reload.
 - If a camera prompt does not appear, allow camera access in the browser's site settings.
 - Tracked AR requires HTTPS and compatible WebXR browser/device support. If the browser falls back to camera-overlay mode, moving the phone changes the view direction, but physical position is not tracked.
 - If camera mode fails, Demo Mode still lets you test the game.

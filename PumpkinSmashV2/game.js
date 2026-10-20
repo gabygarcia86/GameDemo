@@ -1,5 +1,50 @@
 import * as THREE from 'three';
-import { DeviceOrientationControls } from 'three/addons/controls/DeviceOrientationControls.js';
+
+// Three.js removed DeviceOrientationControls from its official addons in r134.
+// This small local replacement keeps the camera-overlay fallback self-contained.
+class DeviceOrientationControls {
+  constructor(object) {
+    this.object = object;
+    this.enabled = false;
+    this.deviceOrientation = null;
+    this.screenOrientation = 0;
+    this._zee = new THREE.Vector3(0, 0, 1);
+    this._euler = new THREE.Euler();
+    this._q0 = new THREE.Quaternion();
+    this._q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
+    this._onDeviceOrientation = (event) => { this.deviceOrientation = event; };
+    this._onScreenOrientation = () => {
+      const angle = window.screen?.orientation?.angle;
+      this.screenOrientation = Number.isFinite(angle) ? angle : (Number(window.orientation) || 0);
+    };
+  }
+  connect() {
+    if (!('DeviceOrientationEvent' in window)) return false;
+    this._onScreenOrientation();
+    window.addEventListener('orientationchange', this._onScreenOrientation, false);
+    window.addEventListener('deviceorientation', this._onDeviceOrientation, false);
+    this.enabled = true;
+    return true;
+  }
+  disconnect() {
+    window.removeEventListener('orientationchange', this._onScreenOrientation, false);
+    window.removeEventListener('deviceorientation', this._onDeviceOrientation, false);
+    this.enabled = false;
+  }
+  update() {
+    if (!this.enabled || !this.deviceOrientation) return;
+    const event = this.deviceOrientation;
+    const alpha = Number.isFinite(event.alpha) ? THREE.MathUtils.degToRad(event.alpha) : 0;
+    const beta = Number.isFinite(event.beta) ? THREE.MathUtils.degToRad(event.beta) : 0;
+    const gamma = Number.isFinite(event.gamma) ? THREE.MathUtils.degToRad(event.gamma) : 0;
+    const orient = THREE.MathUtils.degToRad(this.screenOrientation || 0);
+    this._euler.set(beta, alpha, -gamma, 'YXZ');
+    this.object.quaternion.setFromEuler(this._euler);
+    this.object.quaternion.multiply(this._q1);
+    this.object.quaternion.multiply(this._q0.setFromAxisAngle(this._zee, -orient));
+  }
+  dispose() { this.disconnect(); }
+}
 
 const $ = (id) => document.getElementById(id);
 const game = $('game');

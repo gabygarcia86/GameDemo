@@ -76,6 +76,23 @@
 
     <div id="orientation-label" aria-hidden="true">↻ Move around safely and look in every direction</div>
   </main>
-  <script type="module" src="game.js"></script>
+  <script type="module">
+    // Surface module/CDN failures to the player instead of leaving dead buttons.
+    import('./game.js').catch((error) => {
+      console.error('Pumpkin Smash! failed to initialize:', error);
+      const note = document.getElementById('start-note');
+      if (note) {
+        note.textContent = 'The game could not load its 3D engine. Check your internet connection, reload this page, and make sure the CDN is not blocked.';
+        note.style.color = '#ffb2a4';
+      }
+      const playButton = document.getElementById('camera-start');
+      if (playButton) {
+        playButton.disabled = true;
+        playButton.innerHTML = 'GAME FAILED TO LOAD';
+      }
+      const demoButton = document.getElementById('demo-start');
+      if (demoButton) demoButton.disabled = true;
+    });
+  </script>
 </body>
 </html>

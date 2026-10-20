@@ -1,0 +1,1064 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1a0f2e">
+  <meta name="description" content="A Halloween carnival photo scavenger hunt with ten spooky photo challenges.">
+  <title>Halloween Carnival Photo Scavenger Hunt</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231a0f2e'/%3E%3Cpath d='M12 25h40v27H12z' fill='%23f9b83c'/%3E%3Cpath d='M19 25l5-10h16l5 10' fill='none' stroke='%23fff0c9' stroke-width='5' stroke-linejoin='round'/%3E%3Ccircle cx='32' cy='38.5' r='9' fill='%23f36b21'/%3E%3Ccircle cx='32' cy='38.5' r='4' fill='%23b6e34a'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      --navy: #30134e;
+      --navy-deep: #12091f;
+      --red: #f36b21;
+      --red-deep: #a93612;
+      --gold: #f9b83c;
+      --cream: #fff0c9;
+      --ink: #24152d;
+      --green: #629b22;
+      --lime: #b6e34a;
+      --purple: #5e2681;
+      --shadow: 0 16px 38px rgba(8, 3, 16, .48);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { background: var(--navy-deep); }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      min-height: 100dvh;
+      color: var(--ink);
+      font-family: "Trebuchet MS", Arial, sans-serif;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(182,227,74,.16) 0 3px, transparent 4px),
+        radial-gradient(circle at 82% 24%, rgba(249,184,60,.2) 0 4px, transparent 5px),
+        repeating-linear-gradient(115deg, #160a24 0 30px, #2b103f 30px 60px, #63204a 60px 62px);
+    }
+
+    button, input { font: inherit; }
+
+    .page {
+      width: min(100%, 920px);
+      margin: 0 auto;
+      padding: max(14px, env(safe-area-inset-top)) 12px max(28px, env(safe-area-inset-bottom));
+    }
+
+    .game {
+      overflow: hidden;
+      border: 5px solid var(--red);
+      border-radius: 24px;
+      background:
+        linear-gradient(90deg, transparent 48%, rgba(255,255,255,.025) 50%, transparent 52%) 0 0 / 44px 44px,
+        var(--navy);
+      box-shadow: 0 0 0 3px var(--gold), var(--shadow);
+    }
+
+    .masthead {
+      position: relative;
+      padding: 14px 18px 20px;
+      color: white;
+      text-align: center;
+      background:
+        radial-gradient(circle at 10% 18%, var(--lime) 0 4px, transparent 5px),
+        radial-gradient(circle at 90% 22%, var(--gold) 0 4px, transparent 5px),
+        radial-gradient(circle at 17% 78%, #fff 0 3px, transparent 4px),
+        radial-gradient(circle at 84% 78%, var(--red) 0 5px, transparent 6px),
+        linear-gradient(180deg, #4a1b69, #1a0f2e);
+    }
+
+    .masthead::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -1px;
+      height: 10px;
+      background: repeating-linear-gradient(90deg, var(--red) 0 24px, var(--cream) 24px 48px, var(--navy-deep) 48px 72px);
+    }
+
+    .spooky-icons {
+      margin-bottom: 5px;
+      color: var(--gold);
+      font-size: 1.45rem;
+      letter-spacing: .3em;
+      filter: drop-shadow(0 2px 0 rgba(0,0,0,.45));
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.7rem, 7vw, 3rem);
+      line-height: 1;
+      letter-spacing: .02em;
+      text-shadow: 0 3px 0 var(--red-deep), 0 0 18px rgba(182,227,74,.25);
+    }
+
+    .instructions {
+      margin: 10px auto 0;
+      max-width: 36rem;
+      color: #fff8e4;
+      font-size: clamp(1rem, 2.8vw, 1.12rem);
+      line-height: 1.4;
+    }
+
+    .status-bar {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 10px;
+      margin: 18px 14px 12px;
+      color: white;
+    }
+
+    .status-label {
+      min-width: 4.8rem;
+      font-size: 1rem;
+      font-weight: 800;
+    }
+
+    .progress-track {
+      height: 13px;
+      overflow: hidden;
+      border: 2px solid rgba(255,255,255,.85);
+      border-radius: 999px;
+      background: rgba(0,0,0,.3);
+    }
+
+    .progress-fill {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--red), var(--gold), var(--lime));
+      transition: width .35s ease;
+    }
+
+    .clear-button {
+      border: 1px solid rgba(255,255,255,.55);
+      border-radius: 999px;
+      padding: 7px 11px;
+      color: white;
+      background: rgba(255,255,255,.1);
+      cursor: pointer;
+    }
+
+    .clear-button:disabled {
+      cursor: default;
+      opacity: .45;
+    }
+
+    .hunt-list {
+      display: grid;
+      gap: 12px;
+      padding: 0 12px 14px;
+    }
+
+    .hunt-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 8px;
+      padding: 7px;
+      border: 3px solid var(--red);
+      border-radius: 15px;
+      background: var(--cream);
+      box-shadow: inset 0 0 0 2px var(--purple), 0 5px 12px rgba(0,0,0,.32);
+    }
+
+    .prompt-card {
+      position: relative;
+      display: flex;
+      min-height: 142px;
+      min-width: 0;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 9px;
+      overflow: hidden;
+      border-radius: 9px;
+      padding: 13px 10px;
+      color: white;
+      text-align: center;
+      background:
+        radial-gradient(circle at 12% 14%, rgba(182,227,74,.22) 0 4px, transparent 5px),
+        radial-gradient(circle at 88% 84%, rgba(249,184,60,.24) 0 5px, transparent 6px),
+        linear-gradient(145deg, #5e2681, #29113c);
+    }
+
+    .prompt-number {
+      display: grid;
+      flex: 0 0 auto;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border: 2px solid var(--cream);
+      border-radius: 50%;
+      color: #27122e;
+      font-size: 1.05rem;
+      font-weight: 900;
+      background: var(--gold);
+      box-shadow: 0 3px 0 var(--red-deep);
+    }
+
+    .prompt-title {
+      margin: 0;
+      color: white;
+      font-size: clamp(.79rem, 2.7vw, 1.02rem);
+      font-weight: 900;
+      line-height: 1.2;
+      text-align: center;
+      text-shadow: 0 1px 2px rgba(0,0,0,.85);
+    }
+
+    .photo-slot {
+      position: relative;
+      min-height: 142px;
+      overflow: hidden;
+      border: 3px dashed var(--purple);
+      border-radius: 10px;
+      color: var(--navy);
+      background:
+        radial-gradient(circle at 20% 20%, rgba(243,107,33,.18) 0 6px, transparent 7px),
+        radial-gradient(circle at 80% 78%, rgba(94,38,129,.16) 0 6px, transparent 7px),
+        #fff6df;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .photo-slot:focus-visible {
+      outline: 4px solid #65b7f4;
+      outline-offset: 2px;
+    }
+
+    .photo-slot:active { transform: scale(.985); }
+
+    .slot-placeholder {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      align-content: center;
+      gap: 7px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .camera-icon {
+      width: 44px;
+      height: 36px;
+      color: var(--red);
+      filter: drop-shadow(0 2px 0 rgba(94,38,129,.25));
+    }
+
+    .slot-action {
+      font-size: clamp(.86rem, 3vw, 1rem);
+      font-weight: 900;
+      line-height: 1.15;
+    }
+
+    .slot-note {
+      color: #66575a;
+      font-size: clamp(.72rem, 2.4vw, .82rem);
+      line-height: 1.2;
+    }
+
+    .captured-photo {
+      position: absolute;
+      inset: 0;
+      display: none;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .completed .captured-photo { display: block; }
+    .completed .slot-placeholder { display: none; }
+
+    .retake-pill, .check-pill {
+      position: absolute;
+      z-index: 2;
+      display: none;
+      border-radius: 999px;
+      color: white;
+      font-size: .76rem;
+      font-weight: 900;
+      box-shadow: 0 2px 6px rgba(0,0,0,.3);
+    }
+
+    .retake-pill {
+      right: 7px;
+      bottom: 7px;
+      padding: 5px 8px;
+      background: rgba(7,25,55,.88);
+    }
+
+    .check-pill {
+      top: 7px;
+      right: 7px;
+      width: 28px;
+      height: 28px;
+      place-items: center;
+      background: var(--purple);
+    }
+
+    .completed .retake-pill { display: block; }
+    .completed .check-pill { display: grid; }
+
+    .completion {
+      margin: 0 12px 14px;
+      padding: 13px 16px;
+      border: 3px solid var(--gold);
+      border-radius: 12px;
+      color: white;
+      text-align: center;
+      background: linear-gradient(135deg, #4a1b69, #241032);
+      animation: pop-in .4s ease-out;
+    }
+
+    .completion strong {
+      display: block;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.35rem;
+    }
+
+    .completion-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 13px;
+    }
+
+    .save-button,
+    .share-button {
+      display: inline-flex;
+      flex: 1 1 240px;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      max-width: 360px;
+      min-height: 50px;
+      border: 2px solid #fff4d3;
+      border-radius: 12px;
+      padding: 11px 18px;
+      color: #211129;
+      font-size: 1rem;
+      font-weight: 900;
+      background: linear-gradient(180deg, var(--lime), #90c72f);
+      box-shadow: 0 5px 0 #3d6e16, 0 9px 18px rgba(0,0,0,.25);
+      cursor: pointer;
+    }
+
+    .share-button {
+      color: white;
+      background: linear-gradient(180deg, #f58a31, #e45618);
+      box-shadow: 0 5px 0 #99330f, 0 9px 18px rgba(0,0,0,.25);
+    }
+
+    .save-button:active,
+    .share-button:active {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0 #3d6e16, 0 5px 10px rgba(0,0,0,.25);
+    }
+
+    .share-button:active {
+      box-shadow: 0 2px 0 #99330f, 0 5px 10px rgba(0,0,0,.25);
+    }
+
+    .save-button:focus-visible,
+    .share-button:focus-visible {
+      outline: 4px solid white;
+      outline-offset: 3px;
+    }
+
+    .save-button:disabled,
+    .share-button:disabled {
+      cursor: wait;
+      opacity: .72;
+    }
+
+    .save-icon,
+    .share-icon {
+      width: 22px;
+      height: 22px;
+    }
+
+    .share-hashtag {
+      display: inline-block;
+      margin: 12px 0 0;
+      border: 1px solid rgba(255,255,255,.45);
+      border-radius: 999px;
+      padding: 5px 10px;
+      color: var(--lime);
+      font-size: .9rem;
+      font-weight: 900;
+      background: rgba(0,0,0,.2);
+    }
+
+    .save-status {
+      min-height: 1.25em;
+      margin: 11px 0 0;
+      color: #fef1c9;
+      font-size: .86rem;
+      font-weight: 700;
+    }
+
+    .privacy-note {
+      margin: 0;
+      padding: 2px 18px 18px;
+      color: rgba(255,255,255,.82);
+      font-size: .78rem;
+      line-height: 1.4;
+      text-align: center;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    [hidden] { display: none !important; }
+
+    @keyframes pop-in {
+      from { opacity: 0; transform: translateY(8px) scale(.98); }
+      to { opacity: 1; transform: none; }
+    }
+
+    @media (min-width: 700px) {
+      .page { padding: 28px 20px 48px; }
+      .hunt-list { gap: 15px; padding: 0 18px 18px; }
+      .hunt-item { gap: 12px; padding: 9px; }
+      .prompt-card, .photo-slot { min-height: 205px; }
+      .status-bar { margin-inline: 20px; }
+    }
+
+    @media (max-width: 390px) {
+      .page { padding-inline: 6px; }
+      .game { border-width: 3px; border-radius: 18px; }
+      .masthead { padding-inline: 10px; }
+      .status-bar { grid-template-columns: 1fr auto; }
+      .progress-track { grid-column: 1 / -1; grid-row: 2; }
+      .hunt-list { padding-inline: 7px; }
+      .hunt-item { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+      .prompt-card, .photo-slot { min-height: 142px; }
+      .prompt-card { padding-inline: 7px; }
+      .prompt-number { width: 30px; height: 30px; }
+      .slot-note { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="game" aria-labelledby="game-title">
+      <header class="masthead">
+        <div class="spooky-icons" aria-hidden="true">🎃 ✦ 👻 ✦ 🎃</div>
+        <h1 id="game-title">Halloween Carnival<br>Photo Scavenger Hunt</h1>
+        <p class="instructions">Tap each empty space, then take a photo that matches the clue beside it. For the best results, take pictures in <strong>landscape mode</strong>.</p>
+      </header>
+
+      <div class="status-bar" aria-live="polite">
+        <span class="status-label" id="progress-text">0 of 10</span>
+        <div class="progress-track" role="progressbar" aria-label="Scavenger hunt progress" aria-valuemin="0" aria-valuemax="10" aria-valuenow="0">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <button class="clear-button" id="clear-button" type="button" disabled>Clear photos</button>
+      </div>
+
+      <div class="hunt-list">
+        <article class="hunt-item" data-slot="0">
+          <div class="prompt-card">
+            <span class="prompt-number">1</span>
+            <p class="prompt-title">Take a photo of your favorite decoration.</p>
+          </div>
+          <button class="photo-slot" type="button" aria-label="Take a photo of your favorite decoration">
+            <span class="slot-placeholder" aria-hidden="true">
+              <svg class="camera-icon" viewBox="0 0 64 52" fill="none"><path d="M8 15h11l5-7h16l5 7h11a5 5 0 0 1 5 5v24a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V20a5 5 0 0 1 5-5Z" fill="currentColor"/><circle cx="32" cy="32" r="11" fill="#fff0c9"/><circle cx="32" cy="32" r="7" fill="#30134e"/></svg>
+              <span class="slot-action">Tap to take photo</span>
+              <span class="slot-note">or choose one from your device</span>
+            </span>
+            <img class="captured-photo" alt="Your favorite decoration photo">
+            <span class="check-pill" aria-hidden="true">✓</span>
+            <span class="retake-pill" aria-hidden="true">Tap to retake</span>
+          </button>
+          <input class="file-input sr-only" type="file" accept="image/*" capture="environment" aria-label="Choose a photo of your favorite decoration">
+        </article>
+
+        <article class="hunt-item" data-slot="1">
+          <div class="prompt-card">
+            <span class="prompt-number">2</span>
+            <p class="prompt-title">Take a photo of something extremely tall.</p>
+          </div>
+          <button class="photo-slot" type="button" aria-label="Take a photo of something extremely tall">
+            <span class="slot-placeholder" aria-hidden="true"><svg class="camera-icon" viewBox="0 0 64 52" fill="none"><path d="M8 15h11l5-7h16l5 7h11a5 5 0 0 1 5 5v24a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V20a5 5 0 0 1 5-5Z" fill="currentColor"/><circle cx="32" cy="32" r="11" fill="#fff0c9"/><circle cx="32" cy="32" r="7" fill="#30134e"/></svg><span class="slot-action">Tap to take photo</span><span class="slot-note">or choose one from your device</span></span>
+            <img class="captured-photo" alt="Your photo of something extremely tall"><span class="check-pill" aria-hidden="true">✓</span><span class="retake-pill" aria-hidden="true">Tap to retake</span>
+          </button>
+          <input class="file-input sr-only" type="file" accept="image/*" capture="environment" aria-label="Choose a photo of something extremely tall">
+        </article>
+
+        <article class="hunt-item" data-slot="2">
+          <div class="prompt-card">
+            <span class="prompt-number">3</span>
+            <p class="prompt-title">Take a photo of your favorite costume.</p>
+          </div>
+          <button class="photo-slot" type="button" aria-label="Take a photo of your favorite costume">
+            <span class="slot-placeholder" aria-hidden="true"><svg class="camera-icon" viewBox="0 0 64 52" fill="none"><path d="M8 15h11l5-7h16l5 7h11a5 5 0 0 1 5 5v24a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V20a5 5 0 0 1 5-5Z" fill="currentColor"/><circle cx="32" cy="32" r="11" fill="#fff0c9"/><circle cx="32" cy="32" r="7" fill="#30134e"/></svg><span class="slot-action">Tap to take photo</span><span class="slot-note">or choose one from your device</span></span>
+            <img class="captured-photo" alt="Your favorite costume photo"><span class="check-pill" aria-hidden="true">✓</span><span class="retake-pill" aria-hidden="true">Tap to retake</span>
+          </button>
+          <input class="file-input sr-only" type="file" accept="image/*" capture="environment" aria-label="Choose a photo of your favorite costume">
+        </article>
+
+        <article class="hunt-item" data-slot="3">
+          <div class="prompt-card">
+            <span class="prompt-number">4</span>
+            <p class="prompt-title">Find something orange and take a picture.</p>
+          </div>
+          <button class="photo-slot" type="button" aria-label="Take a picture of something orange">
+            <span class="slot-placeholder" aria-hidden="true"><svg class="camera-icon" viewBox="0 0 64 52" fill="none"><path d="M8 15h11l5-7h16l5 7h11a5 5 0 0 1 5 5v24a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V20a5 5 0 0 1 5-5Z" fill="currentColor"/><circle cx="32" cy="32" r="11" fill="#fff0c9"/><circle cx="32" cy="32" r="7" fill="#30134e"/></svg><span class="slot-action">Tap to take photo</span><span class="slot-note">or choose one from your device</span></span>
+            <img class="captured-photo" alt="Your photo of something orange"><span class="check-pill" aria-hidden="true">✓</span><span class="retake-pill" aria-hidden="true">Tap to retake</span>
+          </button>
+          <input class="file-input sr-only" type="file" accept="image/*" capture="environment" aria-label="Choose a picture of something orange">
+        </article>
+
+        <article class="hunt-item" data-slot="4">
+          <div class="prompt-card">
+            <span class="prompt-number">5</span>
+            <p class="prompt-title">Draw something with chalk and take a picture.</p>
+          </div>
+          <button class="photo-slot" type="button" aria-label="Take a picture of something you drew with chalk">
+            <span class="slot-placeholder" aria-hidden="true"><svg class="camera-icon" viewBox="0 0 64 52" fill="none"><path d="M8 15h11l5-7h16l5 7h11a5 5 0 0 1 5 5v24a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V20a5 5 0 0 1 5-5Z" fill="currentColor"/><circle cx="32" cy="32" r="11" fill="#fff0c9"/><circle cx="32" cy="32" r="7" fill="#30134e"/></svg><span class="slot-action">Tap to take photo</span><span class="slot-note">or choose one from your device</span></span>
+            <img class="captured-photo" alt="Your chalk drawing photo"><span class="check-pill" aria-hidden="true">✓</span><span class="retake-pill" aria-hidden="true">Tap to retake</span>
+          </button>
+          <input class="file-input sr-only" type="file" accept="image/*" capture="environment" aria-label="Choose a picture of your chalk drawing">
+        </article>
+
+        <article class="hunt-item" data-slot="5">
+          <div class="prompt-card">
+            <span class="prompt-number">6</span>
+            <p class="prompt-title">Take a picture of the funniest skeleton.</p>
+          </div>
+          <button class="photo-slot" type="button" aria-label="Take a picture of the funniest skeleton">
+            <span class="slot-placeholder" aria-hidden="true"><svg class="camera-icon" viewBox="0 0 64 52" fill="none"><path d="M8 15h11l5-7h16l5 7h11a5 5 0 0 1 5 5v24a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V20a5 5 0 0 1 5-5Z" fill="currentColor"/><circle cx="32" cy="32" r="11" fill="#fff0c9"/><circle cx="32" cy="32" r="7" fill="#30134e"/></svg><span class="slot-action">Tap to take photo</span><span class="slot-note">or choose one from your device</span></span>
+            <img class="captured-photo" alt="Your funniest skeleton photo"><span class="check-pill" aria-hidden="true">✓</span><span class="retake-pill" aria-hidden="true">Tap to retake</span>
+          </button>
+          <input class="file-input sr-only" type="file" accept="image/*" capture="environment" aria-label="Choose a picture of the funniest skeleton">
+        </article>
+
+        <article class="hunt-item" data-slot="6">
+          <div class="prompt-card">
+            <span class="prompt-number">7</span>
+            <p class="prompt-title">Take a picture of something creepy.</p>
+          </div>
+          <button class="photo-slot" type="button" aria-label="Take a picture of something creepy">
+            <span class="slot-placeholder" aria-hidden="true"><svg class="camera-icon" viewBox="0 0 64 52" fill="none"><path d="M8 15h11l5-7h16l5 7h11a5 5 0 0 1 5 5v24a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V20a5 5 0 0 1 5-5Z" fill="currentColor"/><circle cx="32" cy="32" r="11" fill="#fff0c9"/><circle cx="32" cy="32" r="7" fill="#30134e"/></svg><span class="slot-action">Tap to take photo</span><span class="slot-note">or choose one from your device</span></span>
+            <img class="captured-photo" alt="Your creepy photo"><span class="check-pill" aria-hidden="true">✓</span><span class="retake-pill" aria-hidden="true">Tap to retake</span>
+          </button>
+          <input class="file-input sr-only" type="file" accept="image/*" capture="environment" aria-label="Choose a picture of something creepy">
+        </article>
+
+        <article class="hunt-item" data-slot="7">
+          <div class="prompt-card">
+            <span class="prompt-number">8</span>
+            <p class="prompt-title">Take a group selfie!</p>
+          </div>
+          <button class="photo-slot" type="button" aria-label="Take a group selfie">
+            <span class="slot-placeholder" aria-hidden="true"><svg class="camera-icon" viewBox="0 0 64 52" fill="none"><path d="M8 15h11l5-7h16l5 7h11a5 5 0 0 1 5 5v24a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V20a5 5 0 0 1 5-5Z" fill="currentColor"/><circle cx="32" cy="32" r="11" fill="#fff0c9"/><circle cx="32" cy="32" r="7" fill="#30134e"/></svg><span class="slot-action">Tap to take photo</span><span class="slot-note">or choose one from your device</span></span>
+            <img class="captured-photo" alt="Your group selfie"><span class="check-pill" aria-hidden="true">✓</span><span class="retake-pill" aria-hidden="true">Tap to retake</span>
+          </button>
+          <input class="file-input sr-only" type="file" accept="image/*" capture="user" aria-label="Choose a group selfie">
+        </article>
+
+        <article class="hunt-item" data-slot="8">
+          <div class="prompt-card">
+            <span class="prompt-number">9</span>
+            <p class="prompt-title">Take a picture inside the Ticket Booth.</p>
+          </div>
+          <button class="photo-slot" type="button" aria-label="Take a picture inside the Ticket Booth">
+            <span class="slot-placeholder" aria-hidden="true"><svg class="camera-icon" viewBox="0 0 64 52" fill="none"><path d="M8 15h11l5-7h16l5 7h11a5 5 0 0 1 5 5v24a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V20a5 5 0 0 1 5-5Z" fill="currentColor"/><circle cx="32" cy="32" r="11" fill="#fff0c9"/><circle cx="32" cy="32" r="7" fill="#30134e"/></svg><span class="slot-action">Tap to take photo</span><span class="slot-note">or choose one from your device</span></span>
+            <img class="captured-photo" alt="Your Ticket Booth photo"><span class="check-pill" aria-hidden="true">✓</span><span class="retake-pill" aria-hidden="true">Tap to retake</span>
+          </button>
+          <input class="file-input sr-only" type="file" accept="image/*" capture="environment" aria-label="Choose a picture inside the Ticket Booth">
+        </article>
+
+        <article class="hunt-item" data-slot="9">
+          <div class="prompt-card">
+            <span class="prompt-number">10</span>
+            <p class="prompt-title">Find a performer in the middle of their act and take a picture!</p>
+          </div>
+          <button class="photo-slot" type="button" aria-label="Take a picture of a performer in the middle of their act">
+            <span class="slot-placeholder" aria-hidden="true"><svg class="camera-icon" viewBox="0 0 64 52" fill="none"><path d="M8 15h11l5-7h16l5 7h11a5 5 0 0 1 5 5v24a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V20a5 5 0 0 1 5-5Z" fill="currentColor"/><circle cx="32" cy="32" r="11" fill="#fff0c9"/><circle cx="32" cy="32" r="7" fill="#30134e"/></svg><span class="slot-action">Tap to take photo</span><span class="slot-note">or choose one from your device</span></span>
+            <img class="captured-photo" alt="Your performer photo"><span class="check-pill" aria-hidden="true">✓</span><span class="retake-pill" aria-hidden="true">Tap to retake</span>
+          </button>
+          <input class="file-input sr-only" type="file" accept="image/*" capture="environment" aria-label="Choose a picture of a performer in the middle of their act">
+        </article>
+      </div>
+
+      <div class="completion" id="completion" role="status" hidden>
+        <strong>All ten spooky moments found!</strong>
+        Your Halloween carnival hunt is complete.
+        <div class="completion-actions">
+          <button class="save-button" id="save-button" type="button">
+            <svg class="save-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v12m0 0 5-5m-5 5-5-5M5 15v4h14v-4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span>Save full-page image</span>
+          </button>
+          <button class="share-button" id="share-button" type="button">
+            <svg class="share-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="18" cy="5" r="2.5" stroke="currentColor" stroke-width="2"/><circle cx="6" cy="12" r="2.5" stroke="currentColor" stroke-width="2"/><circle cx="18" cy="19" r="2.5" stroke="currentColor" stroke-width="2"/><path d="m8.3 10.8 7.4-4.5M8.3 13.2l7.4 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <span>Share to social media</span>
+          </button>
+        </div>
+        <p class="share-hashtag">#TheGarciaHalloweenHouse</p>
+        <p class="save-status" id="save-status" aria-live="polite">Downloads one image with all ten photos.</p>
+      </div>
+      <p class="privacy-note">Photos stay in this browser on this device and are not uploaded anywhere.</p>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const STORAGE_PREFIX = 'carnival-photo-hunt-v2-';
+      const items = [...document.querySelectorAll('.hunt-item')];
+      const progressText = document.getElementById('progress-text');
+      const progressFill = document.getElementById('progress-fill');
+      const progressBar = document.querySelector('[role="progressbar"]');
+      const clearButton = document.getElementById('clear-button');
+      const completion = document.getElementById('completion');
+      const saveButton = document.getElementById('save-button');
+      const saveButtonLabel = saveButton.querySelector('span');
+      const shareButton = document.getElementById('share-button');
+      const shareButtonLabel = shareButton.querySelector('span');
+      const saveStatus = document.getElementById('save-status');
+      const SHARE_HASHTAG = '#TheGarciaHalloweenHouse';
+
+      function storageGet(key) {
+        try { return localStorage.getItem(key); } catch (_) { return null; }
+      }
+
+      function storageSet(key, value) {
+        try { localStorage.setItem(key, value); } catch (_) { /* The photo still appears for this session. */ }
+      }
+
+      function storageRemove(key) {
+        try { localStorage.removeItem(key); } catch (_) { /* Storage may be unavailable for local files. */ }
+      }
+
+      function showPhoto(item, dataUrl) {
+        const image = item.querySelector('.captured-photo');
+        image.src = dataUrl;
+        item.querySelector('.photo-slot').classList.add('completed');
+      }
+
+      function updateProgress() {
+        const completed = items.filter(item => item.querySelector('.photo-slot').classList.contains('completed')).length;
+        progressText.textContent = `${completed} of ${items.length}`;
+        progressFill.style.width = `${(completed / items.length) * 100}%`;
+        progressBar.setAttribute('aria-valuenow', String(completed));
+        clearButton.disabled = completed === 0;
+        completion.hidden = completed !== items.length;
+      }
+
+      function resizePhoto(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onerror = () => reject(new Error('Could not read this photo.'));
+          reader.onload = () => {
+            const source = new Image();
+            source.onerror = () => reject(new Error('Could not open this photo.'));
+            source.onload = () => {
+              const maxSide = 820;
+              const scale = Math.min(1, maxSide / Math.max(source.naturalWidth, source.naturalHeight));
+              const width = Math.max(1, Math.round(source.naturalWidth * scale));
+              const height = Math.max(1, Math.round(source.naturalHeight * scale));
+              const canvas = document.createElement('canvas');
+              canvas.width = width;
+              canvas.height = height;
+              const context = canvas.getContext('2d');
+              context.drawImage(source, 0, 0, width, height);
+              resolve(canvas.toDataURL('image/jpeg', .76));
+            };
+            source.src = reader.result;
+          };
+          reader.readAsDataURL(file);
+        });
+      }
+
+      function roundedRect(context, x, y, width, height, radius) {
+        const r = Math.min(radius, width / 2, height / 2);
+        context.beginPath();
+        context.moveTo(x + r, y);
+        context.lineTo(x + width - r, y);
+        context.quadraticCurveTo(x + width, y, x + width, y + r);
+        context.lineTo(x + width, y + height - r);
+        context.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+        context.lineTo(x + r, y + height);
+        context.quadraticCurveTo(x, y + height, x, y + height - r);
+        context.lineTo(x, y + r);
+        context.quadraticCurveTo(x, y, x + r, y);
+        context.closePath();
+      }
+
+      function drawCover(context, image, x, y, width, height) {
+        const sourceWidth = image.naturalWidth || image.width;
+        const sourceHeight = image.naturalHeight || image.height;
+        const scale = Math.max(width / sourceWidth, height / sourceHeight);
+        const cropWidth = width / scale;
+        const cropHeight = height / scale;
+        const sourceX = (sourceWidth - cropWidth) / 2;
+        const sourceY = (sourceHeight - cropHeight) / 2;
+        context.drawImage(image, sourceX, sourceY, cropWidth, cropHeight, x, y, width, height);
+      }
+
+      function fitText(context, text, maxWidth, startingSize, minimumSize) {
+        let size = startingSize;
+        do {
+          context.font = `900 ${size}px Trebuchet MS, Arial, sans-serif`;
+          if (context.measureText(text).width <= maxWidth) return;
+          size -= 2;
+        } while (size >= minimumSize);
+      }
+
+      function wrapTextLines(context, text, maxWidth) {
+        const words = text.split(/\s+/);
+        const lines = [];
+        let line = '';
+        words.forEach(word => {
+          const test = line ? `${line} ${word}` : word;
+          if (line && context.measureText(test).width > maxWidth) {
+            lines.push(line);
+            line = word;
+          } else {
+            line = test;
+          }
+        });
+        if (line) lines.push(line);
+        return lines;
+      }
+
+      async function createCompletedHuntImage() {
+        const capturedImages = items.map(item => item.querySelector('.captured-photo'));
+        await Promise.all(capturedImages.map(image => image.complete ? Promise.resolve() : new Promise((resolve, reject) => {
+          image.addEventListener('load', resolve, { once: true });
+          image.addEventListener('error', reject, { once: true });
+        })));
+
+        const width = 1080;
+        const margin = 46;
+        const headerHeight = 270;
+        const statusHeight = 86;
+        const rowHeight = 260;
+        const rowGap = 18;
+        const footerHeight = 205;
+        const height = margin + headerHeight + statusHeight + (rowHeight * items.length) + (rowGap * (items.length - 1)) + footerHeight + margin;
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const context = canvas.getContext('2d');
+
+        const background = context.createLinearGradient(0, 0, width, height);
+        background.addColorStop(0, '#130920');
+        background.addColorStop(.5, '#35134c');
+        background.addColorStop(1, '#170a24');
+        context.fillStyle = background;
+        context.fillRect(0, 0, width, height);
+
+        context.globalAlpha = .16;
+        context.fillStyle = '#f36b21';
+        for (let x = -height; x < width + height; x += 110) {
+          context.save();
+          context.translate(x, 0);
+          context.rotate(.42);
+          context.fillRect(0, -height, 48, height * 2);
+          context.restore();
+        }
+        context.globalAlpha = 1;
+
+        roundedRect(context, margin, margin, width - margin * 2, headerHeight, 28);
+        const headerGradient = context.createLinearGradient(0, margin, 0, margin + headerHeight);
+        headerGradient.addColorStop(0, '#5e2681');
+        headerGradient.addColorStop(1, '#21102f');
+        context.fillStyle = headerGradient;
+        context.fill();
+        context.lineWidth = 8;
+        context.strokeStyle = '#f9b83c';
+        context.stroke();
+
+        const dots = [
+          [margin + 60, margin + 55, '#b6e34a'],
+          [width - margin - 60, margin + 58, '#f36b21'],
+          [margin + 105, margin + headerHeight - 55, '#f36b21'],
+          [width - margin - 110, margin + headerHeight - 52, '#b6e34a']
+        ];
+        dots.forEach(([x, y, color]) => {
+          context.beginPath();
+          context.arc(x, y, 9, 0, Math.PI * 2);
+          context.fillStyle = color;
+          context.fill();
+        });
+
+        context.fillStyle = '#f9b83c';
+        context.textAlign = 'center';
+        context.font = '900 34px Trebuchet MS, Arial, sans-serif';
+        context.fillText('✦  HALLOWEEN CARNIVAL  ✦', width / 2, margin + 58);
+        context.fillStyle = '#ffffff';
+        context.font = 'bold 62px Georgia, Times New Roman, serif';
+        context.fillText('Photo Scavenger Hunt', width / 2, margin + 139);
+        context.fillStyle = '#fff0c9';
+        context.font = '700 29px Trebuchet MS, Arial, sans-serif';
+        context.fillText('Ten spooky moments captured!', width / 2, margin + 196);
+
+        let y = margin + headerHeight + 28;
+        context.fillStyle = '#ffffff';
+        context.textAlign = 'left';
+        context.font = '900 29px Trebuchet MS, Arial, sans-serif';
+        context.fillText('10 of 10 complete', margin + 6, y + 32);
+        roundedRect(context, margin + 270, y + 8, width - margin * 2 - 276, 30, 15);
+        context.fillStyle = 'rgba(0,0,0,.38)';
+        context.fill();
+        const progressGradient = context.createLinearGradient(margin + 270, 0, width - margin, 0);
+        progressGradient.addColorStop(0, '#f36b21');
+        progressGradient.addColorStop(.52, '#f9b83c');
+        progressGradient.addColorStop(1, '#b6e34a');
+        roundedRect(context, margin + 273, y + 11, width - margin * 2 - 282, 24, 12);
+        context.fillStyle = progressGradient;
+        context.fill();
+        y += statusHeight;
+
+        items.forEach((item, index) => {
+          const cardX = margin;
+          const cardWidth = width - margin * 2;
+          roundedRect(context, cardX, y, cardWidth, rowHeight, 22);
+          context.fillStyle = '#fff0c9';
+          context.fill();
+          context.lineWidth = 8;
+          context.strokeStyle = '#f36b21';
+          context.stroke();
+          roundedRect(context, cardX + 7, y + 7, cardWidth - 14, rowHeight - 14, 17);
+          context.lineWidth = 4;
+          context.strokeStyle = '#5e2681';
+          context.stroke();
+
+          const innerY = y + 16;
+          const innerHeight = rowHeight - 32;
+          const promptX = cardX + 16;
+          const promptWidth = 416;
+          const photoX = promptX + promptWidth + 16;
+          const photoWidth = cardWidth - promptWidth - 48;
+
+          roundedRect(context, promptX, innerY, promptWidth, innerHeight, 12);
+          const promptGradient = context.createLinearGradient(promptX, innerY, promptX + promptWidth, innerY + innerHeight);
+          promptGradient.addColorStop(0, '#5e2681');
+          promptGradient.addColorStop(1, '#29113c');
+          context.fillStyle = promptGradient;
+          context.fill();
+
+          context.save();
+          roundedRect(context, photoX, innerY, photoWidth, innerHeight, 12);
+          context.clip();
+          drawCover(context, capturedImages[index], photoX, innerY, photoWidth, innerHeight);
+          context.restore();
+
+          const label = item.querySelector('.prompt-title').textContent.trim();
+          context.beginPath();
+          context.arc(promptX + promptWidth / 2, innerY + 43, 25, 0, Math.PI * 2);
+          context.fillStyle = '#f9b83c';
+          context.fill();
+          context.lineWidth = 3;
+          context.strokeStyle = '#fff0c9';
+          context.stroke();
+          context.fillStyle = '#28122f';
+          context.textAlign = 'center';
+          context.font = '900 27px Trebuchet MS, Arial, sans-serif';
+          context.fillText(String(index + 1), promptX + promptWidth / 2, innerY + 52);
+
+          let promptSize = 26;
+          let promptLines = [];
+          do {
+            context.font = `900 ${promptSize}px Trebuchet MS, Arial, sans-serif`;
+            promptLines = wrapTextLines(context, label, promptWidth - 42);
+            if (promptLines.length <= 4) break;
+            promptSize -= 2;
+          } while (promptSize >= 18);
+          const promptLineHeight = promptSize * 1.22;
+          const promptTextHeight = promptLines.length * promptLineHeight;
+          const promptTextY = innerY + 92 + Math.max(0, (innerHeight - 102 - promptTextHeight) / 2);
+          context.fillStyle = '#ffffff';
+          promptLines.forEach((line, lineIndex) => {
+            context.fillText(line, promptX + promptWidth / 2, promptTextY + (lineIndex + 1) * promptLineHeight);
+          });
+
+          context.beginPath();
+          context.arc(photoX + photoWidth - 26, innerY + 26, 18, 0, Math.PI * 2);
+          context.fillStyle = '#629b22';
+          context.fill();
+          context.fillStyle = '#ffffff';
+          context.font = '900 24px Arial, sans-serif';
+          context.fillText('✓', photoX + photoWidth - 26, innerY + 34);
+          y += rowHeight + rowGap;
+        });
+
+        y -= rowGap;
+        context.textAlign = 'center';
+        context.fillStyle = '#f9b83c';
+        context.font = 'bold 44px Georgia, Times New Roman, serif';
+        context.fillText('All ten spooky moments found!', width / 2, y + 78);
+        context.fillStyle = '#fff0c9';
+        context.font = '700 26px Trebuchet MS, Arial, sans-serif';
+        context.fillText('Halloween carnival scavenger hunt complete', width / 2, y + 122);
+        context.fillStyle = '#b6e34a';
+        context.font = '900 28px Trebuchet MS, Arial, sans-serif';
+        context.fillText(SHARE_HASHTAG, width / 2, y + 166);
+
+        return new Promise((resolve, reject) => {
+          canvas.toBlob(result => result ? resolve(result) : reject(new Error('Could not create the finished image.')), 'image/png');
+        });
+      }
+
+      function downloadImage(blob) {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'Halloween_Carnival_Photo_Scavenger_Hunt.png';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+      }
+
+      async function shareCompletedHunt() {
+        const blob = await createCompletedHuntImage();
+        const file = new File([blob], 'Halloween_Carnival_Photo_Scavenger_Hunt.png', { type: 'image/png' });
+        const shareData = {
+          files: [file],
+          title: 'Halloween Carnival Photo Scavenger Hunt',
+          text: `We completed the Halloween Carnival Photo Scavenger Hunt! ${SHARE_HASHTAG}`
+        };
+
+        const canShareFile = typeof navigator.share === 'function' &&
+          (typeof navigator.canShare !== 'function' || navigator.canShare({ files: [file] }));
+
+        if (canShareFile) {
+          try {
+            await navigator.share(shareData);
+            return 'shared';
+          } catch (error) {
+            if (error && error.name === 'AbortError') return 'canceled';
+          }
+        }
+
+        downloadImage(blob);
+        let copied = false;
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(SHARE_HASHTAG);
+            copied = true;
+          }
+        } catch (_) { /* The hashtag remains printed on the downloaded image. */ }
+        return copied ? 'downloaded-and-copied' : 'downloaded';
+      }
+
+      items.forEach((item, index) => {
+        const slot = item.querySelector('.photo-slot');
+        const input = item.querySelector('.file-input');
+        const savedPhoto = storageGet(STORAGE_PREFIX + index);
+        if (savedPhoto) showPhoto(item, savedPhoto);
+
+        slot.addEventListener('click', () => input.click());
+        input.addEventListener('change', async () => {
+          const file = input.files && input.files[0];
+          if (!file) return;
+          try {
+            const dataUrl = await resizePhoto(file);
+            showPhoto(item, dataUrl);
+            storageSet(STORAGE_PREFIX + index, dataUrl);
+            saveButtonLabel.textContent = 'Save full-page image';
+            shareButtonLabel.textContent = 'Share to social media';
+            saveStatus.textContent = 'Downloads one image with all ten photos.';
+            updateProgress();
+          } catch (error) {
+            alert(error.message || 'That photo could not be added. Please try another one.');
+          } finally {
+            input.value = '';
+          }
+        });
+      });
+
+      clearButton.addEventListener('click', () => {
+        if (!confirm('Clear all ten scavenger hunt photos?')) return;
+        items.forEach((item, index) => {
+          storageRemove(STORAGE_PREFIX + index);
+          const image = item.querySelector('.captured-photo');
+          image.removeAttribute('src');
+          item.querySelector('.photo-slot').classList.remove('completed');
+        });
+        updateProgress();
+      });
+
+      saveButton.addEventListener('click', async () => {
+        saveButton.disabled = true;
+        shareButton.disabled = true;
+        saveButtonLabel.textContent = 'Creating your image…';
+        saveStatus.textContent = 'Putting all ten photos into one picture.';
+        try {
+          const blob = await createCompletedHuntImage();
+          downloadImage(blob);
+          saveButtonLabel.textContent = 'Save another copy';
+          saveStatus.textContent = 'Saved! Check the Downloads folder on your phone.';
+        } catch (error) {
+          saveButtonLabel.textContent = 'Try saving again';
+          saveStatus.textContent = 'The image could not be saved. Please try again.';
+          alert(error.message || 'The completed hunt could not be saved.');
+        } finally {
+          saveButton.disabled = false;
+          shareButton.disabled = false;
+        }
+      });
+
+      shareButton.addEventListener('click', async () => {
+        shareButton.disabled = true;
+        saveButton.disabled = true;
+        shareButtonLabel.textContent = 'Preparing to share…';
+        saveStatus.textContent = `Creating the image with ${SHARE_HASHTAG}.`;
+        try {
+          const result = await shareCompletedHunt();
+          if (result === 'shared') {
+            shareButtonLabel.textContent = 'Share again';
+            saveStatus.textContent = `Shared with ${SHARE_HASHTAG}.`;
+          } else if (result === 'canceled') {
+            shareButtonLabel.textContent = 'Share to social media';
+            saveStatus.textContent = 'Sharing canceled—your photos are still here.';
+          } else if (result === 'downloaded-and-copied') {
+            shareButtonLabel.textContent = 'Share to social media';
+            saveStatus.textContent = `The image was downloaded and ${SHARE_HASHTAG} was copied. Open your social app to post it.`;
+          } else {
+            shareButtonLabel.textContent = 'Share to social media';
+            saveStatus.textContent = `The image was downloaded with ${SHARE_HASHTAG} printed on it. Open your social app to post it.`;
+          }
+        } catch (error) {
+          shareButtonLabel.textContent = 'Try sharing again';
+          saveStatus.textContent = 'The image could not be shared. Please try again.';
+          alert(error.message || 'The completed hunt could not be shared.');
+        } finally {
+          shareButton.disabled = false;
+          saveButton.disabled = false;
+        }
+      });
+
+      updateProgress();
+    })();
+  </script>
+</body>
+</html>

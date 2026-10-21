@@ -26,14 +26,8 @@
   <script type="importmap">
     {
       "imports": {
-        "three": [
-          "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-          "https://unpkg.com/three@0.160.0/build/three.module.js"
-        ],
-        "mindar-image-three": [
-          "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js",
-          "https://unpkg.com/mind-ar@1.2.5/dist/mindar-image-three.prod.js"
-        ]
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "mindar-image-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"
       }
     }
   </script>
@@ -52,7 +46,6 @@
         <div id="target-config-note">Checking your reference image database…</div>
         <button id="camera-start" class="button button-primary" disabled>◉ START IMAGE AR</button>
         <a class="build-link" href="target-builder.html">Build / update reference images</a>
-        <button id="demo-start" class="button button-secondary">TRY DEMO MODE</button>
         <p id="start-note" class="small-note">No heavy skeleton AI model. Image tracking starts quickly after the target database is ready.</p>
       </div>
     </section>
@@ -88,7 +81,7 @@
     import('./game.js?v=image-reference-v1').catch((error) => {
       console.error('Pumpkin Smash! could not load its AR libraries:', error);
       const note = document.getElementById('target-config-note');
-      if (note) note.textContent = 'The image-tracking libraries failed to load (' + (error?.message || 'unknown module error') + '). Try refreshing on a reliable connection. If this repeats, the CDN may be blocked or the browser may not support module imports.';
+      if (note) note.textContent = 'The image-tracking libraries failed to load (' + (error?.message || 'unknown module error') + '). Check your internet connection and try again. If the error mentions a module specifier, make sure you uploaded the updated index.html and game.js together.';
       const start = document.getElementById('camera-start');
       if (start) start.disabled = true;
     });

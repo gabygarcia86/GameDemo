@@ -4,7 +4,7 @@ import { MindARThree } from 'mindar-image-three';
 const $ = (id) => document.getElementById(id);
 const ui = {
   container: $('ar-container'), startScreen: $('start-screen'), hud: $('hud'), win: $('win-screen'),
-  note: $('target-config-note'), start: $('camera-start'), demo: $('demo-start'), score: $('score'),
+  note: $('target-config-note'), start: $('camera-start'), score: $('score'),
   remaining: $('remaining'), progress: $('progress-fill'), hint: $('hint-text'), toast: $('toast'),
   reset: $('reset-button'), cameraSwitch: $('camera-switch'), sound: $('sound-toggle'),
   playAgain: $('play-again'), backTitle: $('back-to-title')
@@ -17,7 +17,6 @@ let scene = null;
 let camera = null;
 let renderer = null;
 let isRunning = false;
-let demoMode = false;
 let soundOn = false;
 let score = 0;
 let spawnedCount = 0;
@@ -299,7 +298,7 @@ function smashRecord(record) {
 }
 
 function onCanvasTap(event) {
-  if (!isRunning || demoMode || !renderer || !camera || ui.win.classList.contains('hidden') === false) return;
+  if (!isRunning || !renderer || !camera || ui.win.classList.contains('hidden') === false) return;
   if (event.button !== undefined && event.button !== 0) return;
   const rect = renderer.domElement.getBoundingClientRect();
   if (!rect.width || !rect.height) return;
@@ -357,7 +356,6 @@ async function startImageAR() {
 
     await mindar.start();
     isRunning = true;
-    demoMode = false;
     ui.startScreen.classList.add('hidden');
     ui.hud.classList.remove('hidden');
     ui.win.classList.add('hidden');
@@ -431,30 +429,18 @@ async function stopAR() {
   }
   if (mindar) { try { await mindar.stop(); } catch (error) { console.debug(error); } }
   try { renderer?.dispose(); } catch {}
-  mindar = null; scene = null; camera = null; renderer = null; records = []; isRunning = false; demoMode = false;
+  mindar = null; scene = null; camera = null; renderer = null; records = []; isRunning = false;
   ui.cameraSwitch.innerHTML = '↻ <span>CAMERA</span>'; 
   ui.container.replaceChildren();
   ui.hud.classList.add('hidden'); ui.win.classList.add('hidden'); ui.startScreen.classList.remove('hidden');
   await loadConfiguration();
 }
 
-function startDemo() {
-  demoMode = true; isRunning = true; ui.startScreen.classList.add('hidden'); ui.hud.classList.remove('hidden'); ui.win.classList.add('hidden');
-  ui.cameraSwitch.innerHTML = '↻ <span>EXIT</span>';
-  ui.container.innerHTML = '<div id="demo-background" style="display:block;opacity:1"></div><button id="demo-pumpkin" aria-label="Smash demo pumpkin" style="position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);font-size:clamp(100px,30vw,190px);border:0;background:transparent;filter:drop-shadow(0 15px 20px #0009);">🎃</button>';
-  const demoPumpkin = $('demo-pumpkin'); score = 0; goal = 1; updateHud(); setHint('Demo mode: tap the pumpkin. Real image tracking requires reference images and a target database.');
-  demoPumpkin.addEventListener('click', () => {
-    if (score) return;
-    score=1; updateHud(); playSound(150,0.12,'sawtooth'); demoPumpkin.textContent='💥'; setTimeout(()=>{ demoPumpkin.textContent='✨'; },180); setTimeout(()=>{ ui.win.classList.remove('hidden'); },350);
-  });
-}
-
 ui.start.addEventListener('click', startImageAR);
-ui.demo.addEventListener('click', startDemo);
-ui.reset.addEventListener('click', () => { if (demoMode) { startDemo(); } else resetRound(); });
+ui.reset.addEventListener('click', resetRound);
 ui.cameraSwitch.addEventListener('click', stopAR);
 ui.sound.addEventListener('click', () => { soundOn = !soundOn; ui.sound.classList.toggle('muted', !soundOn); ui.sound.textContent = soundOn ? '♫' : '♬'; if (soundOn) playSound(520,0.08,'triangle'); });
-ui.playAgain.addEventListener('click', () => { if (demoMode) { ui.win.classList.add('hidden'); startDemo(); } else resetRound(); });
+ui.playAgain.addEventListener('click', resetRound);
 ui.backTitle.addEventListener('click', stopAR);
 
 loadConfiguration();

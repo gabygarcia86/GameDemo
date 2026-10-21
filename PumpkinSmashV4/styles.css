@@ -4,11 +4,9 @@
 html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#100d18;color:var(--ink);font-family:Nunito,system-ui,sans-serif;overscroll-behavior:none}
 body{position:fixed;inset:0}button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}button:focus-visible{outline:3px solid #ffe4a9;outline-offset:3px}
 #game{position:relative;width:100%;height:100%;height:100dvh;overflow:hidden;isolation:isolate;background:radial-gradient(ellipse at 50% 42%,#342047,#100d18 75%);--safe-top:env(safe-area-inset-top,0px);--safe-bottom:env(safe-area-inset-bottom,0px)}
-#camera,#demo-background,#atmosphere,#scene-root{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#camera,#atmosphere,#scene-root{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 #camera{z-index:0;object-fit:cover;background:#151020;opacity:0;transition:opacity .3s}
 #game.camera-active #camera{opacity:1}
-#demo-background{z-index:0;opacity:0;background:radial-gradient(ellipse at 70% 23%,rgba(121,83,153,.46),transparent 29%),radial-gradient(ellipse at 18% 70%,rgba(45,93,63,.5),transparent 32%),linear-gradient(180deg,#17172e 0%,#3d2944 56%,#11101b 100%);transition:opacity .3s}
-#game.demo-active #demo-background{opacity:1}
 #atmosphere{z-index:1;background:linear-gradient(180deg,rgba(7,5,14,.42),transparent 27%,transparent 68%,rgba(7,5,14,.39)),radial-gradient(ellipse at center,transparent 45%,rgba(7,5,14,.22) 100%)}
 #scene-root{z-index:2;pointer-events:auto;touch-action:pan-x pan-y}
 #scene-root canvas{display:block;width:100%;height:100%;outline:none;touch-action:pan-x pan-y}
@@ -41,7 +39,6 @@ html.spatial-ar, body.spatial-ar, body.spatial-ar #game, #game.spatial-ar {
   background: transparent !important;
 }
 #game.spatial-ar #camera,
-#game.spatial-ar #demo-background,
 #game.spatial-ar #atmosphere {
   display: none !important;
 }

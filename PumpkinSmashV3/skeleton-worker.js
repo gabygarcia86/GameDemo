@@ -45,7 +45,7 @@ self.addEventListener('message', async (event) => {
       const image = new transformerModule.RawImage(
         new Uint8ClampedArray(message.pixels), message.width, message.height, 4
       );
-      const results = await detector(image, ['skeleton.'], { threshold: 0.20 });
+      const results = await detector(image, ['skeleton.'], { threshold: 0.15 });
       const detections = (Array.isArray(results) ? results : []).map(item => ({
         label: String(item.label || ''),
         score: Number(item.score || 0),

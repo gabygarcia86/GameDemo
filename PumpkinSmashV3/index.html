@@ -23,6 +23,7 @@
     <div id="demo-background" aria-hidden="true"></div>
     <div id="atmosphere" aria-hidden="true"></div>
     <div id="scene-root" aria-label="Animated Halloween characters"></div>
+    <div id="skeleton-detection-box" class="skeleton-detection-box" aria-hidden="true"></div>
 
     <section id="start-screen" class="screen-card-wrap">
       <div class="start-card">
@@ -90,7 +91,7 @@
   </main>
   <script type="module">
     // Surface module/CDN failures to the player instead of leaving dead buttons.
-    import('./game.js?v=skeleton-tracking-2').catch((error) => {
+    import('./game.js?v=skeleton-follow-3').catch((error) => {
       console.error('Pumpkin Smash! failed to initialize:', error);
       const note = document.getElementById('start-note');
       if (note) {

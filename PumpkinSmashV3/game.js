@@ -114,6 +114,12 @@ scene.add(contentRoot);
 const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
 camera.position.set(0, 0, 12);
 camera.lookAt(0, 0, 0);
+// AI-spawned pumpkins live under this scene-level group. It copies the camera's
+// pose each frame but remains a renderable scene object, so screen coordinates map
+// directly to the live camera image instead of being mixed with contentRoot space.
+const visionOverlayRoot = new THREE.Group();
+visionOverlayRoot.name = 'vision-overlay-root';
+scene.add(visionOverlayRoot);
 const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
 renderer.setClearColor(0x000000, 0);
 renderer.xr.enabled = true;
@@ -218,15 +224,59 @@ function screenPosition(object, x, y, z = 0) {
   const w = h * camera.aspect;
   object.position.set((x - 0.5) * w, (0.5 - y) * h, z);
 }
-// Convert camera-image coordinates into the current camera orientation. Used by the
-// skeleton scanner so a spawned pumpkin appears beside the real skeleton in view.
+// Move an AI-created pumpkin into camera-aligned space. Unlike transforming a
+// local point into world coordinates while leaving the pumpkin under contentRoot,
+// this uses the same camera-local coordinate system that generated the detector's
+// normalized screen position. The group itself follows the camera pose every frame.
+function attachVisionPumpkin(object) {
+  if (object.parent !== visionOverlayRoot) {
+    if (!object.userData.visionOriginalTransform) {
+      object.userData.visionOriginalTransform = {
+        parent: object.parent,
+        position: object.position.clone(),
+        quaternion: object.quaternion.clone(),
+        scale: object.scale.clone()
+      };
+    }
+    visionOverlayRoot.add(object);
+  }
+}
 function cameraScreenPosition(object, x, y, z = -1.85) {
+  attachVisionPumpkin(object);
   const distance = Math.abs(z);
   const h = 2 * distance * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
   const w = h * camera.aspect;
-  const localPoint = new THREE.Vector3((x - 0.5) * w, (0.5 - y) * h, z);
-  camera.localToWorld(localPoint);
-  object.position.copy(localPoint);
+  object.position.set((x - 0.5) * w, (0.5 - y) * h, z);
+  object.rotation.set(0, 0, object.rotation.z);
+}
+function updateVisionOverlayPose() {
+  // The camera is intentionally not parented to the scene in ordinary mode, so
+  // copy its world pose to this scene-level overlay root explicitly.
+  camera.updateMatrixWorld(true);
+  camera.getWorldPosition(visionOverlayRoot.position);
+  camera.getWorldQuaternion(visionOverlayRoot.quaternion);
+  visionOverlayRoot.scale.set(1, 1, 1);
+  visionOverlayRoot.updateMatrixWorld(true);
+}
+function restoreVisionPumpkins() {
+  for (const pumpkin of interactivePumpkins) {
+    if (pumpkin.parent !== visionOverlayRoot) continue;
+    const saved = pumpkin.userData.visionOriginalTransform;
+    visionOverlayRoot.remove(pumpkin);
+    const restoreParent = saved?.parent && saved.parent !== visionOverlayRoot ? saved.parent : contentRoot;
+    restoreParent.add(pumpkin);
+    if (saved) {
+      pumpkin.position.copy(saved.position);
+      pumpkin.quaternion.copy(saved.quaternion);
+      pumpkin.scale.copy(saved.scale);
+    }
+    pumpkin.userData.visionOriginalTransform = null;
+    pumpkin.userData.visionScreen = null;
+  }
+  visionOverlayRoot.position.set(0, 0, 0);
+  visionOverlayRoot.quaternion.identity();
+  visionOverlayRoot.scale.set(1, 1, 1);
+  visionOverlayRoot.updateMatrixWorld(true);
 }
 function attachLayout(object, x, y, z = 0) {
   object.userData.layout = { x, y, z };
@@ -869,12 +919,13 @@ function burstAt(position) {
 }
 function smashPumpkin(root) {
   if (!gameStarted || root.userData.smashed) return;
+  const smashPosition = root.getWorldPosition(new THREE.Vector3());
   root.userData.smashed = true;
   root.userData.smashedAt = elapsed;
   if (root.userData.visionSpawned && visionTargetPumpkin === root) visionTargetPumpkin = null;
   root.userData.startScale = root.scale.x;
   smashed++;
-  burstAt(root.position);
+  burstAt(smashPosition);
   makeSound('smash');
   updateHud();
   toastMessage(['SPLAT!','PUMPKIN SMASH!','SQUASHED!','NICE HIT!','SMASH-TASTIC!'][Math.floor(Math.random() * 5)]);
@@ -957,6 +1008,7 @@ function animate(_time, xrFrame) {
   const t = elapsed;
 
   if (gameMode === 'camera' && orientationControls) orientationControls.update();
+  if (gameMode === 'camera' && skeletonScanEnabled) updateVisionOverlayPose();
 
   interactivePumpkins.forEach((p, i) => {
     if (!p.visible) return;
@@ -1059,10 +1111,13 @@ function animate(_time, xrFrame) {
 renderer.setAnimationLoop(animate);
 
 function resize() {
-  camera.aspect = window.innerWidth / window.innerHeight;
+  const rect = game.getBoundingClientRect();
+  const width = Math.max(1, Math.round(rect.width || window.innerWidth));
+  const height = Math.max(1, Math.round(rect.height || window.innerHeight));
+  camera.aspect = width / height;
   camera.updateProjectionMatrix();
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.7));
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(width, height);
   if (gameMode === 'demo') layoutDemoScene();
 }
 window.addEventListener('resize', resize, { passive: true });
@@ -1278,7 +1333,8 @@ async function loadSkeletonDetector() {
 
 function prepareVisionFrame() {
   if (!video.videoWidth || !video.videoHeight) return false;
-  const viewportAspect = window.innerWidth / window.innerHeight;
+  const viewport = game.getBoundingClientRect();
+  const viewportAspect = (viewport.width || window.innerWidth) / (viewport.height || window.innerHeight);
   const videoAspect = video.videoWidth / video.videoHeight;
   let sx = 0, sy = 0, sw = video.videoWidth, sh = video.videoHeight;
   if (videoAspect > viewportAspect) {
@@ -1288,7 +1344,7 @@ function prepareVisionFrame() {
     sh = video.videoWidth / viewportAspect;
     sy = (video.videoHeight - sh) / 2;
   }
-  const scale = Math.min(640 / sw, 768 / sh, 1);
+  const scale = Math.min(560 / sw, 960 / sh, 1);
   visionCanvas.width = Math.max(1, Math.round(sw * scale));
   visionCanvas.height = Math.max(1, Math.round(sh * scale));
   visionContext.drawImage(video, sx, sy, sw, sh, 0, 0, visionCanvas.width, visionCanvas.height);
@@ -1353,6 +1409,9 @@ function spawnPumpkinAtSkeleton(detection, imageWidth = visionCanvas.width, imag
     return false;
   }
   const anchor = screenAnchorForDetection(detection, imageWidth, imageHeight);
+  // Save the pumpkin's regular exploration transform before moving it into the
+  // camera-aligned overlay. This lets us restore normal gameplay when AI scan ends.
+  attachVisionPumpkin(target);
   target.userData.visionSpawned = true;
   target.userData.visionScreen = { x: anchor.x, y: anchor.y };
   target.userData.lastVisionSeenAt = now;
@@ -1375,7 +1434,7 @@ function handleSkeletonDetections(detections, imageWidth = visionCanvas.width, i
   const now = performance.now();
   const candidates = (Array.isArray(detections) ? detections : [])
     .map(item => normalizeSkeletonDetection(item, imageWidth, imageHeight))
-    .filter(item => item && /skeleton/i.test(item.label) && item.score >= 0.22);
+    .filter(item => item && /skeleton/i.test(item.label) && item.score >= 0.16);
 
   // Once a skeleton is being followed, prefer detections close to its last box so
   // another object with a slightly higher score does not cause sudden jumps.
@@ -1433,23 +1492,23 @@ function handleSkeletonDetections(detections, imageWidth = visionCanvas.width, i
     }
   } else {
     skeletonMissFrames++;
-    if (skeletonMissFrames >= 3) {
-      skeletonPresent = false;
-      // Stop moving the object with the camera while the detector cannot see the
-      // skeleton. Its last world-direction position remains visible during the grace period.
-      if (visionTargetPumpkin && !visionTargetPumpkin.userData.smashed) {
-        visionTargetPumpkin.userData.visionScreen = null;
-      }
-      if (now - skeletonLastSeenAt > 8500) {
-        if (visionTargetPumpkin && !visionTargetPumpkin.userData.smashed) {
-          visionTargetPumpkin.userData.visionScreen = null;
-        }
-        visionTargetPumpkin = null;
-        lastTrackedSkeletonBox = null;
-      }
+    if (skeletonMissFrames >= 3) skeletonPresent = false;
+    // Keep the pumpkin at the last detected screen position through brief model
+    // misses, rather than detaching it into a stale world-space location. If the
+    // skeleton stays lost, hide the pumpkin until it can be reacquired so it never
+    // misleadingly floats at an unrelated screen corner.
+    const lostFor = now - skeletonLastSeenAt;
+    if (visionTargetPumpkin && !visionTargetPumpkin.userData.smashed && lostFor > 3500) {
+      visionTargetPumpkin.visible = false;
     }
-    if (!skeletonPresent && skeletonMissFrames >= 3 && (!visionTargetPumpkin || skeletonMissFrames >= 6)) {
-      hintText.textContent = 'No skeleton detected. Move a little closer, improve the lighting, and keep most of the skeleton in view.';
+    if (lostFor > 8500) {
+      visionTargetPumpkin = null;
+      lastTrackedSkeletonBox = null;
+    }
+    if (!skeletonPresent && skeletonMissFrames >= 3) {
+      hintText.textContent = visionTargetPumpkin
+        ? 'Skeleton temporarily lost. Point the camera back at it to resume pumpkin tracking.'
+        : 'No skeleton detected. Move closer, improve the lighting, and keep most of the skeleton in view.';
     }
   }
 }
@@ -1482,6 +1541,10 @@ function stopSkeletonScan(showMessage = true) {
   skeletonScanEnabled = false;
   if (aiScanTimer !== null) window.clearInterval(aiScanTimer);
   aiScanTimer = null;
+  restoreVisionPumpkins();
+  visionTargetPumpkin = null;
+  skeletonPresent = false;
+  skeletonMissFrames = 0;
   $('skeleton-scan').classList.remove('is-active');
   $('skeleton-scan').setAttribute('aria-pressed', 'false');
   $('skeleton-scan').innerHTML = '✦ <span>AI SCAN</span>';

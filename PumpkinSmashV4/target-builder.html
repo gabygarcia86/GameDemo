@@ -7,10 +7,12 @@
   <title>Pumpkin Smash! — Reference Image Builder</title>
   <link rel="stylesheet" href="styles.css">
   <style>
-    html{height:auto;min-height:100%;overflow:auto}
-    body{position:static;height:auto;min-height:100%;overflow:auto;background:radial-gradient(ellipse at 50% 0%,#342047,#100d18 65%)}
-    .builder{width:min(900px,100%);margin:0 auto;padding:calc(22px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));}
-    .builder-card{border:1px solid var(--border);border-radius:24px;padding:clamp(20px,4vw,34px);background:rgba(18,13,29,.88);box-shadow:0 18px 64px rgba(0,0,0,.25)}
+    html{width:100%;height:auto!important;min-height:100%;overflow-x:hidden!important;overflow-y:auto!important;scroll-behavior:auto}
+    body{position:static!important;inset:auto!important;width:100%;height:auto!important;min-height:100vh;overflow-x:hidden!important;overflow-y:visible!important;overscroll-behavior-y:auto;background:radial-gradient(ellipse at 50% 0%,#342047,#100d18 65%)}
+    .builder{width:min(900px,100%);margin:0 auto;padding:calc(22px + env(safe-area-inset-top)) 16px calc(48px + env(safe-area-inset-bottom));}
+    .builder-card{border:1px solid var(--border);border-radius:24px;padding:clamp(20px,4vw,34px);background:rgba(18,13,29,.88);box-shadow:0 18px 64px rgba(0,0,0,.25);overflow:visible}
+    .builder-card>*{max-width:100%}
+    @media(max-width:600px){.builder{padding-left:12px;padding-right:12px}.builder-card{padding:20px 16px}.actions .button{min-width:0;width:100%}}
     .builder h1{font-size:clamp(44px,9vw,66px);margin:18px 0 10px}
     .builder h1 span{color:#ff8d2b}
     .builder p{font-size:14px;line-height:1.6;color:#ddd3e5}
@@ -31,7 +33,6 @@
     code{background:rgba(255,255,255,.08);border-radius:4px;padding:2px 4px;color:#ffe0bc}
     .warn{border-left:3px solid #ff9b43;padding-left:12px;color:#ffd5b2!important}
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js" onerror="this.onerror=null;this.src='https://unpkg.com/mind-ar@1.2.5/dist/mindar-image.prod.js'"></script>
 </head>
 <body>
   <main class="builder">
@@ -70,6 +71,7 @@
       const status = document.getElementById('status');
       const progressFill = document.getElementById('progress-fill');
       let selectedFiles = [];
+      let compilerLoadPromise = null;
       const setStatus = (message, kind = '') => {
         status.textContent = message;
         status.className = 'status' + (kind ? ' ' + kind : '');
@@ -150,22 +152,53 @@
         link.remove();
         setTimeout(() => URL.revokeObjectURL(url), 1500);
       }
+      async function ensureCompilerLoaded() {
+        if (window.MINDAR && window.MINDAR.IMAGE && window.MINDAR.IMAGE.Compiler) return true;
+        if (compilerLoadPromise) return compilerLoadPromise;
+        compilerLoadPromise = (async () => {
+          const sources = [
+            'https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js',
+            'https://unpkg.com/mind-ar@1.2.5/dist/mindar-image.prod.js',
+            'https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.js',
+            'https://unpkg.com/mind-ar@1.2.5/dist/mindar-image.js'
+          ];
+          const failures = [];
+          for (const src of sources) {
+            setStatus('Loading image compiler…\nTrying ' + new URL(src).host);
+            try {
+              await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.async = true;
+                script.onload = () => {
+                  if (window.MINDAR && window.MINDAR.IMAGE && window.MINDAR.IMAGE.Compiler) resolve();
+                  else { script.remove(); reject(new Error('Script loaded but compiler API was not found')); }
+                };
+                script.onerror = () => { script.remove(); reject(new Error('Script download failed')); };
+                document.head.appendChild(script);
+              });
+              return true;
+            } catch (error) { failures.push(new URL(src).host + ': ' + error.message); }
+          }
+          throw new Error('All compiler CDNs failed. Details: ' + failures.join(' | '));
+        })();
+        try { return await compilerLoadPromise; }
+        finally { compilerLoadPromise = null; }
+      }
+
       buildButton.addEventListener('click', async () => {
         if (!selectedFiles.length) return;
         if (selectedFiles.length > 30) {
           setStatus('Please use 30 or fewer images per database so mobile tracking remains responsive.', 'bad');
           return;
         }
-        if (!window.MINDAR || !window.MINDAR.IMAGE || !window.MINDAR.IMAGE.Compiler) {
-          setStatus('The image compiler did not load. Check your internet connection, reload this page, and try again.', 'bad');
-          return;
-        }
         buildButton.disabled = true;
         input.disabled = true;
         loadFolderButton.disabled = true;
         progressFill.style.width = '2%';
-        setStatus('Loading reference images…');
+        setStatus('Preparing image compiler…');
         try {
+          await ensureCompilerLoaded();
           const images = [];
           for (const file of selectedFiles) images.push(await loadImage(file));
           const compiler = new window.MINDAR.IMAGE.Compiler();
@@ -201,13 +234,16 @@
           setStatus('Success! Downloaded targets.mind, target-manifest.json, and images-manifest.json. Upload targets.mind and target-manifest.json beside index.html. Put images-manifest.json inside images/ and rename it manifest.json. The selected source image files must also exist in images/.', 'good');
         } catch (error) {
           console.error(error);
-          setStatus('Could not compile these images. Try fewer/lower-resolution images, or replace images with clearer pictures that contain plenty of distinct visual detail. Details: ' + (error && error.message ? error.message : String(error)), 'bad');
+          setStatus('Could not compile these images. Try fewer/lower-resolution images, or replace images with clearer pictures that contain plenty of distinct visual detail.\n\nDetails: ' + (error && error.message ? error.message : String(error)), 'bad');
         } finally {
           buildButton.disabled = selectedFiles.length === 0;
           input.disabled = false;
           loadFolderButton.disabled = false;
         }
       });
+
+      // Automatically load the three project images so the builder is ready on arrival.
+      window.addEventListener('load', () => loadFolderButton.click(), { once: true });
     })();
   </script>
 </body>

@@ -206,7 +206,9 @@ function buildTargetDecoration(record) {
   const h = Math.max(0.35, Math.min(1.8, record.meta.aspectRatio || 0.75));
   const group = new THREE.Group();
   const pumpkin = createPumpkin();
-  pumpkin.position.set(0, -h * 0.30, 0.16);
+  // MindAR's image anchor origin is the center of the tracked reference image.
+  // Keep the pumpkin at that origin so it appears centered on all three photos.
+  pumpkin.position.set(0, 0, 0.16);
   pumpkin.scale.setScalar(Math.min(1, Math.max(0.62, h * 0.9)));
   pumpkin.userData.animateBaseY = pumpkin.position.y;
   group.add(pumpkin);
@@ -244,7 +246,7 @@ function startWin() {
   setTimeout(() => playSound(790, 0.28, 'triangle'), 100);
 }
 function showFoundMessage(record) {
-  setHint(`Found “${record.meta.filename}”! A pumpkin has appeared near the bottom of that image. Tap the pumpkin to smash it.`);
+  setHint(`Found “${record.meta.filename}”! A pumpkin has appeared at the center of that image. Tap the pumpkin to smash it.`);
   showToast('Reference image recognized — pumpkin spawned!');
   playSound(440, 0.1, 'triangle');
 }

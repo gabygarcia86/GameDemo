@@ -56,7 +56,7 @@ self.addEventListener('message', async (event) => {
           ymax: Number(item.box?.ymax || 0)
         }
       }));
-      self.postMessage({ type: 'detections', detections, width: message.width, height: message.height });
+      self.postMessage({ type: 'detections', scanId: message.scanId, detections, width: message.width, height: message.height });
     } catch (error) {
       self.postMessage({ type: 'scan-error', message: String(error?.message || error || 'Inference failed.') });
     } finally {

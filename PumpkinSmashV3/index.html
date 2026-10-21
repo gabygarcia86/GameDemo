@@ -60,7 +60,7 @@
       <div class="message-card">
         <div class="message-icon">💀</div>
         <h2>FIND SKELETONS</h2>
-        <p>The first run downloads an AI model of about 230 MB plus support files. The detector uses a short text prompt to avoid ONNX input-shape errors. Camera frames are analyzed on this device and are not uploaded by this game. For compatibility, this switches from tracked AR to camera-overlay mode, which cannot keep objects anchored to your physical walking position or use WebXR depth occlusion.</p>
+        <p>The first run downloads an AI model of about 230 MB plus support files. Camera frames are analyzed on this device and are not uploaded by this game. On compatible Android browsers, the scanner uses WebXR camera access plus real-world depth to place a pumpkin at the skeleton and create a persistent world anchor. If your browser does not expose both features, Pumpkin Smash! will use screen-following camera mode instead; in that fallback, the pumpkin cannot remain anchored when you turn away.</p>
         <button id="ai-confirm-start" class="button button-primary">ENABLE AI SCAN</button>
         <button id="ai-confirm-cancel" class="button button-secondary">CANCEL</button>
       </div>
@@ -91,7 +91,7 @@
   </main>
   <script type="module">
     // Surface module/CDN failures to the player instead of leaving dead buttons.
-    import('./game.js?v=skeleton-follow-3').catch((error) => {
+    import('./game.js?v=persistent-world-tracking-2').catch((error) => {
       console.error('Pumpkin Smash! failed to initialize:', error);
       const note = document.getElementById('start-note');
       if (note) {

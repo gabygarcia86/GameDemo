@@ -1,70 +1,83 @@
 # Pumpkin Smash! 🎃
 
-A mobile-friendly Halloween AR hunt built with HTML, CSS, JavaScript, and Three.js. Players search for five pumpkins to smash while bats fly overhead, zombies rise from the ground, skeletons dance, ghosts drift by, and a glowing full moon hangs high in the virtual sky.
+A mobile-first Halloween AR hunt built with HTML, CSS, JavaScript, and Three.js. Find five pumpkins while bats fly overhead, zombies rise from the ground, skeletons dance, ghosts drift past, and a full moon hangs in the sky.
 
-## What's improved in this build
+## Persistent skeleton-to-pumpkin tracking
 
-### Real surface placement (compatible WebXR devices)
+On a compatible mobile WebXR AR session, **AI SCAN** attempts to use both WebXR Raw Camera Access and CPU depth sensing. The scanner analyzes a pose-synchronized camera frame, samples real-world depth around the detected skeleton, converts that camera point into the tracked AR reference space, and creates a WebXR anchor there. After a pumpkin is anchored, moving the phone should change the view of the pumpkin naturally while the pumpkin stays at the same real-world point. Re-detecting the same 3D location will not intentionally spawn duplicate pumpkins; a different skeleton can reveal another one.
 
-The game requests immersive WebXR AR, horizontal hit-testing, and a floor reference space. Aim at a clear floor or table area. When the placement reticle appears, tap **PLACE WORLD** to put the Halloween scene there. The pumpkin group is then placed relative to that detected surface and follows the device's tracked movement instead of being drawn as a screen overlay. Persistent anchors are used when the runtime supports them.
+This path requires all of the following:
 
-The placement reticle only appears while selecting the initial surface. The pumpkins themselves do not have rings, outlines, arrows, or target markers.
+- A secure HTTPS page (GitHub Pages provides HTTPS).
+- A browser/device that can launch `immersive-ar` WebXR.
+- WebXR `camera-access` so the AI can inspect camera frames during the AR session.
+- WebXR CPU depth sensing so the detector's 2D location can be converted into a 3D position.
+- WebXR anchors where supported. If anchors are missing, the point falls back to the XR session's tracked reference space.
 
-### Real-world skeleton recognition (optional AI scan)
+**If any required camera/depth capability is missing, the game explicitly falls back to camera-overlay AI scanning.** That fallback positions the pumpkin over the screen-space center of the detected skeleton, but cannot keep it at a stable physical-world location after the skeleton leaves the camera view. In the fallback mode, browser UI (such as the Chrome address bar) usually remains visible. A successful immersive WebXR session generally takes over the screen. Browser UI alone is only a clue, not a complete compatibility test.
 
-Tap **AI SCAN** to analyze the live camera image for a Halloween skeleton decoration, a skeleton model, or a person wearing a skeleton costume. When the detector recognizes one, a pumpkin appears near the bottom of its detected image region. The pumpkin now lives in a camera-aligned overlay group, so image coordinates map directly to the rendered view and it follows the skeleton as successive detections update. A dashed outline shows the image region the AI currently identifies as the skeleton, making it easier to tell whether a bad placement comes from the detector or the pumpkin transform. It holds the last position through brief misses and hides if tracking is lost for several seconds, preventing it from floating in an unrelated spot. Re-enter with a different skeleton to reveal another pumpkin.
+WebXR raw camera access and depth sensing are experimental/limited-availability features and vary by browser, version, device, and AR runtime. The project never claims persistent anchoring when those APIs are unavailable.
 
-The scanner downloads Transformers.js and a quantized Grounding DINO model from public CDNs on first use (the model weights are about 227 MB, plus support files). The detector uses the short prompt `skeleton.` because this exported ONNX model can reject longer prompts with an `input_ids` dimension error. A reliable internet connection and a modern phone are recommended. Frames are processed locally in the browser; this project does not send camera frames to its own server. The model is loaded and run in a dedicated Web Worker so model inference does not block the animation loop and touch controls. Detection is intentionally throttled to reduce device load. Recognition is experimental: it can miss skeletons or mistake other shapes for one, and performance depends on the phone, lighting, camera distance, and model loading.
+## AI skeleton detector
 
-**AR and AI limitation:** WebXR immersive AR does not expose pose-synchronized raw camera frames consistently across browsers. For that reason, tapping **AI SCAN** exits tracked WebXR and switches to the ordinary camera-overlay mode for recognition. In this mode, the pumpkin can be placed beside a skeleton in the camera image, but cannot be accurately anchored to a real floor or use WebXR depth occlusion. Physical walking-position tracking is not available in this fallback mode. You can return to tracked AR by restarting the AR session.
+- The detector uses Transformers.js and a quantized Grounding DINO model hosted on public CDNs.
+- The first run downloads about 230 MB of model weights plus support files. Use reliable Wi-Fi and keep the page open while loading.
+- The worker uses the short prompt `skeleton.` to avoid an ONNX `input_ids` dimension error.
+- Model loading and inference run in `skeleton-worker.js`, separate from the UI thread so the game controls and animation can keep responding.
+- Frames are analyzed locally in the browser; the game does not upload them to its own server.
+- Skeleton detection is experimental. Results vary with lighting, camera distance, the shape/content of the skeleton, device performance, and model accuracy.
+- In camera-overlay fallback, the pumpkin is centered over the detected skeleton and follows it while detections continue. It does not have physical-world anchoring in this mode.
 
-### Shadows and optional depth occlusion
+## Surface placement, depth, and Halloween atmosphere
 
-The tracked AR scene includes soft contact shadows under the pumpkins and characters. The game requests WebXR depth sensing as an optional capability, and uses Three.js's depth-sensing mesh when exposed by the browser/runtime. If supported, physical surfaces can occlude virtual objects. Depth sensing is hardware/browser dependent; the game still runs without it, but only contact shadows remain.
+- The game requests a floor reference space and horizontal hit testing. Aim at a visible floor/table and press **PLACE WORLD** when the reticle appears.
+- Soft contact shadows help ground virtual objects.
+- Optional depth occlusion is used only where the AR runtime exposes suitable depth features.
+- Bats fly overhead, zombies rise from the ground, skeletons dance, ghosts drift, and the moon sits high in the virtual sky.
+- The hint pill stays near the top of the screen in portrait and landscape layouts.
 
-### Halloween atmosphere
+## Run locally
 
-- Bats fly above the play area.
-- Zombies repeatedly rise from and sink into the floor.
-- Skeletons dance near ground level.
-- Ghosts float through the scene at different heights.
-- A large full moon and distant stars sit high above the scene.
-
-## Play locally
-
-Camera access requires HTTPS or localhost. The easiest local test is VS Code's Live Server extension, or Python's built-in server:
+Camera access requires HTTPS or localhost. With Python installed, run:
 
 ```bash
 cd PumpkinSmashV3
 python -m http.server 8000
 ```
 
-Then open `http://localhost:8000` in a browser. For tracked AR, test the published HTTPS site directly on a compatible phone browser. Demo Mode works without camera permission.
+Open `http://localhost:8000`. Demo Mode works without camera permission. For actual mobile AR, test the published HTTPS page on a compatible phone.
 
-## Publish inside a GitHub Pages site
+## Publish in a GitHub Pages repository
 
-1. Copy the entire `pumpkin-smash` folder into your GitHub Pages repository.
-2. Commit and push the files.
-3. Make sure GitHub Pages is enabled for the repository (Settings → Pages).
-4. Open the folder URL. For a project site it usually looks like `https://USERNAME.github.io/REPOSITORY/pumpkin-smash/`. For a user/organization site, it usually looks like `https://USERNAME.github.io/pumpkin-smash/`.
-5. Open the link directly on your phone and approve camera permissions when prompted.
+1. Keep `index.html`, `styles.css`, `game.js`, `skeleton-worker.js`, and `README.md` together inside the `pumpkin-smash` folder.
+2. Upload/replace those files in your repository, keeping the folder's location the same.
+3. Commit the changes and wait for GitHub Pages to publish them.
+4. Open the folder URL on your phone and allow camera access when asked.
+5. Refresh the page after deploying. If the old code still appears, open the URL in a private tab or clear the site's cache.
 
-Keep `index.html`, `styles.css`, `game.js`, `skeleton-worker.js`, and this README together. The worker file must be uploaded alongside `game.js` or AI scan cannot start. Three.js is loaded from jsDelivr; the AI scanner also downloads Transformers.js and the detector model when first used.
+For example, a project site's URL usually resembles `https://USERNAME.github.io/REPOSITORY/pumpkin-smash/`.
 
 ## Controls
 
-- **PLAY IN AR:** attempts tracked WebXR AR; falls back to a live camera overlay if immersive AR is unavailable.
-- **PLACE WORLD:** in tracked AR, aim the reticle at a clear floor/table area and tap the button to anchor the scene.
-- **AI SCAN:** turns on optional camera-based skeleton recognition. If you were in tracked AR, this changes to camera-overlay mode because raw frames aren't broadly available within WebXR.
-- **CAMERA:** returns to demo mode.
-- **RESET:** restores the five pumpkins. While AI scan is active, it resets the skeleton-trigger state too.
+- **PLAY IN AR:** attempts immersive WebXR. If that cannot start, the game explicitly enters camera-overlay fallback.
+- **PLACE WORLD:** in tracked AR, aim at a floor/table and tap to place the Halloween scene.
+- **AI SCAN:** when camera access plus CPU depth are available in WebXR, tries persistent world-tracked skeleton anchoring. Otherwise it explains the fallback and uses screen-following recognition.
+- **CAMERA:** toggles back to the non-AR/demo view.
+- **RESET:** resets all five pumpkins and clears existing skeleton anchors.
 - **Sound button:** enables or mutes synthesized sound effects.
 
-## Safety
+## Troubleshooting
 
-Use a clear area, stay away from roads, stairs, and obstacles, and stop moving before tapping a pumpkin. Keep awareness of your surroundings. Never play while driving or near traffic.
+- **The screen still shows the browser address bar after PLAY IN AR:** the page is probably in camera-overlay fallback. Check that the device/browser supports immersive WebXR AR and that the device's AR runtime is installed/available. The UI now says explicitly when tracked AR did not start.
+- **AI scan says depth/camera access is unavailable:** this browser session did not provide both raw camera frames and CPU depth, so persistent skeleton anchoring cannot be computed. The scanner offers camera-overlay mode, which only follows a visible skeleton on-screen.
+- **The skeleton is detected but no pumpkin appears in tracked AR:** the session may not provide usable depth at the detected point. The game pauses the persistent scanner and explains when you should switch modes or try a compatible device.
+- **AI scan reports `Got invalid dimensions for input: input_ids`:** ensure all files were replaced, especially `skeleton-worker.js`, and hard-refresh the site. The worker uses a single short prompt (`skeleton.`).
+- **AI model is slow to load:** the model download is large. Keep the tab open on a reliable connection; older phones may run short on memory or processing power.
+- **Pumpkin position is wrong in camera-overlay mode:** the box drawn by the detector may be inaccurate. Improve lighting, move closer, and keep most of the skeleton in view. Screen-overlay mode cannot provide persistent physical tracking.
+- **No floor reticle:** WebXR hit testing may not be available, or the camera may not see a horizontal surface. Slowly aim across a well-lit floor or table.
+- **No depth occlusion:** real-world occlusion requires compatible depth sensing. The game still works with contact shadows where available.
 
-## Project structure
+## Project files
 
 ```text
 pumpkin-smash/
@@ -75,25 +88,6 @@ pumpkin-smash/
 └── README.md
 ```
 
-## Troubleshooting
+## Safety
 
-- **3D engine fails to load:** check the internet connection and whether jsDelivr is blocked, then reload.
-- **Camera permission doesn't appear:** allow camera access in the browser's site settings.
-- **No PLACE WORLD reticle:** the browser/device may not support WebXR hit testing, or the camera may not be aimed at a detectable horizontal surface. Try a slow sweep across a well-lit floor or table.
-- **Tracked AR does not start:** WebXR immersive AR is not available in every browser or device. Use Demo Mode or camera-overlay fallback.
-- **AI scan reports `Got invalid dimensions for input: input_ids`:** this build sends one short `skeleton.` prompt. Keep all project files together and use the current build. The first scan downloads a large model; keep the tab open on a reliable connection. Older phones may also run out of memory or processing capacity.
-- **AI scan previously froze the game after saying it was ready:** this version moves model loading and each detection run into `skeleton-worker.js`, so the main render loop and touch controls do not wait for ONNX inference. Make sure you upload `skeleton-worker.js` alongside `game.js`, replace the other project files too, commit, and refresh the page. The HTML includes a cache-busting version on the main module so GitHub Pages is less likely to keep running the old scanner.
-- **Depth occlusion isn't visible:** depth sensing requires compatible device/browser support. Contact shadows work as a fallback.
-- **Pumpkin appears in the wrong corner:** replace every project file and refresh the browser cache. This version uses a dedicated camera-aligned scene group for the AI-spawned pumpkin, maps its screen position directly from the detector box, and briefly holds tracking through short missed detections. If the model draws an incorrect box, the pumpkin can still appear misplaced; improve lighting and keep the full skeleton in frame.
-
-## Skeleton tracking limits
-
-The AI-scan mode follows the real skeleton through successive camera detections and keeps the same pumpkin across short detection gaps. This is image-space tracking, not a guaranteed physical-world anchor: if the skeleton leaves view for a long time or the player moves around it, standard camera-overlay mode cannot know the skeleton's exact 3D position. Full world anchoring requires camera pose plus reliable depth/AR tracking support on the device.
-
-### UI changes in this revision
-
-- In portrait mode, the hint pill stays near the top of the screen below the brand/score row instead of being flex-distributed into the middle. Landscape retains its compact top placement.
-- AI detection uses a slightly higher portrait analysis resolution and a lower confidence threshold to improve recall on phone-captured skeleton decorations. This can increase false positives.
-- The AI pumpkin uses camera-aligned coordinates while scanning, so it follows the detection on screen instead of relying on a stale world transform. This cannot create physical-world anchoring while running in camera-overlay mode.
-
-- **Orange dashed box during AI scan:** this is a visual guide to the region the detector thinks contains the skeleton. If the box is not around the skeleton, recognition is wrong; improve lighting, move closer, and keep the full decoration in frame. The pumpkin is positioned near the bottom of this box.
+Use an open, obstacle-free area. Stop walking before tapping a pumpkin, and keep awareness of nearby furniture, stairs, traffic, and other people. Never play while driving or near traffic.

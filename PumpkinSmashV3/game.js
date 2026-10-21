@@ -74,6 +74,19 @@ let latestHitTestResult = null;
 let latestSurfaceMatrix = null;
 let worldPlaced = false;
 let worldAnchor = null;
+let xrCameraAccessAvailable = false;
+let xrCameraBinding = null;
+let xrCameraReadbackFramebuffer = null;
+let xrScanIdCounter = 0;
+let xrScanLastSubmittedAt = 0;
+const xrScanMetadata = new Map();
+let xrWorldTrackingTarget = null;
+let xrWorldCandidate = null;
+let xrPendingSkeletonAnchor = null;
+let xrAnchorCreationPending = false;
+let xrCameraAccessWarned = false;
+let xrCameraReadFailures = 0;
+let xrDepthMissCount = 0;
 let depthMesh = null;
 let depthSensingSeen = false;
 let depthCheckThrottle = 0;
@@ -515,6 +528,7 @@ function enableOrientationControls() {
 
 async function startCamera() {
   $('start-note').textContent = 'Starting AR…';
+  let xrStartFailure = null;
 
   // On browsers that need a separate motion-sensor permission, request it directly
   // inside this tap. True WebXR AR does not depend on these fallback controls.
@@ -531,10 +545,10 @@ async function startCamera() {
       // and the game's touch controls work in this mode.
       session = await navigator.xr.requestSession('immersive-ar', {
         requiredFeatures: ['local-floor', 'hit-test', 'dom-overlay'],
-        optionalFeatures: ['anchors', 'depth-sensing'],
+        optionalFeatures: ['anchors', 'depth-sensing', 'camera-access'],
         depthSensing: {
-          usagePreference: ['gpu-optimized', 'cpu-optimized'],
-          dataFormatPreference: ['luminance-alpha', 'float32']
+          usagePreference: ['cpu-optimized', 'gpu-optimized'],
+          dataFormatPreference: ['float32', 'luminance-alpha']
         },
         domOverlay: { root: document.body }
       });
@@ -545,6 +559,14 @@ async function startCamera() {
       orientationControls = null;
       await renderer.xr.setSession(session);
       xrSession = session;
+      xrCameraAccessAvailable = Boolean(session.enabledFeatures?.includes?.('camera-access'));
+      xrCameraBinding = null;
+      xrCameraReadbackFramebuffer = null;
+      xrScanMetadata.clear();
+      xrScanLastSubmittedAt = 0;
+      xrCameraAccessWarned = false;
+      xrCameraReadFailures = 0;
+      xrDepthMissCount = 0;
       session.addEventListener('end', handleXRSessionEnd, { once: true });
       session.addEventListener('select', handleXRSelect);
       xrViewerSpace = await session.requestReferenceSpace('viewer');
@@ -564,11 +586,14 @@ async function startCamera() {
       toastMessage('Scan the floor to anchor your Halloween world.');
       return;
     } catch (error) {
+      xrStartFailure = error;
       console.info('Tracked WebXR AR is unavailable here; trying camera-overlay fallback.', error);
       if (session) {
         try { await session.end(); } catch (_) { /* session may already have ended */ }
       }
     }
+  } else {
+    xrStartFailure = new Error('WebXR immersive-ar is not available in this browser.');
   }
 
   if (!navigator.mediaDevices?.getUserMedia) {
@@ -591,7 +616,10 @@ async function startCamera() {
     contentRoot.visible = true;
     setContactShadowsVisible(false);
     beginGame();
-    if (motionAllowed) {
+    if (xrStartFailure) {
+      hintText.textContent = 'CAMERA OVERLAY MODE: this browser could not start tracked WebXR AR. AI pumpkins can follow a visible skeleton, but cannot stay world-anchored when you turn away.';
+      toastMessage('Tracked AR unavailable — using camera overlay.');
+    } else if (motionAllowed) {
       toastMessage('Turn around to search for pumpkins.');
     } else {
       toastMessage('Camera mode: turn your phone to search.');
@@ -609,7 +637,12 @@ async function startCamera() {
 }
 
 function handleXRSessionEnd() {
+  clearXrSkeletonAnchors(true);
   xrSession = null;
+  xrCameraAccessAvailable = false;
+  xrCameraBinding = null;
+  xrCameraReadbackFramebuffer = null;
+  xrScanMetadata.clear();
   hitTestSource?.cancel?.();
   hitTestSource = null;
   xrViewerSpace = null;
@@ -653,6 +686,10 @@ function beginGame() {
   if (skeletonScanEnabled && gameMode === 'camera') {
     visionTargetPumpkin = null;
     interactivePumpkins.forEach((p) => { p.visible = false; });
+  } else if (skeletonScanEnabled && gameMode === 'xr') {
+    interactivePumpkins.forEach((p) => {
+      if (!p.userData.smashed && !p.userData.xrWorldTracked) p.visible = false;
+    });
   }
   startScreen.classList.add('hidden');
   permissionScreen.classList.add('hidden');
@@ -1002,7 +1039,10 @@ renderer.domElement.addEventListener('pointerup', (event) => {
 renderer.domElement.addEventListener('pointercancel', () => { pointerDown = null; });
 
 function animate(_time, xrFrame) {
-  if (gameMode === 'xr' && xrFrame) updateXRSurfaceAndDepth(xrFrame);
+  if (gameMode === 'xr' && xrFrame) {
+    updateXRSurfaceAndDepth(xrFrame);
+    if (skeletonScanEnabled) scanXRCameraForSkeleton(xrFrame);
+  }
   const dt = Math.min(clock.getDelta(), 0.04);
   elapsed += dt;
   const t = elapsed;
@@ -1027,6 +1067,10 @@ function animate(_time, xrFrame) {
       const v = p.userData.visionScreen;
       cameraScreenPosition(p, v.x, v.y, -1.85);
       p.rotation.set(0, 0, Math.sin(t * 1.2 + i) * 0.025);
+    } else if (gameMode === 'xr' && p.userData.xrWorldTracked) {
+      // Leave anchored pumpkin translation untouched. A tiny scale-independent bob
+      // would break exact overlay alignment, so the persistent collectible stays steady.
+      p.rotation.z = 0;
     } else {
       const base = p.userData.worldBase;
       if (base) p.position.y = base.y + Math.sin(t * 1.5 + i) * 0.012;
@@ -1228,6 +1272,9 @@ function updateXRSurfaceAndDepth(frame) {
       }
     } catch (_) { /* Use the latest reference-space pose if anchors are unsupported. */ }
   }
+
+  processPendingXRSkeletonAnchor(frame, referenceSpace);
+  updateXRSkeletonAnchorPoses(frame, referenceSpace);
 }
 
 // Run vision inference in a module worker. Grounding DINO can take seconds on a
@@ -1259,7 +1306,13 @@ function handleSkeletonWorkerMessage(event) {
   }
   if (data.type === 'detections') {
     skeletonScanBusy = false;
-    handleSkeletonDetections(data.detections, data.width, data.height);
+    if (gameMode === 'xr' && skeletonScanEnabled) {
+      const metadata = xrScanMetadata.get(data.scanId);
+      xrScanMetadata.delete(data.scanId);
+      if (metadata) handleXRSkeletonDetections(data.detections, data.width, data.height, metadata);
+    } else {
+      handleSkeletonDetections(data.detections, data.width, data.height);
+    }
     return;
   }
   if (data.type === 'scan-error') {
@@ -1270,7 +1323,10 @@ function handleSkeletonWorkerMessage(event) {
     hintText.textContent = 'AI scan paused because the detector reported an error. You can still use the other game controls; tap AI SCAN to retry.';
     stopSkeletonScan(false);
     visionTargetPumpkin = null;
-    interactivePumpkins.forEach(p => { if (!p.userData.smashed) p.visible = true; });
+    interactivePumpkins.forEach(p => {
+      if (p.userData.smashed) return;
+      p.visible = gameMode === 'xr' ? Boolean(p.userData.xrWorldTracked) : true;
+    });
     return;
   }
   if (data.type === 'loading') {
@@ -1296,7 +1352,10 @@ function handleSkeletonWorkerError(event) {
     hintText.textContent = 'AI scanner stopped unexpectedly. The game controls remain available; tap AI SCAN to retry.';
     stopSkeletonScan(false);
     visionTargetPumpkin = null;
-    interactivePumpkins.forEach(p => { if (!p.userData.smashed) p.visible = true; });
+    interactivePumpkins.forEach(p => {
+      if (p.userData.smashed) return;
+      p.visible = gameMode === 'xr' ? Boolean(p.userData.xrWorldTracked) : true;
+    });
   }
 }
 
@@ -1329,6 +1388,443 @@ async function loadSkeletonDetector() {
   }
 
   return skeletonWorkerReadyPromise;
+}
+
+// Persistent AI-in-AR tracking. These routines keep detection in the same WebXR
+// session as positional tracking, instead of switching to a screen-space camera overlay.
+function copyXRDepthSnapshot(frame, view) {
+  try {
+    if (!xrSession || xrSession.depthUsage !== 'cpu-optimized' || typeof frame.getDepthInformation !== 'function') return null;
+    const info = frame.getDepthInformation(view);
+    if (!info?.data) return null;
+    return {
+      width: info.width,
+      height: info.height,
+      format: xrSession.depthDataFormat || 'luminance-alpha',
+      rawValueToMeters: Number(info.rawValueToMeters) || 1,
+      normTransform: Array.from(info.normDepthBufferFromNormView.matrix),
+      data: info.data.slice(0)
+    };
+  } catch (_) {
+    return null;
+  }
+}
+
+function readXRCameraPixels(frame, view) {
+  if (!xrSession || !view?.camera || typeof XRWebGLBinding !== 'function') return null;
+  const gl = renderer.getContext();
+  if (!xrCameraBinding) xrCameraBinding = new XRWebGLBinding(xrSession, gl);
+  const texture = xrCameraBinding.getCameraImage(view.camera);
+  if (!texture) return null;
+
+  const width = view.camera.width;
+  const height = view.camera.height;
+  if (!width || !height) return null;
+  if (!xrCameraReadbackFramebuffer) xrCameraReadbackFramebuffer = gl.createFramebuffer();
+
+  const previousFramebuffer = gl.getParameter(gl.FRAMEBUFFER_BINDING);
+  const previousViewport = gl.getParameter(gl.VIEWPORT);
+  let rawPixels = new Uint8Array(width * height * 4);
+  try {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, xrCameraReadbackFramebuffer);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+    if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
+      throw new Error('The browser exposed the AR camera texture but did not allow pixel readback.');
+    }
+    gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, rawPixels);
+    const glError = gl.getError();
+    if (glError !== gl.NO_ERROR) throw new Error(`AR camera readback failed (WebGL ${glError}).`);
+  } finally {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, previousFramebuffer);
+    gl.viewport(previousViewport[0], previousViewport[1], previousViewport[2], previousViewport[3]);
+    // Raw WebGL operations are outside Three.js's state cache; reset it before rendering.
+    renderer.resetState();
+  }
+
+  // WebGL readPixels starts at the bottom-left. The model and bounding boxes use top-left.
+  const flipped = new Uint8ClampedArray(rawPixels.length);
+  const rowBytes = width * 4;
+  for (let y = 0; y < height; y++) {
+    const sourceOffset = (height - 1 - y) * rowBytes;
+    flipped.set(rawPixels.subarray(sourceOffset, sourceOffset + rowBytes), y * rowBytes);
+  }
+
+  // Grounding DINO does not need full sensor resolution. Downscale after readback to
+  // reduce worker transfer size and inference latency on mobile phones.
+  const factor = Math.min(1, 900 / Math.max(width, height));
+  const outWidth = Math.max(1, Math.round(width * factor));
+  const outHeight = Math.max(1, Math.round(height * factor));
+  if (outWidth === width && outHeight === height) return { width, height, pixels: flipped };
+  const scaled = new Uint8ClampedArray(outWidth * outHeight * 4);
+  for (let y = 0; y < outHeight; y++) {
+    const sy = Math.min(height - 1, Math.floor(y / factor));
+    for (let x = 0; x < outWidth; x++) {
+      const sx = Math.min(width - 1, Math.floor(x / factor));
+      const source = (sy * width + sx) * 4;
+      const target = (y * outWidth + x) * 4;
+      scaled[target] = flipped[source];
+      scaled[target + 1] = flipped[source + 1];
+      scaled[target + 2] = flipped[source + 2];
+      scaled[target + 3] = flipped[source + 3];
+    }
+  }
+  return { width: outWidth, height: outHeight, pixels: scaled };
+}
+
+function pauseXRWorldScan(message) {
+  // Stop the unsupported path cleanly without ending the user's AR session.
+  xrCameraAccessAvailable = false;
+  xrCameraReadFailures = 0;
+  xrDepthMissCount = 0;
+  stopSkeletonScan(false);
+  interactivePumpkins.forEach((pumpkin) => {
+    if (pumpkin.userData.smashed) return;
+    pumpkin.visible = Boolean(pumpkin.userData.xrWorldTracked);
+  });
+  hintText.textContent = message;
+  toastMessage('Persistent AI scan unavailable. Tap AI SCAN for camera-only fallback.');
+}
+
+function scanXRCameraForSkeleton(frame) {
+  if (!skeletonScanEnabled || gameMode !== 'xr' || !xrSession || skeletonScanBusy || !skeletonDetectorReady || !skeletonWorker) return;
+  const now = performance.now();
+  if (now - xrScanLastSubmittedAt < 1350) return;
+  xrScanLastSubmittedAt = now;
+  const referenceSpace = renderer.xr.getReferenceSpace();
+  if (!referenceSpace) return;
+  const viewerPose = frame.getViewerPose(referenceSpace);
+  const view = viewerPose?.views?.find(candidate => candidate.camera);
+  if (!view?.camera) {
+    if (!xrCameraAccessWarned) {
+      xrCameraAccessWarned = true;
+      pauseXRWorldScan('This WebXR session did not expose camera frames. Tap AI SCAN again to use screen-following camera mode; it cannot persist when you turn away.');
+    }
+    return;
+  }
+  try {
+    const image = readXRCameraPixels(frame, view);
+    if (!image) throw new Error('The AR camera texture was not available for this frame.');
+    xrCameraReadFailures = 0;
+    const scanId = ++xrScanIdCounter;
+    const viewTransform = Array.from(view.transform.matrix);
+    const projection = Array.from(view.projectionMatrix);
+    const depth = copyXRDepthSnapshot(frame, view);
+    const metadata = {
+      scanId,
+      width: image.width,
+      height: image.height,
+      viewTransform,
+      projection,
+      depth,
+      referenceSpace,
+      capturedAt: now
+    };
+    xrScanMetadata.set(scanId, metadata);
+    // Keep only the most recent few frames in case a browser delivers late worker messages.
+    while (xrScanMetadata.size > 3) xrScanMetadata.delete(xrScanMetadata.keys().next().value);
+    skeletonScanBusy = true;
+    xrScanLastSubmittedAt = now;
+    skeletonWorker.postMessage({
+      type: 'scan', scanId, width: image.width, height: image.height,
+      pixels: image.pixels.buffer
+    }, [image.pixels.buffer]);
+  } catch (error) {
+    console.warn('Could not read the pose-synchronized AR camera frame:', error);
+    skeletonScanBusy = false;
+    xrCameraReadFailures++;
+    xrCameraAccessWarned = true;
+    if (xrCameraReadFailures >= 3) {
+      pauseXRWorldScan('The browser exposed the AR camera but could not read its image frames. Use AI SCAN again for screen-following mode, or try a browser/device with WebXR camera access.');
+    } else {
+      hintText.textContent = 'Checking AR camera access… the game remains responsive while the camera interface is tested.';
+    }
+  }
+}
+
+function sampleXRDepthMeters(depth, u, v) {
+  if (!depth?.data || !depth.width || !depth.height) return null;
+  try {
+    const transform = new THREE.Matrix4().fromArray(depth.normTransform);
+    const normalized = new THREE.Vector4(
+      THREE.MathUtils.clamp(u, 0, 1), THREE.MathUtils.clamp(v, 0, 1), 0, 1
+    ).applyMatrix4(transform);
+    const w = Math.abs(normalized.w) > 1e-6 ? normalized.w : 1;
+    const centerX = THREE.MathUtils.clamp(Math.floor((normalized.x / w) * depth.width), 0, depth.width - 1);
+    const centerY = THREE.MathUtils.clamp(Math.floor((normalized.y / w) * depth.height), 0, depth.height - 1);
+    let values;
+    if (depth.format === 'float32') values = new Float32Array(depth.data);
+    else if (depth.format === 'luminance-alpha' || depth.format === 'unsigned-short') values = new Uint16Array(depth.data);
+    else return null;
+
+    // Sample a tiny neighborhood and take its median. A single missing/noisy depth
+    // pixel at the skeleton center otherwise prevents an otherwise valid anchor.
+    const samples = [];
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        const x = THREE.MathUtils.clamp(centerX + dx, 0, depth.width - 1);
+        const y = THREE.MathUtils.clamp(centerY + dy, 0, depth.height - 1);
+        const meters = values[y * depth.width + x] * depth.rawValueToMeters;
+        if (Number.isFinite(meters) && meters > 0.12 && meters < 12) samples.push(meters);
+      }
+    }
+    if (!samples.length) return null;
+    samples.sort((a, b) => a - b);
+    return samples[Math.floor(samples.length / 2)];
+  } catch (error) {
+    console.debug('Could not sample AR depth data:', error);
+    return null;
+  }
+}
+
+function worldPointFromXRSkeleton(detection, imageWidth, imageHeight, metadata) {
+  if (!metadata?.projection || !metadata?.viewTransform) return null;
+  const box = detection.box;
+  // Anchor to the center of the detected skeleton so the pumpkin visually stays
+  // over that same physical location as the player changes camera position.
+  const u = THREE.MathUtils.clamp(((box.xmin + box.xmax) * 0.5) / imageWidth, 0.015, 0.985);
+  const v = THREE.MathUtils.clamp(((box.ymin + box.ymax) * 0.5) / imageHeight, 0.015, 0.985);
+  const depth = sampleXRDepthMeters(metadata.depth, u, v);
+  if (!depth) return null;
+
+  const projection = metadata.projection;
+  const ndcX = 2 * u - 1;
+  const ndcY = 1 - 2 * v;
+  // Inverse of the usual perspective projection for a point at the measured camera-space depth.
+  const cameraX = ((ndcX + projection[8]) / projection[0]) * depth;
+  const cameraY = ((ndcY + projection[9]) / projection[5]) * depth;
+  const cameraPoint = new THREE.Vector3(cameraX, cameraY, -depth);
+  const cameraToWorld = new THREE.Matrix4().fromArray(metadata.viewTransform);
+  const worldPosition = cameraPoint.applyMatrix4(cameraToWorld);
+  const cameraPosition = new THREE.Vector3().setFromMatrixPosition(cameraToWorld);
+  // Move the pumpkin a few centimetres toward the viewer so it appears in front of a
+  // physical skeleton or a skeleton shown on a monitor, without remaining screen-locked.
+  const towardViewer = cameraPosition.clone().sub(worldPosition).normalize();
+  worldPosition.addScaledVector(towardViewer, 0.045);
+
+  const boxHeight = Math.max(1, box.ymax - box.ymin);
+  const focalPixels = Math.max(1, (projection[5] * imageHeight) / 2);
+  const estimatedSkeletonHeight = (boxHeight * depth) / focalPixels;
+  // The pumpkin mesh is roughly two world units tall; keep it around one third of
+  // the detected skeleton's height so it reads as an overlay, not a giant foreground prop.
+  const pumpkinScale = THREE.MathUtils.clamp(estimatedSkeletonHeight * 0.18, 0.08, 0.28);
+  const towardViewerYaw = Math.atan2(cameraPosition.x - worldPosition.x, cameraPosition.z - worldPosition.z);
+  const orientation = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), towardViewerYaw);
+  return { position: worldPosition, orientation, scale: pumpkinScale, u, v, depth };
+}
+
+function spawnAnchoredPumpkinForSkeleton(detection, imageWidth, imageHeight, metadata, worldPlacement) {
+  const target = interactivePumpkins.find(p => !p.userData.xrAnchorSpawned && !p.userData.smashed);
+  if (!target) {
+    toastMessage('Skeleton detected, but all five pumpkins have been used. Tap RESET to hunt again.');
+    return false;
+  }
+  if (!target.userData.xrOriginalTransform) {
+    target.userData.xrOriginalTransform = {
+      parent: target.parent,
+      position: target.position.clone(),
+      quaternion: target.quaternion.clone(),
+      scale: target.scale.clone()
+    };
+  }
+  // Anchored pumpkins live directly under scene, so their transforms use the same
+  // WebXR reference-space coordinates as XRAnchor.anchorSpace (not contentRoot-local space).
+  scene.attach(target);
+  target.userData.xrAnchorSpawned = true;
+  target.userData.xrWorldTracked = true;
+  target.userData.xrSkeletonAnchor = null;
+  target.userData.visionSpawned = true;
+  target.userData.visionScreen = null;
+  target.userData.lastVisionSeenAt = performance.now();
+  target.userData.lastVisionBox = { ...detection.box };
+  target.userData.worldBase = null;
+  target.position.copy(worldPlacement.position);
+  target.quaternion.copy(worldPlacement.orientation);
+  target.scale.setScalar(worldPlacement.scale);
+  target.rotation.z = 0;
+  target.visible = true;
+  target.userData.xrAnchorDepthMeters = worldPlacement.depth;
+  xrWorldTrackingTarget = target;
+  visionTargetPumpkin = target;
+  xrPendingSkeletonAnchor = {
+    target,
+    position: worldPlacement.position.clone(),
+    orientation: worldPlacement.orientation.clone()
+  };
+  xrAnchorCreationPending = false;
+  makeSound('win');
+  toastMessage(`SKELETON SPOTTED · ${Math.round(detection.score * 100)}% · WORLD ANCHORED!`);
+  hintText.textContent = 'Pumpkin world-anchored at the skeleton’s detected position. Turn or walk around safely; it should stay at that real-world spot.';
+  updateHud();
+  return true;
+}
+
+function handleXRSkeletonDetections(detections, imageWidth, imageHeight, metadata) {
+  if (!skeletonScanEnabled || gameMode !== 'xr' || !metadata) return;
+  const now = performance.now();
+  const candidates = (Array.isArray(detections) ? detections : [])
+    .map(item => normalizeSkeletonDetection(item, imageWidth, imageHeight))
+    .filter(item => item && /skeleton/i.test(item.label) && item.score >= 0.14);
+  let hit = null;
+  if (candidates.length) {
+    const previousBox = lastTrackedSkeletonBox && now - skeletonLastSeenAt < 5000 ? lastTrackedSkeletonBox : null;
+    if (previousBox) {
+      const oldX = (previousBox.xmin + previousBox.xmax) * 0.5 / imageWidth;
+      const oldY = (previousBox.ymin + previousBox.ymax) * 0.5 / imageHeight;
+      const nearby = candidates.map(item => {
+        const x = (item.box.xmin + item.box.xmax) * 0.5 / imageWidth;
+        const y = (item.box.ymin + item.box.ymax) * 0.5 / imageHeight;
+        return { item, distance: Math.hypot(x - oldX, y - oldY) };
+      }).filter(entry => entry.distance < 0.45).sort((a, b) => (b.item.score - b.distance * 0.25) - (a.item.score - a.distance * 0.25));
+      if (nearby.length) hit = nearby[0].item;
+    }
+    if (!hit) hit = candidates.sort((a, b) => b.score - a.score)[0];
+  }
+
+  if (hit) {
+    skeletonPresent = true;
+    skeletonMissFrames = 0;
+    skeletonLastSeenAt = now;
+    lastTrackedSkeletonBox = { ...hit.box };
+    const worldPlacement = worldPointFromXRSkeleton(hit, imageWidth, imageHeight, metadata);
+    if (!worldPlacement) {
+      xrWorldCandidate = null;
+      xrDepthMissCount++;
+      if (xrDepthMissCount >= 3) {
+        pauseXRWorldScan('The skeleton is visible, but this session did not provide usable depth to calculate a persistent 3D anchor. Tap AI SCAN again for screen-following mode; try a compatible AR device for persistent placement.');
+      } else {
+        hintText.textContent = 'Skeleton detected. Reading its real-world depth so the pumpkin can anchor in place…';
+      }
+      return;
+    }
+    xrDepthMissCount = 0;
+
+    // A repeat detection of the same physical skeleton should not spawn duplicates.
+    // Compare 3D positions, not image boxes, because the image box moves as the player
+    // walks around while the same real-world point remains near its existing anchor.
+    const alreadyAnchored = interactivePumpkins.find((pumpkin) =>
+      pumpkin.userData.xrAnchorSpawned && pumpkin.parent === scene &&
+      pumpkin.position.distanceTo(worldPlacement.position) < 0.62
+    );
+    if (alreadyAnchored) {
+      xrWorldCandidate = null;
+      xrWorldTrackingTarget = alreadyAnchored;
+      visionTargetPumpkin = alreadyAnchored;
+      hintText.textContent = alreadyAnchored.userData.smashed
+        ? 'This skeleton already revealed a pumpkin. Look for a different skeleton to discover another.'
+        : 'Pumpkin anchored to this skeleton. Smash it, then look around for another skeleton.';
+      return;
+    }
+
+    if (xrWorldCandidate && xrWorldCandidate.position.distanceTo(worldPlacement.position) < 0.23) {
+      xrWorldCandidate.position.lerp(worldPlacement.position, 0.5);
+      xrWorldCandidate.orientation.slerp(worldPlacement.orientation, 0.5);
+      xrWorldCandidate.scale = xrWorldCandidate.scale * 0.5 + worldPlacement.scale * 0.5;
+      xrWorldCandidate.count++;
+    } else {
+      xrWorldCandidate = {
+        position: worldPlacement.position.clone(),
+        orientation: worldPlacement.orientation.clone(),
+        scale: worldPlacement.scale,
+        count: 1
+      };
+    }
+    if (xrWorldCandidate.count >= 2) {
+      const stable = {
+        position: xrWorldCandidate.position.clone(),
+        orientation: xrWorldCandidate.orientation.clone(),
+        scale: xrWorldCandidate.scale,
+        depth: worldPlacement.depth
+      };
+      spawnAnchoredPumpkinForSkeleton(hit, imageWidth, imageHeight, metadata, stable);
+      xrWorldCandidate = null;
+    } else {
+      hintText.textContent = `Skeleton recognized (${Math.round(hit.score * 100)}%). Stabilizing its real-world position…`;
+    }
+  } else {
+    skeletonMissFrames++;
+    if (skeletonMissFrames >= 3) skeletonPresent = false;
+    if (skeletonMissFrames >= 3) xrWorldCandidate = null;
+    if (!xrWorldTrackingTarget) {
+      hintText.textContent = 'No skeleton detected yet. Move closer, improve lighting, and keep most of the skeleton in view.';
+    } else {
+      hintText.textContent = 'Skeleton temporarily out of view. Its pumpkin remains anchored in the AR world.';
+    }
+  }
+}
+
+function processPendingXRSkeletonAnchor(frame, referenceSpace) {
+  if (!xrPendingSkeletonAnchor || xrAnchorCreationPending || !frame || !referenceSpace) return;
+  const pending = xrPendingSkeletonAnchor;
+  // The chosen point is already fixed in local-floor reference space. Native anchors
+  // improve stability when the runtime refines its map, when the API is available.
+  if (typeof frame.createAnchor !== 'function' || typeof XRRigidTransform !== 'function') {
+    xrPendingSkeletonAnchor = null;
+    return;
+  }
+  xrAnchorCreationPending = true;
+  try {
+    const p = pending.position;
+    const q = pending.orientation;
+    const transform = new XRRigidTransform(
+      { x: p.x, y: p.y, z: p.z },
+      { x: q.x, y: q.y, z: q.z, w: q.w }
+    );
+    frame.createAnchor(transform, referenceSpace).then(anchor => {
+      if (pending.target.userData.smashed || pending.target.parent !== scene) {
+        anchor.delete?.();
+      } else {
+        pending.target.userData.xrSkeletonAnchor = anchor;
+      }
+    }).catch(error => {
+      console.info('Native skeleton anchor was unavailable; keeping the object in tracked reference space.', error);
+    }).finally(() => {
+      if (xrPendingSkeletonAnchor === pending) xrPendingSkeletonAnchor = null;
+      xrAnchorCreationPending = false;
+    });
+  } catch (error) {
+    console.info('Native skeleton anchor could not be created; using tracked reference space.', error);
+    xrPendingSkeletonAnchor = null;
+    xrAnchorCreationPending = false;
+  }
+}
+
+function updateXRSkeletonAnchorPoses(frame, referenceSpace) {
+  for (const pumpkin of interactivePumpkins) {
+    const anchor = pumpkin.userData.xrSkeletonAnchor;
+    if (!anchor || pumpkin.parent !== scene) continue;
+    try {
+      const pose = frame.getPose(anchor.anchorSpace, referenceSpace);
+      if (pose) {
+        const matrix = new THREE.Matrix4().fromArray(pose.transform.matrix);
+        pumpkin.position.setFromMatrixPosition(matrix);
+        pumpkin.quaternion.setFromRotationMatrix(matrix);
+      }
+    } catch (_) { /* Reference-space pose remains the fallback if the runtime skips a pose. */ }
+  }
+}
+
+function clearXrSkeletonAnchors(restoreTransforms = false) {
+  for (const pumpkin of interactivePumpkins) {
+    const anchor = pumpkin.userData.xrSkeletonAnchor;
+    anchor?.delete?.();
+    pumpkin.userData.xrSkeletonAnchor = null;
+    if (restoreTransforms && pumpkin.userData.xrOriginalTransform && pumpkin.parent === scene) {
+      const saved = pumpkin.userData.xrOriginalTransform;
+      scene.remove(pumpkin);
+      (saved.parent || contentRoot).add(pumpkin);
+      pumpkin.position.copy(saved.position);
+      pumpkin.quaternion.copy(saved.quaternion);
+      pumpkin.scale.copy(saved.scale);
+      pumpkin.userData.xrOriginalTransform = null;
+      pumpkin.userData.xrAnchorSpawned = false;
+      pumpkin.userData.xrWorldTracked = false;
+    }
+  }
+  xrWorldTrackingTarget = null;
+  xrWorldCandidate = null;
+  xrPendingSkeletonAnchor = null;
+  xrAnchorCreationPending = false;
+  xrScanMetadata.clear();
 }
 
 function prepareVisionFrame() {
@@ -1396,9 +1892,10 @@ function screenAnchorForDetection(detection, imageWidth, imageHeight) {
   const boxHeight = Math.max(1, box.ymax - box.ymin);
   return {
     x: THREE.MathUtils.clamp(((box.xmin + box.xmax) * 0.5) / imageWidth, 0.035, 0.965),
-    // Put the pumpkin just below the detected skeleton's feet, not in its torso.
-    y: THREE.MathUtils.clamp((box.ymax / imageHeight) + 0.035, 0.055, 0.955),
-    scale: THREE.MathUtils.clamp((boxHeight / imageHeight) * 0.72, 0.24, 0.48)
+    // Center the pumpkin on the detected skeleton in camera-overlay fallback mode.
+    // This is screen-relative only; true walk-around persistence needs WebXR anchors.
+    y: THREE.MathUtils.clamp(((box.ymin + box.ymax) * 0.5) / imageHeight, 0.055, 0.945),
+    scale: THREE.MathUtils.clamp((boxHeight / imageHeight) * 0.30, 0.13, 0.30)
   };
 }
 
@@ -1424,7 +1921,7 @@ function spawnPumpkinAtSkeleton(detection, imageWidth = visionCanvas.width, imag
   visionTargetPumpkin = target;
   makeSound('win');
   toastMessage(`SKELETON SPOTTED · ${Math.round(detection.score * 100)}% · PUMPKIN APPEARED!`);
-  hintText.textContent = 'Skeleton tracked. Keep it in view and the pumpkin will follow near its feet.';
+  hintText.textContent = 'Pumpkin is centered on the detected skeleton. In camera-overlay mode it follows only while the scanner can see it.';
   updateHud();
   return true;
 }
@@ -1486,7 +1983,7 @@ function handleSkeletonDetections(detections, imageWidth = visionCanvas.width, i
     skeletonLastSeenAt = now;
     lastTrackedSkeletonBox = { ...hit.box };
     if (visionTargetPumpkin && !visionTargetPumpkin.userData.smashed) {
-      hintText.textContent = `Skeleton found (${Math.round(hit.score * 100)}%). Keep it in view; the pumpkin tracks near its feet.`;
+      hintText.textContent = `Skeleton found (${Math.round(hit.score * 100)}%). The pumpkin follows its center while it stays visible.`;
     } else {
       hintText.textContent = `Skeleton found (${Math.round(hit.score * 100)}%). Keep scanning for another skeleton.`;
     }
@@ -1539,6 +2036,8 @@ function scanCameraForSkeleton() {
 
 function stopSkeletonScan(showMessage = true) {
   skeletonScanEnabled = false;
+  xrScanMetadata.clear();
+  xrWorldCandidate = null;
   if (aiScanTimer !== null) window.clearInterval(aiScanTimer);
   aiScanTimer = null;
   restoreVisionPumpkins();
@@ -1592,10 +2091,56 @@ async function startSkeletonScanConfirmed() {
   $('ai-confirm').classList.add('hidden');
   $('skeleton-scan').disabled = true;
   try {
-    // Preserve existing orientation tracking, or request it while this button tap is
-    // still active (not after waiting on a model download or camera operation).
+    const enabledFeatures = Array.isArray(xrSession?.enabledFeatures) ? xrSession.enabledFeatures : [];
+    const sessionHasRawCamera = Boolean(
+      gameMode === 'xr' && xrSession && xrCameraAccessAvailable &&
+      typeof XRWebGLBinding === 'function' && enabledFeatures.includes('camera-access')
+    );
+    const sessionHasCpuDepth = Boolean(
+      gameMode === 'xr' && xrSession && xrSession.depthUsage === 'cpu-optimized' &&
+      enabledFeatures.includes('depth-sensing')
+    );
+
+    if (sessionHasRawCamera && sessionHasCpuDepth) {
+      // Keep immersive AR active: detections use pose-synchronized camera frames and
+      // are converted into a 3D reference-space point before creating a native anchor.
+      restoreVisionPumpkins();
+      skeletonScanEnabled = true;
+      skeletonPresent = false;
+      skeletonMissFrames = 0;
+      skeletonLastSeenAt = 0;
+      lastTrackedSkeletonBox = null;
+      lastSkeletonSpawnAt = 0;
+      xrScanLastSubmittedAt = 0;
+      xrWorldCandidate = null;
+      xrCameraAccessWarned = false;
+      xrCameraReadFailures = 0;
+      xrDepthMissCount = 0;
+      xrWorldTrackingTarget = interactivePumpkins.find(p => p.userData.xrWorldTracked && !p.userData.smashed) || null;
+      visionTargetPumpkin = xrWorldTrackingTarget;
+      interactivePumpkins.forEach(p => {
+        p.userData.visionSpawned = Boolean(p.userData.xrWorldTracked);
+        if (!p.userData.smashed && !p.userData.xrWorldTracked) p.visible = false;
+      });
+      $('skeleton-scan').classList.add('is-active');
+      $('skeleton-scan').setAttribute('aria-pressed', 'true');
+      $('skeleton-scan').innerHTML = '✦ <span>SCANNING</span>';
+      hintText.textContent = 'Starting world-tracked AI scan. Keep the skeleton in view briefly so the game can measure its 3D position and create a persistent anchor.';
+      await loadSkeletonDetector();
+      hintText.textContent = 'World-tracked AI scanner ready. Point the camera at a real skeleton or a skeleton image; the pumpkin will anchor to that 3D location.';
+      toastMessage('World-tracked AI scanner ready!');
+      return;
+    }
+
+    // If either raw WebXR camera frames or CPU depth is unavailable, the browser
+    // cannot derive a reliable 3D point. Use the screen-following camera path, and
+    // say explicitly that it cannot stay world-anchored while the phone moves.
+    const wasTrackedAR = gameMode === 'xr';
     let motionAllowed = Boolean(gameMode === 'camera' && orientationControls);
     if (!motionAllowed) motionAllowed = await requestOrientationPermission();
+    if (gameMode === 'xr') {
+      toastMessage('Persistent AI anchoring is unavailable here; switching to camera-overlay scan.');
+    }
     await openCameraOverlayForSkeletonScan(motionAllowed);
     skeletonScanEnabled = true;
     skeletonPresent = false;
@@ -1614,17 +2159,15 @@ async function startSkeletonScanConfirmed() {
     $('skeleton-scan').innerHTML = '✦ <span>SCANNING</span>';
     hintText.textContent = 'Loading the on-device skeleton detector. First download is large; keep this page open.';
     await loadSkeletonDetector();
-    hintText.textContent = 'AI scanner ready in the background. Move the camera around safely; the controls and animations will remain active while it checks for skeletons.';
-    toastMessage('AI skeleton scanner ready!');
+    hintText.textContent = 'Camera-overlay AI scanner ready. The pumpkin follows the skeleton while it is visible, but this mode cannot keep it anchored when you turn away.';
+    toastMessage(wasTrackedAR ? 'Depth/camera access unavailable — screen tracking only.' : 'AI scanner ready — screen tracking only.');
     aiScanTimer = window.setInterval(scanCameraForSkeleton, 1100);
   } catch (error) {
     console.error('Could not start skeleton scanner:', error);
     stopSkeletonScan(false);
-    const cameraIsRunning = Boolean(stream && video.videoWidth);
+    const cameraIsRunning = Boolean((stream && video.videoWidth) || (gameMode === 'xr' && xrSession));
     if (cameraIsRunning) {
-      // The camera itself is fine; an AI-model/network failure should not hide the HUD
-      // behind a misleading camera-permission screen.
-      interactivePumpkins.forEach(p => { if (!p.userData.smashed) p.visible = true; });
+      interactivePumpkins.forEach(p => { if (!p.userData.smashed && !p.userData.xrWorldTracked) p.visible = true; });
       hintText.textContent = 'AI scanning could not load. Check the connection and tap AI SCAN to retry.';
       toastMessage('AI model failed to load. Check your connection.');
     } else {
@@ -1670,7 +2213,7 @@ $('camera-switch').addEventListener('click', async () => {
     await startCamera();
   }
 });
-$('reset-button').addEventListener('click', () => { if (skeletonScanEnabled) { skeletonPresent = false; skeletonMissFrames = 0; skeletonLastSeenAt = 0; lastTrackedSkeletonBox = null; lastSkeletonSpawnAt = 0; visionTargetPumpkin = null; } beginGame(); toastMessage('Fresh pumpkins. Fresh start!'); });
+$('reset-button').addEventListener('click', () => { if (skeletonScanEnabled) { skeletonPresent = false; skeletonMissFrames = 0; skeletonLastSeenAt = 0; lastTrackedSkeletonBox = null; lastSkeletonSpawnAt = 0; visionTargetPumpkin = null; } clearXrSkeletonAnchors(true); beginGame(); toastMessage('Fresh pumpkins. Fresh start!'); });
 $('sound-toggle').addEventListener('click', async () => {
   audioEnabled = !audioEnabled;
   $('sound-toggle').classList.toggle('muted', !audioEnabled);
@@ -1678,7 +2221,7 @@ $('sound-toggle').addEventListener('click', async () => {
   $('sound-toggle').setAttribute('aria-label', audioEnabled ? 'Mute sound' : 'Enable sound');
   if (audioEnabled) { makeSound('smash'); toastMessage('Sound effects on'); } else toastMessage('Sound effects off');
 });
-$('play-again').addEventListener('click', () => beginGame());
+$('play-again').addEventListener('click', () => { clearXrSkeletonAnchors(true); beginGame(); });
 $('back-to-title').addEventListener('click', backToTitle);
 window.addEventListener('pagehide', () => {
   stream?.getTracks().forEach(track => track.stop());

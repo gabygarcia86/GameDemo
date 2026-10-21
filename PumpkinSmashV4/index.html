@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#100d18">
+  <meta name="description" content="Pumpkin Smash! — lightweight image-target AR Halloween hunt.">
+  <title>Pumpkin Smash! — Image Reference AR</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.88em' font-size='88'%3E🎃%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    #ar-container { position:fixed; inset:0; z-index:0; overflow:hidden; background:#100d18; }
+    #ar-container canvas { display:block; width:100%; height:100%; touch-action:manipulation; }
+    #ar-container video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+    .screen-card-wrap { z-index:10; }
+    .hud { z-index:8; }
+    .hint-pill { top:calc(100px + var(--safe-top)); }
+    .hud.hidden { display:none!important; }
+    #target-config-note { font-size:12px;line-height:1.5;color:#f5c59b;background:rgba(255,135,50,.09);border:1px solid rgba(255,160,80,.2);border-radius:12px;padding:11px 12px;margin:0 0 14px; }
+    .build-link { display:block; color:#ffd2a5; font-size:12px; font-weight:900; text-decoration:underline; margin:12px auto 0; }
+    #win-screen { z-index:12; }
+    .status-small { font-size:10px; color:#c8bece; margin-top:6px; }
+    @media (orientation:portrait) { .hint-pill { top:calc(108px + var(--safe-top)); max-width:calc(100% - 22px); } }
+    @media (orientation:landscape) { .hint-pill { top:calc(76px + var(--safe-top)); max-width:min(62vw,720px); } }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "mindar-image-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <main id="game" aria-label="Pumpkin Smash image target AR game">
+    <div id="ar-container" aria-label="Live camera and augmented reality scene"></div>
+    <div id="atmosphere" aria-hidden="true"></div>
+
+    <section id="start-screen" class="screen-card-wrap">
+      <div class="start-card">
+        <div class="eyebrow"><span class="eyebrow-dot"></span> LIGHTWEIGHT IMAGE-TARGET AR</div>
+        <h1>PUMPKIN<br><span>SMASH!</span></h1>
+        <p class="intro">Point your camera at one of your saved reference images. When the game recognizes an image, a 3D pumpkin appears attached to that image. Find and smash up to five pumpkins.</p>
+        <div class="feature-row"><span>🎃 Image tracking</span><span>🦇 Bats</span><span>👻 Ghosts</span><span>🌕 Full moon</span></div>
+        <div id="target-config-note">Checking your reference image database…</div>
+        <button id="camera-start" class="button button-primary" disabled>◉ START IMAGE AR</button>
+        <a class="build-link" href="target-builder.html">Build / update reference images</a>
+        <button id="demo-start" class="button button-secondary">TRY DEMO MODE</button>
+        <p id="start-note" class="small-note">No heavy skeleton AI model. Image tracking starts quickly after the target database is ready.</p>
+      </div>
+    </section>
+
+    <section id="hud" class="hud hidden" aria-label="Game status">
+      <header class="top-bar">
+        <div class="brand"><span class="brand-pumpkin">🎃</span><div><div class="brand-title">PUMPKIN <b>SMASH!</b></div><div class="brand-subtitle">IMAGE-TARGET HAUNT</div></div></div>
+        <div class="score-panel"><span class="score-label">PUMPKINS SMASHED</span><strong id="score">0 <i>/ 5</i></strong></div>
+        <button id="sound-toggle" class="icon-button" aria-label="Toggle sound" title="Toggle sound">♫</button>
+      </header>
+      <div id="hint-pill" class="hint-pill"><span class="pulse-dot"></span><span id="hint-text">Look for any of your reference images. A pumpkin appears when one is tracked.</span></div>
+      <div class="bottom-bar">
+        <div class="progress-wrap"><div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div><div class="progress-caption"><span>HAUNT-O-METER</span><span id="remaining">5 LEFT</span></div></div>
+        <button id="camera-switch" class="mini-button" aria-label="Stop camera">↻ <span>CAMERA</span></button>
+        <button id="reset-button" class="mini-button" aria-label="Reset pumpkins">⟲ <span>RESET</span></button>
+      </div>
+      <div id="toast" class="toast" aria-live="polite"></div>
+    </section>
+
+    <section id="win-screen" class="screen-card-wrap hidden">
+      <div class="win-card">
+        <div class="win-pumpkin">🎃</div>
+        <div class="eyebrow">THE HAUNT IS CLEARED</div>
+        <h2>YOU SMASHED<br><span>THE PUMPKINS!</span></h2>
+        <p>Every tracked target has been smashed. Add more reference images to your database for another hunt.</p>
+        <button id="play-again" class="button button-primary">PLAY AGAIN</button>
+        <button id="back-to-title" class="button button-secondary">BACK TO TITLE</button>
+      </div>
+    </section>
+    <div id="orientation-label" aria-hidden="true">↻ Move carefully and point at a reference image</div>
+  </main>
+  <script type="module">
+    import('./game.js?v=image-reference-v1').catch((error) => {
+      console.error('Pumpkin Smash! could not load its AR libraries:', error);
+      const note = document.getElementById('target-config-note');
+      if (note) note.textContent = 'The image-tracking libraries failed to load. Check your internet connection, reload this page, and make sure the CDN is reachable.';
+      const start = document.getElementById('camera-start');
+      if (start) start.disabled = true;
+    });
+  </script>
+</body>
+</html>

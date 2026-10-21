@@ -14,7 +14,7 @@ The placement reticle only appears while selecting the initial surface. The pump
 
 Tap **AI SCAN** to analyze the live camera image for a Halloween skeleton decoration, a skeleton model, or a person wearing a skeleton costume. When the detector recognizes one, a pumpkin appears near the bottom of its detected image region. While the skeleton stays in view, the pumpkin follows the detection; after the skeleton leaves view, the pumpkin stays at its last approximate position. Re-enter with a different skeleton to reveal another pumpkin.
 
-The scanner downloads Transformers.js and a quantized Grounding DINO model from public CDNs on first use (the model weights are about 227 MB, plus support files). The detector uses the short prompt `skeleton.` because this exported ONNX model can reject longer prompts with an `input_ids` dimension error. A reliable internet connection and a modern phone are recommended. Frames are processed locally in the browser; this project does not send camera frames to its own server. Recognition is experimental: it can miss skeletons or mistake other shapes for one, and performance depends on the phone, lighting, camera distance, and model loading.
+The scanner downloads Transformers.js and a quantized Grounding DINO model from public CDNs on first use (the model weights are about 227 MB, plus support files). The detector uses the short prompt `skeleton.` because this exported ONNX model can reject longer prompts with an `input_ids` dimension error. A reliable internet connection and a modern phone are recommended. Frames are processed locally in the browser; this project does not send camera frames to its own server. The model is loaded and run in a dedicated Web Worker so model inference does not block the animation loop and touch controls. Detection is intentionally throttled to reduce device load. Recognition is experimental: it can miss skeletons or mistake other shapes for one, and performance depends on the phone, lighting, camera distance, and model loading.
 
 **AR and AI limitation:** WebXR immersive AR does not expose pose-synchronized raw camera frames consistently across browsers. For that reason, tapping **AI SCAN** exits tracked WebXR and switches to the ordinary camera-overlay mode for recognition. In this mode, the pumpkin can be placed beside a skeleton in the camera image, but cannot be accurately anchored to a real floor or use WebXR depth occlusion. Physical walking-position tracking is not available in this fallback mode. You can return to tracked AR by restarting the AR session.
 
@@ -49,7 +49,7 @@ Then open `http://localhost:8000` in a browser. For tracked AR, test the publish
 4. Open the folder URL. For a project site it usually looks like `https://USERNAME.github.io/REPOSITORY/pumpkin-smash/`. For a user/organization site, it usually looks like `https://USERNAME.github.io/pumpkin-smash/`.
 5. Open the link directly on your phone and approve camera permissions when prompted.
 
-Keep `index.html`, `styles.css`, `game.js`, and this README together. Three.js is loaded from jsDelivr; the AI scanner also downloads Transformers.js and the detector model when first used.
+Keep `index.html`, `styles.css`, `game.js`, `skeleton-worker.js`, and this README together. The worker file must be uploaded alongside `game.js` or AI scan cannot start. Three.js is loaded from jsDelivr; the AI scanner also downloads Transformers.js and the detector model when first used.
 
 ## Controls
 
@@ -71,6 +71,7 @@ pumpkin-smash/
 ├── index.html
 ├── styles.css
 ├── game.js
+├── skeleton-worker.js
 └── README.md
 ```
 
@@ -80,6 +81,6 @@ pumpkin-smash/
 - **Camera permission doesn't appear:** allow camera access in the browser's site settings.
 - **No PLACE WORLD reticle:** the browser/device may not support WebXR hit testing, or the camera may not be aimed at a detectable horizontal surface. Try a slow sweep across a well-lit floor or table.
 - **Tracked AR does not start:** WebXR immersive AR is not available in every browser or device. Use Demo Mode or camera-overlay fallback.
-- **AI scan reports `Got invalid dimensions for input: input_ids`:** use this build, which sends one short `skeleton.` prompt rather than several long prompts. The exported ONNX model may reject a longer token sequence. Replace all project files in the `pumpkin-smash` folder, commit, then refresh the site. If the same error persists, clear the site's cached files or try a private/incognito tab so the browser does not run an older `game.js` from cache. The first scan downloads a large model; keep the tab open on a reliable connection. Older phones may also run out of memory or processing capacity.
-- **AI scan pauses for a different reason:** read the complete message in the on-screen toast and check the browser console; a network/CDN loading error requires a different fix from an ONNX input-shape error.
+- **AI scan reports `Got invalid dimensions for input: input_ids`:** this build sends one short `skeleton.` prompt rather than several long prompts. The exported ONNX model may reject a longer token sequence. Keep all five project files together and use a current build. The first scan downloads a large model; keep the tab open on a reliable connection. Older phones may also run out of memory or processing capacity.
+- **AI scan previously froze the game after saying it was ready:** this version moves model loading and each detection run into `skeleton-worker.js`, so the main render loop and touch controls do not wait for ONNX inference. Make sure you upload `skeleton-worker.js` alongside `game.js`, replace the other project files too, commit, and refresh the page. The HTML includes a cache-busting version on the main module so GitHub Pages is less likely to keep running the old scanner.
 - **Depth occlusion isn't visible:** depth sensing requires compatible device/browser support. Contact shadows work as a fallback.

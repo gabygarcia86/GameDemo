@@ -77,8 +77,12 @@ let worldAnchor = null;
 let depthMesh = null;
 let depthSensingSeen = false;
 let depthCheckThrottle = 0;
-let skeletonDetector = null;
+let skeletonWorker = null;
+let skeletonDetectorReady = false;
 let skeletonDetectorLoading = false;
+let skeletonWorkerReadyPromise = null;
+let resolveSkeletonWorkerReady = null;
+let rejectSkeletonWorkerReady = null;
 let skeletonScanEnabled = false;
 let skeletonPresent = false;
 let skeletonMissFrames = 0;
@@ -1169,26 +1173,105 @@ function updateXRSurfaceAndDepth(frame) {
   }
 }
 
-// Zero-shot vision detection looks for a real skeleton decoration or skeleton costume.
-// It only analyzes the live camera in camera-overlay mode; current mobile browsers do
-// not all expose raw, pose-synchronized camera frames to JavaScript inside WebXR AR.
-async function loadSkeletonDetector() {
-  if (skeletonDetector) return skeletonDetector;
-  if (skeletonDetectorLoading) {
-    while (skeletonDetectorLoading && !skeletonDetector) await new Promise(resolve => setTimeout(resolve, 150));
-    if (skeletonDetector) return skeletonDetector;
-  }
-  skeletonDetectorLoading = true;
-  try {
-    $('hint-text').textContent = 'Loading AI skeleton detector. First download is large; keep this page open.';
-    const hf = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.2');
-    hf.env.allowLocalModels = false;
-    hf.env.useBrowserCache = true;
-    skeletonDetector = await hf.pipeline('zero-shot-object-detection', 'onnx-community/grounding-dino-tiny-ONNX', { dtype: 'q4' });
-    return skeletonDetector;
-  } finally {
+// Run vision inference in a module worker. Grounding DINO can take seconds on a
+// phone; keeping ONNX inference off the UI thread prevents animations and buttons
+// from freezing while the model analyzes camera frames.
+function handleSkeletonWorkerMessage(event) {
+  const data = event.data || {};
+  if (data.type === 'ready') {
+    skeletonDetectorReady = true;
     skeletonDetectorLoading = false;
+    const resolve = resolveSkeletonWorkerReady;
+    resolveSkeletonWorkerReady = null;
+    rejectSkeletonWorkerReady = null;
+    skeletonWorkerReadyPromise = null;
+    resolve?.();
+    return;
   }
+  if (data.type === 'init-error') {
+    const error = new Error(data.message || 'The AI model could not initialize.');
+    skeletonDetectorLoading = false;
+    const reject = rejectSkeletonWorkerReady;
+    resolveSkeletonWorkerReady = null;
+    rejectSkeletonWorkerReady = null;
+    skeletonWorkerReadyPromise = null;
+    skeletonWorker?.terminate();
+    skeletonWorker = null;
+    reject?.(error);
+    return;
+  }
+  if (data.type === 'detections') {
+    skeletonScanBusy = false;
+    handleSkeletonDetections(data.detections, data.width, data.height);
+    return;
+  }
+  if (data.type === 'scan-error') {
+    skeletonScanBusy = false;
+    console.warn('Skeleton scan failed:', data.message);
+    const detail = String(data.message || 'Unknown scanning error').replace(/https?:\/\/\S+/g, 'model file').slice(0, 120);
+    toastMessage(`AI scan paused: ${detail}`);
+    hintText.textContent = 'AI scan paused because the detector reported an error. You can still use the other game controls; tap AI SCAN to retry.';
+    stopSkeletonScan(false);
+    visionTargetPumpkin = null;
+    interactivePumpkins.forEach(p => { if (!p.userData.smashed) p.visible = true; });
+    return;
+  }
+  if (data.type === 'loading') {
+    hintText.textContent = data.message || 'Loading AI skeleton detector. Keep this page open.';
+  }
+}
+
+function handleSkeletonWorkerError(event) {
+  const error = new Error(event.message || 'The AI worker stopped unexpectedly.');
+  console.error('Skeleton worker error:', error);
+  skeletonScanBusy = false;
+  skeletonDetectorReady = false;
+  skeletonDetectorLoading = false;
+  skeletonWorker?.terminate();
+  skeletonWorker = null;
+  const reject = rejectSkeletonWorkerReady;
+  resolveSkeletonWorkerReady = null;
+  rejectSkeletonWorkerReady = null;
+  skeletonWorkerReadyPromise = null;
+  reject?.(error);
+  if (skeletonScanEnabled) {
+    toastMessage('AI scan stopped, but the game is still available. Tap AI SCAN to retry.');
+    hintText.textContent = 'AI scanner stopped unexpectedly. The game controls remain available; tap AI SCAN to retry.';
+    stopSkeletonScan(false);
+    visionTargetPumpkin = null;
+    interactivePumpkins.forEach(p => { if (!p.userData.smashed) p.visible = true; });
+  }
+}
+
+async function loadSkeletonDetector() {
+  if (skeletonDetectorReady) return;
+  if (skeletonWorkerReadyPromise) return skeletonWorkerReadyPromise;
+
+  skeletonDetectorLoading = true;
+  hintText.textContent = 'Loading AI detector in the background. The game will remain responsive.';
+  skeletonWorkerReadyPromise = new Promise((resolve, reject) => {
+    resolveSkeletonWorkerReady = resolve;
+    rejectSkeletonWorkerReady = reject;
+  });
+
+  try {
+    if (!skeletonWorker) {
+      skeletonWorker = new Worker(new URL('./skeleton-worker.js', import.meta.url), { type: 'module' });
+      skeletonWorker.addEventListener('message', handleSkeletonWorkerMessage);
+      skeletonWorker.addEventListener('error', handleSkeletonWorkerError);
+    }
+    skeletonWorker.postMessage({ type: 'init' });
+  } catch (error) {
+    skeletonDetectorLoading = false;
+    skeletonWorkerReadyPromise = null;
+    resolveSkeletonWorkerReady = null;
+    rejectSkeletonWorkerReady = null;
+    skeletonWorker?.terminate();
+    skeletonWorker = null;
+    throw error;
+  }
+
+  return skeletonWorkerReadyPromise;
 }
 
 function prepareVisionFrame() {
@@ -1210,13 +1293,13 @@ function prepareVisionFrame() {
   return true;
 }
 
-function spawnPumpkinAtSkeleton(detection) {
+function spawnPumpkinAtSkeleton(detection, imageWidth = visionCanvas.width, imageHeight = visionCanvas.height) {
   const target = interactivePumpkins.find((p) => !p.userData.visionSpawned && !p.userData.smashed);
   if (!target) return;
   target.userData.visionSpawned = true;
   target.userData.visionScreen = {
-    x: THREE.MathUtils.clamp(((detection.box.xmin + detection.box.xmax) * 0.5) / visionCanvas.width, 0.05, 0.95),
-    y: THREE.MathUtils.clamp((detection.box.ymax / visionCanvas.height) - 0.04, 0.12, 0.92)
+    x: THREE.MathUtils.clamp(((detection.box.xmin + detection.box.xmax) * 0.5) / imageWidth, 0.05, 0.95),
+    y: THREE.MathUtils.clamp((detection.box.ymax / imageHeight) - 0.04, 0.12, 0.92)
   };
   target.userData.worldBase = null;
   target.visible = true;
@@ -1229,59 +1312,59 @@ function spawnPumpkinAtSkeleton(detection) {
   updateHud();
 }
 
-async function scanCameraForSkeleton() {
-  if (!skeletonScanEnabled || skeletonScanBusy || gameMode !== 'camera' || !skeletonDetector || !video.videoWidth) return;
+function handleSkeletonDetections(detections, imageWidth = visionCanvas.width, imageHeight = visionCanvas.height) {
+  if (!skeletonScanEnabled || gameMode !== 'camera') return;
   const now = performance.now();
-  if (now - lastSkeletonSpawnAt < 250) return;
-  skeletonScanBusy = true;
+  const hit = (Array.isArray(detections) ? detections : [])
+    .filter(item => /skeleton/i.test(String(item.label || '')) && Number(item.score) >= 0.30)
+    .sort((a, b) => b.score - a.score)[0];
+
+  if (hit) {
+    skeletonMissFrames = 0;
+    if (!skeletonPresent && (lastSkeletonSpawnAt === 0 || now - lastSkeletonSpawnAt > 2600)) {
+      spawnPumpkinAtSkeleton(hit, imageWidth, imageHeight);
+      lastSkeletonSpawnAt = now;
+    } else if (visionTargetPumpkin?.visible && !visionTargetPumpkin.userData.smashed) {
+      visionTargetPumpkin.userData.visionScreen = {
+        x: THREE.MathUtils.clamp(((hit.box.xmin + hit.box.xmax) * 0.5) / imageWidth, 0.05, 0.95),
+        y: THREE.MathUtils.clamp((hit.box.ymax / imageHeight) - 0.04, 0.12, 0.92)
+      };
+    }
+    skeletonPresent = true;
+  } else {
+    skeletonMissFrames++;
+    if (skeletonMissFrames >= 3) {
+      skeletonPresent = false;
+      // Freeze at the last detected position after the real skeleton leaves view.
+      if (visionTargetPumpkin && !visionTargetPumpkin.userData.smashed) {
+        visionTargetPumpkin.userData.visionScreen = null;
+      }
+      visionTargetPumpkin = null;
+    }
+  }
+}
+
+function scanCameraForSkeleton() {
+  if (!skeletonScanEnabled || skeletonScanBusy || gameMode !== 'camera' || !skeletonDetectorReady || !skeletonWorker || !video.videoWidth) return;
+  const now = performance.now();
+  // Avoid sending frames too quickly on lower-powered phones.
+  if (now - lastSkeletonSpawnAt < 900 && lastSkeletonSpawnAt !== 0) return;
   try {
     if (!prepareVisionFrame()) return;
-    // Transformers.js zero-shot-object-detection expects labels as the SECOND
-    // argument and options as the THIRD. Passing one options object here causes
-    // inference to throw every scan cycle, which previously paused the scanner.
-    // Keep the prompt to one short phrase. This exported ONNX build can reject
-    // longer/multiple text prompts because its input_ids sequence dimension may
-    // be fixed. A single short noun phrase avoids the ORT invalid-dimensions error.
-    const candidateLabels = ['skeleton.'];
-    const detections = await skeletonDetector(visionCanvas, candidateLabels, {
-      threshold: 0.30
-    });
-    const hit = (Array.isArray(detections) ? detections : [])
-      .filter(item => /skeleton/i.test(String(item.label || '')) && item.score >= 0.33)
-      .sort((a, b) => b.score - a.score)[0];
-    if (hit) {
-      skeletonMissFrames = 0;
-      if (!skeletonPresent && (lastSkeletonSpawnAt === 0 || now - lastSkeletonSpawnAt > 2600)) {
-        spawnPumpkinAtSkeleton(hit);
-        lastSkeletonSpawnAt = now;
-      } else if (visionTargetPumpkin?.visible && !visionTargetPumpkin.userData.smashed) {
-        visionTargetPumpkin.userData.visionScreen = {
-          x: THREE.MathUtils.clamp(((hit.box.xmin + hit.box.xmax) * 0.5) / visionCanvas.width, 0.05, 0.95),
-          y: THREE.MathUtils.clamp((hit.box.ymax / visionCanvas.height) - 0.04, 0.12, 0.92)
-        };
-      }
-      skeletonPresent = true;
-    } else {
-      skeletonMissFrames++;
-      if (skeletonMissFrames >= 3) {
-        skeletonPresent = false;
-        // Stop following camera-space coordinates. The pumpkin remains where it was
-        // last seen, rather than staying glued to the screen after the skeleton leaves.
-        if (visionTargetPumpkin && !visionTargetPumpkin.userData.smashed) {
-          visionTargetPumpkin.userData.visionScreen = null;
-        }
-        visionTargetPumpkin = null;
-      }
-    }
+    const frame = visionContext.getImageData(0, 0, visionCanvas.width, visionCanvas.height);
+    skeletonScanBusy = true;
+    // Transfer the pixel buffer to the worker instead of copying it. Inference runs
+    // entirely away from the main thread, so the render loop and touch events remain live.
+    skeletonWorker.postMessage({
+      type: 'scan',
+      width: visionCanvas.width,
+      height: visionCanvas.height,
+      pixels: frame.data.buffer
+    }, [frame.data.buffer]);
   } catch (error) {
-    console.warn('Skeleton scan failed:', error);
-    // Show a short reason instead of blaming the connection for every error.
-    const detail = String(error?.message || error || 'Unknown scanning error').replace(/https?:\/\/\S+/g, 'model file').slice(0, 100);
-    toastMessage(`AI scan paused: ${detail}`);
-    hintText.textContent = 'AI scan paused. Check your connection and tap AI SCAN to retry. If it repeats, check the browser console for details.';
-    stopSkeletonScan(false);
-  } finally {
     skeletonScanBusy = false;
+    console.warn('Could not send a camera frame to the AI worker:', error);
+    toastMessage('AI scan could not read a camera frame. The game is still responsive.');
   }
 }
 
@@ -1356,9 +1439,9 @@ async function startSkeletonScanConfirmed() {
     $('skeleton-scan').innerHTML = '✦ <span>SCANNING</span>';
     hintText.textContent = 'Loading the on-device skeleton detector. First download is large; keep this page open.';
     await loadSkeletonDetector();
-    hintText.textContent = 'AI skeleton scan active. Move the camera around safely; a pumpkin appears when a skeleton is recognized.';
+    hintText.textContent = 'AI scanner ready in the background. Move the camera around safely; the controls and animations will remain active while it checks for skeletons.';
     toastMessage('AI skeleton scanner ready!');
-    aiScanTimer = window.setInterval(scanCameraForSkeleton, 900);
+    aiScanTimer = window.setInterval(scanCameraForSkeleton, 1400);
   } catch (error) {
     console.error('Could not start skeleton scanner:', error);
     stopSkeletonScan(false);

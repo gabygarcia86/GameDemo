@@ -90,7 +90,7 @@
   </main>
   <script type="module">
     // Surface module/CDN failures to the player instead of leaving dead buttons.
-    import('./game.js').catch((error) => {
+    import('./game.js?v=ai-worker-1').catch((error) => {
       console.error('Pumpkin Smash! failed to initialize:', error);
       const note = document.getElementById('start-note');
       if (note) {

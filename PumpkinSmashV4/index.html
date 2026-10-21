@@ -26,8 +26,14 @@
   <script type="importmap">
     {
       "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-        "mindar-image-three": "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"
+        "three": [
+          "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+          "https://unpkg.com/three@0.160.0/build/three.module.js"
+        ],
+        "mindar-image-three": [
+          "https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js",
+          "https://unpkg.com/mind-ar@1.2.5/dist/mindar-image-three.prod.js"
+        ]
       }
     }
   </script>
@@ -82,7 +88,7 @@
     import('./game.js?v=image-reference-v1').catch((error) => {
       console.error('Pumpkin Smash! could not load its AR libraries:', error);
       const note = document.getElementById('target-config-note');
-      if (note) note.textContent = 'The image-tracking libraries failed to load. Check your internet connection, reload this page, and make sure the CDN is reachable.';
+      if (note) note.textContent = 'The image-tracking libraries failed to load (' + (error?.message || 'unknown module error') + '). Try refreshing on a reliable connection. If this repeats, the CDN may be blocked or the browser may not support module imports.';
       const start = document.getElementById('camera-start');
       if (start) start.disabled = true;
     });

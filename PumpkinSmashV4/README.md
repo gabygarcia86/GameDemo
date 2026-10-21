@@ -21,20 +21,23 @@ pumpkin-smash/
 └── images/
     ├── .gitkeep
     ├── README.md
-    └── manifest.json      # starts with an empty images list
+    ├── image1.jpg
+    ├── image2.jpg
+    ├── image3.jpg
+    └── manifest.json      # lists image1.jpg, image2.jpg, and image3.jpg
 ```
 
-The `images/` folder is intentionally empty of photos apart from its README, placeholder, and empty `manifest.json`. Add your own `.jpg`, `.jpeg`, `.png`, or `.webp` reference images there.
+The `images/` folder includes three JPG reference images. Their filenames are listed in `images/manifest.json`, which the builder uses to load the published images.
 
 ## Add reference images
 
 GitHub Pages is static hosting and doesn't provide a directory-listing API, so browser code cannot automatically discover every filename inside `images/`. The included builder supports choosing local files and loading published images listed in `images/manifest.json`.
 
-1. Add at least **five distinct, detailed images** to `images/` in your local project folder. Good targets contain visible details, edges, and contrast. Avoid blank graphics, flat colors, repeated patterns, blurry photos, and glossy images with reflections.
+1. Use the three included JPGs or add more distinct, detailed images to `images/`. Good targets contain visible details, edges, and contrast. Avoid blank graphics, flat colors, repeated patterns, blurry photos, and glossy images with reflections. Five or more distinct images are needed for the full five-pumpkin hunt.
 2. Open the published `target-builder.html` page (or serve the project locally over `http://localhost`).
-3. For the first build, use **Select reference images** and select the same local image files you put in `images/`. Multiple selection is supported. The builder sorts names alphabetically and uses the same order in its generated manifest.
+3. For the included images, press **LOAD IMAGES FROM PROJECT FOLDER** to load the filenames in `images/manifest.json`. Alternatively, use **Select reference images** to select the local files. Multiple selection is supported. The builder sorts names alphabetically and uses the same order in its generated manifest.
 4. Press **BUILD IMAGE DATABASE** and wait for compilation to finish. The browser downloads three files: `targets.mind`, `target-manifest.json`, and `images-manifest.json`.
-5. Upload `targets.mind` and `target-manifest.json` to the project root beside `index.html`. Upload `images-manifest.json` into the `images/` folder and rename it to `manifest.json`. Make sure the selected original image files also exist in `images/`. Commit the changes to GitHub.
+5. Upload `targets.mind` and `target-manifest.json` to the project root beside `index.html`. Upload `images-manifest.json` into the `images/` folder and rename it to `manifest.json`. Make sure all selected original image files also exist in `images/`. Commit the changes to GitHub.
 6. Open the game page on your phone, allow camera access, and press **START IMAGE AR**. Aim at one of your exact reference images. A pumpkin appears attached near the lower area of the tracked image. Tap the pumpkin to smash it.
 
 After the first setup, the builder's **LOAD IMAGES FROM PROJECT FOLDER** button can load published images directly from `images/manifest.json`. Whenever you add, delete, or replace images, update that JSON list (or select all intended local images), rebuild, and re-upload `targets.mind` and `target-manifest.json`. The builder also downloads a fresh `images-manifest.json` that you upload as `images/manifest.json`. Target indexes align with the alphabetical order shown in `target-manifest.json`.
@@ -49,7 +52,7 @@ If you have fewer than five source images, the win goal adjusts to the number of
 4. Open `.../pumpkin-smash/target-builder.html` to compile/update targets; after building, upload the two target files to the project root and the generated image-list manifest to `images/manifest.json`.
 5. Open `.../pumpkin-smash/` on your phone to play.
 
-The runtime uses Three.js and MindAR from CDNs, so the page needs an internet connection to load these JavaScript libraries. It no longer downloads the previous 230 MB skeleton-detection model. The compiler only runs when you visit the builder and press Build.
+The runtime tries jsDelivr first and falls back to unpkg for Three.js and MindAR. The page still needs an internet connection to load these JavaScript libraries; networks that block both CDNs will prevent AR from starting. The startup screen now includes the underlying module error to make troubleshooting easier. It no longer downloads the previous 230 MB skeleton-detection model. The compiler only runs when you visit the builder and press Build.
 
 ## Gameplay
 
@@ -61,6 +64,7 @@ The runtime uses Three.js and MindAR from CDNs, so the page needs an internet co
 
 ## Troubleshooting
 
+- **Image-tracking libraries failed to load:** refresh the page on a reliable connection. The runtime tries jsDelivr and then unpkg; if both are blocked by a network/content filter, try another network. The on-screen message now includes the underlying module error.
 - **Start AR is disabled:** the project needs `targets.mind` and a non-empty `target-manifest.json`. Run `target-builder.html`, then upload both target files.
 - **Load Images From Project Folder says the list is empty:** put the exact filenames in the `images` array in `images/manifest.json`. The included `images-manifest.json` download can be renamed and uploaded there.
 - **Camera is denied:** allow camera permission for the GitHub Pages site in browser settings.

@@ -81,6 +81,11 @@ pumpkin-smash/
 - **Camera permission doesn't appear:** allow camera access in the browser's site settings.
 - **No PLACE WORLD reticle:** the browser/device may not support WebXR hit testing, or the camera may not be aimed at a detectable horizontal surface. Try a slow sweep across a well-lit floor or table.
 - **Tracked AR does not start:** WebXR immersive AR is not available in every browser or device. Use Demo Mode or camera-overlay fallback.
-- **AI scan reports `Got invalid dimensions for input: input_ids`:** this build sends one short `skeleton.` prompt rather than several long prompts. The exported ONNX model may reject a longer token sequence. Keep all five project files together and use a current build. The first scan downloads a large model; keep the tab open on a reliable connection. Older phones may also run out of memory or processing capacity.
+- **AI scan reports `Got invalid dimensions for input: input_ids`:** this build sends one short `skeleton.` prompt. Keep all project files together and use the current build. The first scan downloads a large model; keep the tab open on a reliable connection. Older phones may also run out of memory or processing capacity.
 - **AI scan previously froze the game after saying it was ready:** this version moves model loading and each detection run into `skeleton-worker.js`, so the main render loop and touch controls do not wait for ONNX inference. Make sure you upload `skeleton-worker.js` alongside `game.js`, replace the other project files too, commit, and refresh the page. The HTML includes a cache-busting version on the main module so GitHub Pages is less likely to keep running the old scanner.
 - **Depth occlusion isn't visible:** depth sensing requires compatible device/browser support. Contact shadows work as a fallback.
+- **Pumpkin appears in the wrong corner:** update every project file and refresh the browser cache. This version converts normalized detection boxes into image pixels before positioning the pumpkin and keeps the pumpkin aligned with the detected skeleton as long as it is reacquired.
+
+## Skeleton tracking limits
+
+The AI-scan mode follows the real skeleton through successive camera detections and keeps the same pumpkin across short detection gaps. This is image-space tracking, not a guaranteed physical-world anchor: if the skeleton leaves view for a long time or the player moves around it, standard camera-overlay mode cannot know the skeleton's exact 3D position. Full world anchoring requires camera pose plus reliable depth/AR tracking support on the device.

@@ -86,6 +86,8 @@ let rejectSkeletonWorkerReady = null;
 let skeletonScanEnabled = false;
 let skeletonPresent = false;
 let skeletonMissFrames = 0;
+let skeletonLastSeenAt = 0;
+let lastTrackedSkeletonBox = null;
 let skeletonScanBusy = false;
 let lastSkeletonSpawnAt = 0;
 let visionTargetPumpkin = null;
@@ -925,7 +927,7 @@ renderer.domElement.addEventListener('pointerdown', (event) => {
   pointerDown = { x: event.clientX, y: event.clientY, lastX: event.clientX, lastY: event.clientY, id: event.pointerId };
 });
 renderer.domElement.addEventListener('pointermove', (event) => {
-  if (gameMode !== 'camera' || orientationControls || !pointerDown || pointerDown.id !== event.pointerId) return;
+  if (gameMode !== 'camera' || skeletonScanEnabled || orientationControls || !pointerDown || pointerDown.id !== event.pointerId) return;
   const dx = event.clientX - pointerDown.lastX;
   const dy = event.clientY - pointerDown.lastY;
   camera.rotation.order = 'YXZ';
@@ -1286,60 +1288,168 @@ function prepareVisionFrame() {
     sh = video.videoWidth / viewportAspect;
     sy = (video.videoHeight - sh) / 2;
   }
-  const scale = Math.min(480 / sw, 720 / sh, 1);
+  const scale = Math.min(640 / sw, 768 / sh, 1);
   visionCanvas.width = Math.max(1, Math.round(sw * scale));
   visionCanvas.height = Math.max(1, Math.round(sh * scale));
   visionContext.drawImage(video, sx, sy, sw, sh, 0, 0, visionCanvas.width, visionCanvas.height);
   return true;
 }
 
-function spawnPumpkinAtSkeleton(detection, imageWidth = visionCanvas.width, imageHeight = visionCanvas.height) {
-  const target = interactivePumpkins.find((p) => !p.userData.visionSpawned && !p.userData.smashed);
-  if (!target) return;
-  target.userData.visionSpawned = true;
-  target.userData.visionScreen = {
-    x: THREE.MathUtils.clamp(((detection.box.xmin + detection.box.xmax) * 0.5) / imageWidth, 0.05, 0.95),
-    y: THREE.MathUtils.clamp((detection.box.ymax / imageHeight) - 0.04, 0.12, 0.92)
+// Normalize model output into source-frame pixel coordinates. Some ONNX/browser
+// builds return normalized 0..1 boxes, while the standard pipeline returns pixels.
+// Treating normalized coordinates as pixels can pin the pumpkin to the top-left.
+function normalizeSkeletonDetection(detection, imageWidth, imageHeight) {
+  if (!detection || !imageWidth || !imageHeight) return null;
+  const source = detection.box ?? detection.bbox ?? detection.boundingBox ?? detection.bounding_box;
+  if (!source) return null;
+  let values;
+  if (Array.isArray(source) || ArrayBuffer.isView(source)) {
+    values = Array.from(source).slice(0, 4).map(Number);
+  } else {
+    values = [
+      Number(source.xmin ?? source.x0 ?? source.left ?? source.x_min),
+      Number(source.ymin ?? source.y0 ?? source.top ?? source.y_min),
+      Number(source.xmax ?? source.x1 ?? source.right ?? source.x_max),
+      Number(source.ymax ?? source.y1 ?? source.bottom ?? source.y_max)
+    ];
+  }
+  if (values.length !== 4 || !values.every(Number.isFinite)) return null;
+  let [xmin, ymin, xmax, ymax] = values;
+  // Normalize normalized boxes before clamping (a 0..1 box treated as pixels
+  // previously got clamped to 5%/12%, hence the top-left pumpkin symptom).
+  if (Math.max(Math.abs(xmin), Math.abs(ymin), Math.abs(xmax), Math.abs(ymax)) <= 1.25) {
+    xmin *= imageWidth; xmax *= imageWidth;
+    ymin *= imageHeight; ymax *= imageHeight;
+  }
+  if (xmax < xmin) [xmin, xmax] = [xmax, xmin];
+  if (ymax < ymin) [ymin, ymax] = [ymax, ymin];
+  xmin = THREE.MathUtils.clamp(xmin, 0, imageWidth);
+  xmax = THREE.MathUtils.clamp(xmax, 0, imageWidth);
+  ymin = THREE.MathUtils.clamp(ymin, 0, imageHeight);
+  ymax = THREE.MathUtils.clamp(ymax, 0, imageHeight);
+  if (xmax - xmin < 3 || ymax - ymin < 3) return null;
+  return {
+    label: String(detection.label ?? detection.text ?? detection.class ?? 'skeleton'),
+    score: Number.isFinite(Number(detection.score)) ? Number(detection.score) : 0,
+    box: { xmin, ymin, xmax, ymax }
   };
+}
+
+function screenAnchorForDetection(detection, imageWidth, imageHeight) {
+  const box = detection.box;
+  const boxHeight = Math.max(1, box.ymax - box.ymin);
+  return {
+    x: THREE.MathUtils.clamp(((box.xmin + box.xmax) * 0.5) / imageWidth, 0.035, 0.965),
+    // Put the pumpkin just below the detected skeleton's feet, not in its torso.
+    y: THREE.MathUtils.clamp((box.ymax / imageHeight) + 0.035, 0.055, 0.955),
+    scale: THREE.MathUtils.clamp((boxHeight / imageHeight) * 0.72, 0.24, 0.48)
+  };
+}
+
+function spawnPumpkinAtSkeleton(detection, imageWidth = visionCanvas.width, imageHeight = visionCanvas.height, now = performance.now()) {
+  const target = interactivePumpkins.find((p) => !p.userData.visionSpawned && !p.userData.smashed);
+  if (!target) {
+    toastMessage('Skeleton spotted, but all five pumpkins have already been used. Tap RESET to hunt again.');
+    return false;
+  }
+  const anchor = screenAnchorForDetection(detection, imageWidth, imageHeight);
+  target.userData.visionSpawned = true;
+  target.userData.visionScreen = { x: anchor.x, y: anchor.y };
+  target.userData.lastVisionSeenAt = now;
+  target.userData.lastVisionBox = { ...detection.box };
   target.userData.worldBase = null;
   target.visible = true;
   target.rotation.set(0, 0, 0);
-  target.scale.setScalar(0.54);
-  cameraScreenPosition(target, target.userData.visionScreen.x, target.userData.visionScreen.y, -1.85);
+  target.scale.setScalar(anchor.scale);
+  cameraScreenPosition(target, anchor.x, anchor.y, -1.85);
   visionTargetPumpkin = target;
   makeSound('win');
-  toastMessage('SKELETON SPOTTED! A pumpkin appeared!');
+  toastMessage(`SKELETON SPOTTED · ${Math.round(detection.score * 100)}% · PUMPKIN APPEARED!`);
+  hintText.textContent = 'Skeleton tracked. Keep it in view and the pumpkin will follow near its feet.';
   updateHud();
+  return true;
 }
 
 function handleSkeletonDetections(detections, imageWidth = visionCanvas.width, imageHeight = visionCanvas.height) {
   if (!skeletonScanEnabled || gameMode !== 'camera') return;
   const now = performance.now();
-  const hit = (Array.isArray(detections) ? detections : [])
-    .filter(item => /skeleton/i.test(String(item.label || '')) && Number(item.score) >= 0.30)
-    .sort((a, b) => b.score - a.score)[0];
+  const candidates = (Array.isArray(detections) ? detections : [])
+    .map(item => normalizeSkeletonDetection(item, imageWidth, imageHeight))
+    .filter(item => item && /skeleton/i.test(item.label) && item.score >= 0.22);
+
+  // Once a skeleton is being followed, prefer detections close to its last box so
+  // another object with a slightly higher score does not cause sudden jumps.
+  let hit = null;
+  if (candidates.length) {
+    const recentBox = lastTrackedSkeletonBox && now - skeletonLastSeenAt < 5000 ? lastTrackedSkeletonBox : null;
+    if (recentBox) {
+      const oldX = (recentBox.xmin + recentBox.xmax) * 0.5 / imageWidth;
+      const oldY = (recentBox.ymin + recentBox.ymax) * 0.5 / imageHeight;
+      const nearby = candidates.map(item => {
+        const x = (item.box.xmin + item.box.xmax) * 0.5 / imageWidth;
+        const y = (item.box.ymin + item.box.ymax) * 0.5 / imageHeight;
+        return { item, distance: Math.hypot(x - oldX, y - oldY) };
+      }).filter(entry => entry.distance < 0.42).sort((a, b) => (b.item.score - b.distance * 0.25) - (a.item.score - a.distance * 0.25));
+      if (nearby.length) hit = nearby[0].item;
+    }
+    if (!hit) hit = candidates.sort((a, b) => b.score - a.score)[0];
+  }
 
   if (hit) {
-    skeletonMissFrames = 0;
-    if (!skeletonPresent && (lastSkeletonSpawnAt === 0 || now - lastSkeletonSpawnAt > 2600)) {
-      spawnPumpkinAtSkeleton(hit, imageWidth, imageHeight);
-      lastSkeletonSpawnAt = now;
-    } else if (visionTargetPumpkin?.visible && !visionTargetPumpkin.userData.smashed) {
-      visionTargetPumpkin.userData.visionScreen = {
-        x: THREE.MathUtils.clamp(((hit.box.xmin + hit.box.xmax) * 0.5) / imageWidth, 0.05, 0.95),
-        y: THREE.MathUtils.clamp((hit.box.ymax / imageHeight) - 0.04, 0.12, 0.92)
-      };
+    const wasSkeletonPresent = skeletonPresent;
+    const currentTarget = visionTargetPumpkin;
+    const targetAge = currentTarget ? now - Number(currentTarget.userData.lastVisionSeenAt || 0) : Infinity;
+    const canResumeTrack = currentTarget && !currentTarget.userData.smashed && targetAge <= 8500;
+    const anchor = screenAnchorForDetection(hit, imageWidth, imageHeight);
+
+    if (canResumeTrack) {
+      // Smooth frame-to-frame bounding-box changes to stop the pumpkin jittering.
+      const previous = currentTarget.userData.visionScreen;
+      const smooth = previous
+        ? { x: previous.x * 0.32 + anchor.x * 0.68, y: previous.y * 0.32 + anchor.y * 0.68 }
+        : { x: anchor.x, y: anchor.y };
+      currentTarget.userData.visionScreen = smooth;
+      currentTarget.userData.lastVisionSeenAt = now;
+      currentTarget.userData.lastVisionBox = { ...hit.box };
+      currentTarget.visible = true;
+      currentTarget.scale.setScalar(currentTarget.scale.x * 0.35 + anchor.scale * 0.65);
+      visionTargetPumpkin = currentTarget;
+    } else if (!wasSkeletonPresent) {
+      // The previous detected skeleton has been gone long enough: leave its pumpkin
+      // where it was last anchored and create a new pumpkin for the new encounter.
+      if (currentTarget && !currentTarget.userData.smashed) currentTarget.userData.visionScreen = null;
+      visionTargetPumpkin = null;
+      spawnPumpkinAtSkeleton(hit, imageWidth, imageHeight, now);
     }
+
     skeletonPresent = true;
+    skeletonMissFrames = 0;
+    skeletonLastSeenAt = now;
+    lastTrackedSkeletonBox = { ...hit.box };
+    if (visionTargetPumpkin && !visionTargetPumpkin.userData.smashed) {
+      hintText.textContent = `Skeleton found (${Math.round(hit.score * 100)}%). Keep it in view; the pumpkin tracks near its feet.`;
+    } else {
+      hintText.textContent = `Skeleton found (${Math.round(hit.score * 100)}%). Keep scanning for another skeleton.`;
+    }
   } else {
     skeletonMissFrames++;
     if (skeletonMissFrames >= 3) {
       skeletonPresent = false;
-      // Freeze at the last detected position after the real skeleton leaves view.
+      // Stop moving the object with the camera while the detector cannot see the
+      // skeleton. Its last world-direction position remains visible during the grace period.
       if (visionTargetPumpkin && !visionTargetPumpkin.userData.smashed) {
         visionTargetPumpkin.userData.visionScreen = null;
       }
-      visionTargetPumpkin = null;
+      if (now - skeletonLastSeenAt > 8500) {
+        if (visionTargetPumpkin && !visionTargetPumpkin.userData.smashed) {
+          visionTargetPumpkin.userData.visionScreen = null;
+        }
+        visionTargetPumpkin = null;
+        lastTrackedSkeletonBox = null;
+      }
+    }
+    if (!skeletonPresent && skeletonMissFrames >= 3 && (!visionTargetPumpkin || skeletonMissFrames >= 6)) {
+      hintText.textContent = 'No skeleton detected. Move a little closer, improve the lighting, and keep most of the skeleton in view.';
     }
   }
 }
@@ -1427,6 +1537,8 @@ async function startSkeletonScanConfirmed() {
     skeletonScanEnabled = true;
     skeletonPresent = false;
     skeletonMissFrames = 0;
+    skeletonLastSeenAt = 0;
+    lastTrackedSkeletonBox = null;
     lastSkeletonSpawnAt = 0;
     visionTargetPumpkin = null;
     interactivePumpkins.forEach(p => {
@@ -1441,7 +1553,7 @@ async function startSkeletonScanConfirmed() {
     await loadSkeletonDetector();
     hintText.textContent = 'AI scanner ready in the background. Move the camera around safely; the controls and animations will remain active while it checks for skeletons.';
     toastMessage('AI skeleton scanner ready!');
-    aiScanTimer = window.setInterval(scanCameraForSkeleton, 1400);
+    aiScanTimer = window.setInterval(scanCameraForSkeleton, 1100);
   } catch (error) {
     console.error('Could not start skeleton scanner:', error);
     stopSkeletonScan(false);
@@ -1495,7 +1607,7 @@ $('camera-switch').addEventListener('click', async () => {
     await startCamera();
   }
 });
-$('reset-button').addEventListener('click', () => { if (skeletonScanEnabled) { skeletonPresent = false; skeletonMissFrames = 0; lastSkeletonSpawnAt = 0; visionTargetPumpkin = null; } beginGame(); toastMessage('Fresh pumpkins. Fresh start!'); });
+$('reset-button').addEventListener('click', () => { if (skeletonScanEnabled) { skeletonPresent = false; skeletonMissFrames = 0; skeletonLastSeenAt = 0; lastTrackedSkeletonBox = null; lastSkeletonSpawnAt = 0; visionTargetPumpkin = null; } beginGame(); toastMessage('Fresh pumpkins. Fresh start!'); });
 $('sound-toggle').addEventListener('click', async () => {
   audioEnabled = !audioEnabled;
   $('sound-toggle').classList.toggle('muted', !audioEnabled);

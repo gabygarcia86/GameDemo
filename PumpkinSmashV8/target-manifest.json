@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "generatedAt": "2026-10-22T23:56:18.447Z",
+  "trackingLibrary": "MindAR Image Tracking 1.2.5",
+  "targetCount": 14,
+  "targets": [
+    {
+      "index": 0,
+      "filename": "image1.jpg",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 1.7777777777777777
+    },
+    {
+      "index": 1,
+      "filename": "image2.jpg",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 1.7777777777777777
+    },
+    {
+      "index": 2,
+      "filename": "image3.jpg",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 1.7777777777777777
+    },
+    {
+      "index": 3,
+      "filename": "image4.jpg",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 1.7777777777777777
+    },
+    {
+      "index": 4,
+      "filename": "image5.jpg",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 1.7777777777777777
+    },
+    {
+      "index": 5,
+      "filename": "image6.jpg",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 1.7777777777777777
+    },
+    {
+      "index": 6,
+      "filename": "image7.jpg",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 1.7777777777777777
+    },
+    {
+      "index": 7,
+      "filename": "image8.jpg",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 1.7777777777777777
+    },
+    {
+      "index": 8,
+      "filename": "image9.jpg",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 1.7777777777777777
+    },
+    {
+      "index": 9,
+      "filename": "image10.jpg",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 1.7777777777777777
+    },
+    {
+      "index": 10,
+      "filename": "image11.jpg",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 1.7777777777777777
+    },
+    {
+      "index": 11,
+      "filename": "image12.jpg",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 1.7777777777777777
+    },
+    {
+      "index": 12,
+      "filename": "image13.jpg",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 1.7777777777777777
+    },
+    {
+      "index": 13,
+      "filename": "image14.jpg",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 1.7777777777777777
+    }
+  ]
+}

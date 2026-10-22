@@ -34,6 +34,7 @@ let starting = false;
 let smashing = false;
 let smashStartedAt = 0;
 let pointerStart = null;
+let pointerId = null;
 let lastFrame = 0;
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
@@ -318,14 +319,17 @@ function updateFrame(time) {
 }
 
 function onPointerDown(event) {
-  if (!running || event.button !== 0 || event.target !== renderer?.domElement) return;
+  if (!running || event.button !== 0 || !event.isPrimary) return;
   pointerStart = { x: event.clientX, y: event.clientY };
+  pointerId = event.pointerId;
+  renderer?.domElement.setPointerCapture(event.pointerId);
 }
 
 function onPointerUp(event) {
-  if (!pointerStart || !renderer || !camera || !scene) return;
+  if (!pointerStart || event.pointerId !== pointerId || !renderer || !camera || !scene) return;
   const start = pointerStart;
   pointerStart = null;
+  pointerId = null;
   if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 20) return;
   const rect = renderer.domElement.getBoundingClientRect();
   pointer.set(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1);
@@ -336,12 +340,19 @@ function onPointerUp(event) {
   if (hit) smashPumpkin();
 }
 
+function onPointerCancel(event) {
+  if (event.pointerId !== pointerId) return;
+  pointerStart = null;
+  pointerId = null;
+}
+
 async function stopRuntime() {
   running = false;
   renderer?.setAnimationLoop(null);
   if (renderer?.domElement) {
     renderer.domElement.removeEventListener('pointerdown', onPointerDown);
     renderer.domElement.removeEventListener('pointerup', onPointerUp);
+    renderer.domElement.removeEventListener('pointercancel', onPointerCancel);
   }
   if (mindar) {
     const current = mindar;
@@ -361,6 +372,8 @@ async function stopRuntime() {
   records = [];
   activeRecord = null;
   smashing = false;
+  pointerStart = null;
+  pointerId = null;
   particles.length = 0;
 }
 
@@ -388,6 +401,7 @@ async function startGame() {
       missTolerance: 6
     });
     ({ scene, camera, renderer } = mindar);
+    mindar.cssRenderer.domElement.style.pointerEvents = 'none';
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.setClearColor(0x130d1b, 0);
     scene.add(new THREE.HemisphereLight(0xffffff, 0x432b3f, 1.6));
@@ -406,6 +420,7 @@ async function startGame() {
     setHint('Camera ready. Slowly point it at one of the three reference photos.');
     renderer.domElement.addEventListener('pointerdown', onPointerDown);
     renderer.domElement.addEventListener('pointerup', onPointerUp);
+    renderer.domElement.addEventListener('pointercancel', onPointerCancel);
     renderer.setAnimationLoop(updateFrame);
   } catch (error) {
     console.error('Pumpkin Smash! failed to initialize camera or image tracking:', error);

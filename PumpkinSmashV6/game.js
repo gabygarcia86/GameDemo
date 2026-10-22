@@ -86,14 +86,14 @@ async function checkSetup() {
     const response = await fetch('./target-manifest.json', { cache: 'no-store' });
     if (!response.ok) throw new Error(`target-manifest.json returned HTTP ${response.status}`);
     const data = await response.json();
-    if (data.version !== 1 || !Array.isArray(data.targets) || data.targets.length !== 3) {
-      throw new Error('The target manifest must contain the three reference images.');
+    if (data.version !== 1 || !Array.isArray(data.targets) || data.targets.length !== GAME_GOAL) {
+      throw new Error(`The target manifest must contain exactly ${GAME_GOAL} reference images.`);
     }
     const filenames = data.targets.map((target, index) => target.filename);
     if (
       data.targets.some((target, index) => target.index !== index) ||
-      new Set(filenames).size !== 3 ||
-      !['image1.jpg', 'image2.jpg', 'image3.jpg'].every((filename) => filenames.includes(filename))
+      new Set(filenames).size !== GAME_GOAL ||
+      !Array.from({ length: GAME_GOAL }, (_, index) => `image${index + 1}.jpg`).every((filename) => filenames.includes(filename))
     ) {
       throw new Error('The target manifest indexes or filenames are invalid.');
     }
@@ -103,11 +103,11 @@ async function checkSetup() {
       ui.setupStatus.textContent = 'The photos are configured, but targets.mind is missing or empty. Use the image database builder below.';
       return;
     }
-    ui.setupStatus.textContent = 'Image database ready. Find and smash five pumpkins.';
+    ui.setupStatus.textContent = 'Five unique image targets are ready. Find and smash each pumpkin once.';
     ui.start.disabled = false;
   } catch (error) {
     console.error('Could not validate the image target setup:', error);
-    ui.setupStatus.textContent = 'The image target manifest is missing or invalid. Open the builder to restore the three-photo setup.';
+    ui.setupStatus.textContent = 'The image target manifest is missing or invalid. Open the builder to restore the five-photo setup.';
   }
 }
 
@@ -198,16 +198,15 @@ function spawnPumpkin(record) {
   pumpkin.userData.baseScale.setScalar(scale);
   record.anchor.group.add(pumpkin);
   record.pumpkin = pumpkin;
-  record.smashed = false;
   activeRecord = record;
-  setHint(`Found ${record.target.filename}. Tap the pumpkin at the center of the photo to smash it.`);
+  setHint(`Found ${record.target.filename}. Tap its pumpkin to score; this photo can only be smashed once.`);
 }
 
 function spawnOnFirstVisibleTarget() {
   if (activeRecord || smashing || score >= GAME_GOAL) return;
-  const next = records.find((record) => record.targetFoundNow);
+  const next = records.find((record) => record.targetFoundNow && !record.smashed);
   if (next) spawnPumpkin(next);
-  else setHint('Point the camera at one of the three reference photos to find a pumpkin.');
+  else setHint('Scan for a different reference photo. Each photo can only be smashed once.');
 }
 
 function onTargetFound(record) {
@@ -238,7 +237,7 @@ function onTargetLost(record) {
     activeRecord = null;
   }
   if (!smashing && score < GAME_GOAL) {
-    setHint('Image lost. Slowly point the camera at one of the three reference photos again.');
+    setHint('Pumpkin Lost!');
   }
 }
 
@@ -268,10 +267,10 @@ function smashPumpkin() {
   if (score === GAME_GOAL) {
     ui.finalScore.textContent = `${score} pumpkins smashed.`;
   }
-  setHint(score >= GAME_GOAL ? 'All five pumpkins smashed!' : 'SMASH! Find the next pumpkin on a reference photo.');
+  setHint(score >= GAME_GOAL ? 'All five unique pumpkins smashed!' : 'SMASH! Find a different reference photo!');
 }
 
-function finishSmash() {
+async function finishSmash() {
   const record = activeRecord;
   if (record) {
     record.smashed = true;
@@ -287,6 +286,11 @@ function finishSmash() {
   smashing = false;
   if (score >= GAME_GOAL) {
     ui.hud.classList.add('hidden');
+    try {
+      await stopRuntime();
+    } catch (error) {
+      console.error('Could not fully stop the camera and image scanner after the round:', error);
+    }
     ui.endScreen.classList.remove('hidden');
     return;
   }
@@ -307,7 +311,7 @@ function updateFrame(time) {
     const squash = progress < 0.3 ? 1 - progress * 1.25 : Math.max(0, (1 - progress) / 0.625);
     const scale = activeRecord.pumpkin.userData.baseScale;
     activeRecord.pumpkin.scale.set(scale.x * Math.max(0.01, squash), scale.y * Math.max(0.01, squash * 0.7), scale.z);
-    if (progress >= 1) finishSmash();
+    if (progress >= 1) void finishSmash();
   }
   for (const particle of particles) {
     particle.age += delta;
@@ -357,6 +361,8 @@ async function stopRuntime() {
   if (mindar) {
     const current = mindar;
     mindar = null;
+    current.ui?.hideScanning();
+    current.ui?.hideLoading();
     try {
       await current.stop();
     } finally {
@@ -417,7 +423,7 @@ async function startGame() {
     ui.startScreen.classList.add('hidden');
     ui.endScreen.classList.add('hidden');
     ui.hud.classList.remove('hidden');
-    setHint('Camera ready. Slowly point it at one of the three reference photos.');
+    setHint('Find five unique photos. Each pumpkin can only be smashed once.');
     renderer.domElement.addEventListener('pointerdown', onPointerDown);
     renderer.domElement.addEventListener('pointerup', onPointerUp);
     renderer.domElement.addEventListener('pointercancel', onPointerCancel);
@@ -442,23 +448,11 @@ async function startGame() {
 
 function resetRound() {
   score = 0;
-  smashing = false;
-  for (const record of records) {
-    record.smashed = false;
-    disposePumpkin(record);
-  }
-  for (const particle of particles) {
-    particle.mesh.parent?.remove(particle.mesh);
-    particle.mesh.geometry.dispose();
-    particle.mesh.material.dispose();
-  }
-  particles.length = 0;
-  activeRecord = null;
   updateScore();
   ui.endScreen.classList.add('hidden');
-  ui.hud.classList.remove('hidden');
-  setHint('Find and smash five pumpkins. A pumpkin appears only while a reference photo is tracked.');
-  spawnOnFirstVisibleTarget();
+  ui.startScreen.classList.remove('hidden');
+  ui.startError.hidden = true;
+  void startGame();
 }
 
 ui.start.addEventListener('click', startGame);

@@ -20,12 +20,12 @@
     <header>
       <p class="eyebrow">PUMPKIN SMASH! SETUP</p>
       <h1>IMAGE DATABASE<br><span>BUILDER</span></h1>
-      <p class="lede">Compile the three included reference photos into MindAR's image-tracking database. Compilation runs in this browser. Neither the source photos nor camera images are uploaded to a server.</p>
+      <p class="lede">Compile the five included reference photos into MindAR's image-tracking database. Compilation runs in this browser. Neither the source photos nor camera images are uploaded to a server.</p>
     </header>
 
     <section class="panel" aria-labelledby="targets-title">
       <h2 id="targets-title">Reference photos</h2>
-      <p class="help">The builder loads these exact files from <code>images/</code> automatically. All three must load before compilation can start.</p>
+      <p class="help">The builder loads <code>image1.jpg</code> through <code>image5.jpg</code> from <code>images/</code> automatically. All five must load before compilation can start.</p>
       <div id="target-list" class="target-list" aria-live="polite"></div>
     </section>
 
@@ -33,7 +33,7 @@
       <h2 id="build-title">Build the target database</h2>
       <p class="help">Keep this page open while image features are analyzed. It may take a few minutes on a phone.</p>
       <div class="progress" aria-label="Build progress"><span id="progress-bar"></span></div>
-      <p id="status" class="status" role="status">Loading the three reference photos…</p>
+      <p id="status" class="status" role="status">Loading the five reference photos…</p>
       <div class="actions">
         <button id="build-button" class="button primary" type="button" disabled>BUILD IMAGE DATABASE</button>
         <a class="button secondary" href="./index.html">BACK TO GAME</a>
@@ -45,10 +45,10 @@
       <h2 id="steps-title">Deployment and troubleshooting</h2>
       <ol class="steps">
         <li>Build using a modern browser over HTTPS or localhost. The bundled compiler and runtime dependencies are loaded from this project, not a CDN.</li>
-        <li>Move the downloaded <code>targets.mind</code> and <code>target-manifest.json</code> to this folder's root beside <code>index.html</code>. Keep the three original photos in <code>images/</code>.</li>
+        <li>Move the downloaded <code>targets.mind</code> and <code>target-manifest.json</code> to this folder's root beside <code>index.html</code>. Keep all five photos in <code>images/</code>.</li>
         <li>Publish the full <code>PumpkinSmashV6</code> folder on GitHub Pages. Open the game on your phone, grant camera access, and scan one of the actual reference photos.</li>
       </ol>
-      <p class="warning"><strong>Tracking limitation:</strong> this tracks the exact flat photos, not similar real-world objects. <code>image2.jpg</code> has a large, mostly plain wall; the illustrated ball has useful detail, but the wall contributes few features. Keep the ball and its print well lit and visible. For more reliable tracking, use a high-contrast printed target with distinctive details.</p>
+      <p class="warning"><strong>Tracking limitation:</strong> this tracks the exact flat photos, not similar real-world objects. <code>image2.jpg</code> has a large, mostly plain wall, and <code>image5.jpg</code> has few distinct features outside the blue object. Keep the ball's print and blue object sharp, well lit, and visible. For more reliable tracking, use a high-contrast printed target with distinctive details.</p>
       <p class="help">If an image fails to load, check its exact filename and case under <code>images/</code>. If MindAR reports poor target quality, use sharp, distinctive visual detail; do not substitute another image without updating the target manifest.</p>
     </section>
   </main>

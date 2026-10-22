@@ -1,6 +1,6 @@
 import './vendor/mind-ar/dist/mindar-image.prod.js';
 
-const targetFiles = ['image1.jpg', 'image2.jpg', 'image3.jpg'];
+const targetFiles = ['image1.jpg', 'image2.jpg', 'image3.jpg', 'image4.jpg', 'image5.jpg'];
 const $ = (id) => document.getElementById(id);
 const list = $('target-list');
 const buildButton = $('build-button');
@@ -83,7 +83,7 @@ async function loadSources() {
   const results = await Promise.all(pending);
   loadedTargets = results.filter((result) => result.status === 'fulfilled').map((result) => result.target);
   if (loadedTargets.length === targetFiles.length) {
-    setStatus('All three reference photos loaded. Ready to build.');
+    setStatus(`All ${targetFiles.length} reference photos loaded. Ready to build.`);
   } else {
     setStatus(`${loadedTargets.length} of ${targetFiles.length} photos loaded. Fix the listed image errors before building.`, 'bad');
   }

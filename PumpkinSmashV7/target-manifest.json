@@ -1,0 +1,225 @@
+{
+  "version": 1,
+  "generatedAt": "2026-10-22T00:55:45.633Z",
+  "trackingLibrary": "MindAR Image Tracking 1.2.5",
+  "targetCount": 31,
+  "targets": [
+    {
+      "index": 0,
+      "filename": "image1.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 1,
+      "filename": "image2.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 2,
+      "filename": "image3.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 3,
+      "filename": "image4.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 4,
+      "filename": "image5.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 5,
+      "filename": "image6.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 6,
+      "filename": "image7.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 7,
+      "filename": "image8.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 8,
+      "filename": "image9.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 9,
+      "filename": "image10.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 10,
+      "filename": "image11.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 11,
+      "filename": "image12.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 12,
+      "filename": "image13.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 13,
+      "filename": "image14.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 14,
+      "filename": "image15.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 15,
+      "filename": "image16.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 16,
+      "filename": "image17.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 17,
+      "filename": "image18.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 18,
+      "filename": "image19.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 19,
+      "filename": "image20.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 20,
+      "filename": "image21.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 21,
+      "filename": "image22.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 22,
+      "filename": "image23.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 23,
+      "filename": "image24.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 24,
+      "filename": "image25.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 25,
+      "filename": "image26.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 26,
+      "filename": "image27.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 27,
+      "filename": "image28.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 28,
+      "filename": "image29.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 29,
+      "filename": "image30.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 30,
+      "filename": "image31.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    }
+  ]
+}

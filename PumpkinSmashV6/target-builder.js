@@ -1,6 +1,7 @@
 import './vendor/mind-ar/dist/mindar-image.prod.js';
 
-const targetFiles = ['image1.jpg', 'image2.jpg', 'image3.jpg', 'image4.jpg', 'image5.jpg'];
+let targetFiles = [];
+const minimumPlayableTargets = 5;
 const $ = (id) => document.getElementById(id);
 const list = $('target-list');
 const buildButton = $('build-button');
@@ -68,6 +69,23 @@ function download(blob, filename) {
 }
 
 async function loadSources() {
+  const manifestResponse = await fetch('./images/manifest.json', { cache: 'no-store' });
+  if (!manifestResponse.ok) {
+    throw new Error(`Could not load images/manifest.json (HTTP ${manifestResponse.status}).`);
+  }
+  const imageManifest = await manifestResponse.json();
+  if (!Array.isArray(imageManifest.images) || imageManifest.images.length === 0) {
+    throw new Error('images/manifest.json must contain a nonempty "images" array.');
+  }
+  const filenamePattern = /^[a-z0-9][a-z0-9._-]*\.(?:jpe?g|png|webp)$/i;
+  if (imageManifest.images.some((filename) => typeof filename !== 'string' || !filenamePattern.test(filename))) {
+    throw new Error('Each images/manifest.json entry must be a filename (JPG, PNG, or WEBP), without folder paths.');
+  }
+  if (new Set(imageManifest.images.map((filename) => filename.toLowerCase())).size !== imageManifest.images.length) {
+    throw new Error('images/manifest.json contains duplicate filenames.');
+  }
+  targetFiles = imageManifest.images;
+
   const pending = targetFiles.map((filename) => {
     const card = addTargetCard(filename);
     return loadTarget(filename, card).then(
@@ -82,19 +100,28 @@ async function loadSources() {
   });
   const results = await Promise.all(pending);
   loadedTargets = results.filter((result) => result.status === 'fulfilled').map((result) => result.target);
-  if (loadedTargets.length === targetFiles.length) {
-    setStatus(`All ${targetFiles.length} reference photos loaded. Ready to build.`);
+  if (targetFiles.length < minimumPlayableTargets) {
+    setStatus(`The game requires at least ${minimumPlayableTargets} targets, but images/manifest.json lists only ${targetFiles.length}.`, 'bad');
+  } else if (loadedTargets.length === targetFiles.length) {
+    setStatus(`All ${targetFiles.length} reference photos listed in images/manifest.json loaded. Ready to build.`);
   } else {
     setStatus(`${loadedTargets.length} of ${targetFiles.length} photos loaded. Fix the listed image errors before building.`, 'bad');
   }
-  buildButton.disabled = loadedTargets.length !== targetFiles.length || !window.MINDAR?.IMAGE?.Compiler;
+  buildButton.disabled = targetFiles.length < minimumPlayableTargets ||
+    loadedTargets.length !== targetFiles.length ||
+    !window.MINDAR?.IMAGE?.Compiler;
   if (!window.MINDAR?.IMAGE?.Compiler) {
     setStatus('The local MindAR image compiler did not load. Check that vendor/mind-ar files were uploaded, then reload.', 'bad');
   }
 }
 
 buildButton.addEventListener('click', async () => {
-  if (building || loadedTargets.length !== targetFiles.length || !window.MINDAR?.IMAGE?.Compiler) return;
+  if (
+    building ||
+    targetFiles.length < minimumPlayableTargets ||
+    loadedTargets.length !== targetFiles.length ||
+    !window.MINDAR?.IMAGE?.Compiler
+  ) return;
   building = true;
   buildButton.disabled = true;
   progressBar.style.width = '0%';
@@ -138,7 +165,9 @@ buildButton.addEventListener('click', async () => {
     setStatus(`Compilation failed: ${error.message || String(error)}. Check the image files and reload before trying again.`, 'bad');
   } finally {
     building = false;
-    buildButton.disabled = loadedTargets.length !== targetFiles.length || !window.MINDAR?.IMAGE?.Compiler;
+    buildButton.disabled = targetFiles.length < minimumPlayableTargets ||
+      loadedTargets.length !== targetFiles.length ||
+      !window.MINDAR?.IMAGE?.Compiler;
   }
 });
 

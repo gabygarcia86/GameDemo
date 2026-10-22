@@ -86,16 +86,26 @@ async function checkSetup() {
     const response = await fetch('./target-manifest.json', { cache: 'no-store' });
     if (!response.ok) throw new Error(`target-manifest.json returned HTTP ${response.status}`);
     const data = await response.json();
-    if (data.version !== 1 || !Array.isArray(data.targets) || data.targets.length !== GAME_GOAL) {
-      throw new Error(`The target manifest must contain exactly ${GAME_GOAL} reference images.`);
-    }
-    const filenames = data.targets.map((target, index) => target.filename);
+    const imageResponse = await fetch('./images/manifest.json', { cache: 'no-store' });
+    if (!imageResponse.ok) throw new Error(`images/manifest.json returned HTTP ${imageResponse.status}`);
+    const imageData = await imageResponse.json();
     if (
-      data.targets.some((target, index) => target.index !== index) ||
-      new Set(filenames).size !== GAME_GOAL ||
-      !Array.from({ length: GAME_GOAL }, (_, index) => `image${index + 1}.jpg`).every((filename) => filenames.includes(filename))
+      !Array.isArray(imageData.images) ||
+      imageData.images.length < GAME_GOAL ||
+      imageData.images.some((filename) => typeof filename !== 'string') ||
+      new Set(imageData.images.map((filename) => filename.toLowerCase())).size !== imageData.images.length
     ) {
-      throw new Error('The target manifest indexes or filenames are invalid.');
+      throw new Error(`images/manifest.json must contain at least ${GAME_GOAL} unique image filenames.`);
+    }
+    if (
+      data.version !== 1 ||
+      !Array.isArray(data.targets) ||
+      data.targets.length < GAME_GOAL ||
+      data.targets.length !== imageData.images.length ||
+      data.targetCount !== data.targets.length ||
+      data.targets.some((target, index) => !target || target.index !== index || target.filename !== imageData.images[index])
+    ) {
+      throw new Error('The target database does not match the ordered image list in images/manifest.json. Rebuild it in target-builder.html.');
     }
     manifest = data;
     const targetResponse = await fetch('./targets.mind', { method: 'HEAD', cache: 'no-store' });
@@ -103,11 +113,11 @@ async function checkSetup() {
       ui.setupStatus.textContent = 'The photos are configured, but targets.mind is missing or empty. Use the image database builder below.';
       return;
     }
-    ui.setupStatus.textContent = 'Five unique image targets are ready. Find and smash each pumpkin once.';
+    ui.setupStatus.textContent = `${data.targets.length} image targets are ready. Smash any ${GAME_GOAL} unique pumpkins to win.`;
     ui.start.disabled = false;
   } catch (error) {
     console.error('Could not validate the image target setup:', error);
-    ui.setupStatus.textContent = 'The image target manifest is missing or invalid. Open the builder to restore the five-photo setup.';
+    ui.setupStatus.textContent = 'The image target manifest is missing or invalid. Open the builder to rebuild it from images/manifest.json.';
   }
 }
 
@@ -423,7 +433,7 @@ async function startGame() {
     ui.startScreen.classList.add('hidden');
     ui.endScreen.classList.add('hidden');
     ui.hud.classList.remove('hidden');
-    setHint('Find five unique photos. Each pumpkin can only be smashed once.');
+    setHint('Find any five unique photos. Each pumpkin can only be smashed once.');
     renderer.domElement.addEventListener('pointerdown', onPointerDown);
     renderer.domElement.addEventListener('pointerup', onPointerUp);
     renderer.domElement.addEventListener('pointercancel', onPointerCancel);

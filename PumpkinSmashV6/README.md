@@ -1,57 +1,80 @@
-# Pumpkin Smash! — image-tracked AR
+# Pumpkin Smash! V6 — image-tracked AR
 
-Pumpkin Smash! is a static, mobile-first Halloween game. MindAR Image Tracking 1.2.5 recognizes five supplied photographs and anchors a procedural Three.js pumpkin to the center of the recognized image. Each target can score only once; finish all five unique targets to win.
+Pumpkin Smash! is a static, mobile-first Halloween game. MindAR Image Tracking 1.2.5 recognizes the images listed in `images/manifest.json` and anchors a Three.js pumpkin to a detected image. The current image list contains nine targets. Each image can score only once in a round, and a round ends after five different images have been smashed.
 
-## Included project
+## Project files
 
-- `index.html`, `game.js`, and `styles.css` — the game and its UI.
-- `target-builder.html`, `target-builder.js`, and `target-builder.css` — a separate, vertically scrolling local browser compiler.
-- `images/image1.jpg` through `images/image5.jpg` — the reference photos.
-- `images/manifest.json` — the fixed source-image list.
-- `vendor/` — local copies of Three.js 0.160.0 and MindAR 1.2.5, including their licenses. Three.js 0.160.0 is used because MindAR 1.2.5 imports `sRGBEncoding`; the provided Three.js 0.186.1 archive no longer exports that symbol and is not compatible with this MindAR build. The original `.tgz` archives are retained as supplied but are not loaded at runtime.
+- `index.html`, `game.js`, and `styles.css` — the game.
+- `target-builder.html`, `target-builder.js`, and `target-builder.css` — the local in-browser image database builder.
+- `images/` — original reference images and `manifest.json`, the authoritative image list.
+- `targets.mind` and `target-manifest.json` — compiled database and its ordered target-index metadata. These must be rebuilt together whenever the image list or any listed image changes.
+- `vendor/` — local MindAR and compatible Three.js runtime and compiler dependencies.
 
-No runtime CDN, backend, API key, Node server, or image upload is used. The target compiler runs locally in the browser; the game uses the camera feed locally.
-
-## Build or refresh targets
-
-This project includes `targets.mind` compiled from all five reference photos. To regenerate the database after changing a source image:
-
-1. Serve the folder through HTTPS or localhost (camera access and browser workers require a secure context). For example, with Python installed, open a terminal in this folder and run `python -m http.server 8000`; then visit `http://localhost:8000/target-builder.html`.
-2. The builder automatically loads and previews all five files from `images/`, reports dimensions and individual loading errors, then enables **Build Image Database** only when all five are available.
-3. Press **Build Image Database** and keep the page open until compilation completes. The success state is shown only after MindAR returns nonempty binary data and the matching target manifest has been generated.
-4. The browser downloads `targets.mind` and `target-manifest.json`. Put both files in this project root beside `index.html`. Keep the source photographs in `images/`.
-5. Replace both generated root files together. Target indexes follow the displayed order: image1 through image5.
-
-Publish the full folder to GitHub Pages and open the game over HTTPS on a supported phone.
+The app does not use a runtime CDN, backend, API key, or photo upload. Build and camera processing run in the browser.
 
 ## Run the game
 
-1. Open `index.html` through HTTPS (GitHub Pages) or localhost.
-2. Tap **Start Game**, grant camera access, and slowly point the rear-facing camera at one of the exact source photos.
-3. Tap the visible 3D pumpkin to score. The pumpkin appears only on a currently tracked target, inherits MindAR's target transform, and is centered at local target coordinates `(0, 0, 0)` with a small positive local-Z offset.
-4. Each reference photo can be smashed only once. After each squash and particle burst completes, another pumpkin spawns on a visible, not-yet-smashed photo. The tracker and camera stop and the scanning overlay is hidden after the fifth unique smash.
+1. Ensure the root `targets.mind` and `target-manifest.json` were built from the current `images/manifest.json`.
+2. Serve the folder over HTTPS or localhost. For example, run `python -m http.server 8000` from this folder and open `http://localhost:8000/`.
+3. Tap **Start Game**, grant camera access, and point the rear-facing camera at one of the listed reference images.
+4. Tap the pumpkin on a tracked image. That image cannot score again during this round. Find four other unsmashed images to complete the five-smash round.
 
-## Replace or add reference photos
+The game database can include more than five targets; the round goal remains five unique images. The game requires at least five valid entries in `images/manifest.json`.
 
-This build uses `image1.jpg` through `image5.jpg`. To replace one, preserve or update its filename in `images/manifest.json`, update `target-builder.js`'s `targetFiles` list if the filename changes, and rebuild. The five-smash game requires five distinct targets. Always preserve original images elsewhere before replacing them. A target binary and its manifest must be rebuilt together so indexes remain aligned.
+## Add or remove reference images
 
-## Troubleshooting and limitations
+`images/manifest.json` is the one source-of-truth list the builder reads. You do not need to edit `target-builder.js` to add or remove an image.
 
-- **Builder image failed:** confirm the exact, case-sensitive filename and path in `images/`. The individual card displays its HTTP or image-decoding error.
-- **Compiler missing:** check that `vendor/mind-ar/dist/` was published with the project and reload. The builder does not fall back to a CDN.
-- **Camera error:** use HTTPS or localhost, allow camera permission, close other camera apps, and retry. Modern Chrome on Android and Safari on iOS are the primary targets; older browsers or embedded in-app browsers may not support camera or module features.
-- **No pumpkin appears:** the game needs both generated `targets.mind` and its generated `target-manifest.json` in the project root. Keep the exact reference photo in view, sharp, and well lit.
-- **Image2 tracking:** `image2.jpg` contains a detailed illustrated ball but also a large plain wall. The wall has little distinctive texture and may lower tracking reliability. Favor the ball's printed pattern.
-- **Image5 tracking:** `image5.jpg` has relatively few distinctive features outside the blue object. Keep the object sharp, well lit, and fully visible.
-- **Tracking scope:** this is planar photo tracking, not general object detection or persistent world mapping. The pumpkin follows the photo's pose and is removed when that target is genuinely lost. It will not recognize a similar 3D cabinet, ball, door, or decoration.
-- **Privacy:** target compilation and camera processing run in the browser. This project does not send photos or camera frames to a server.
+### Add an image
 
-## Verification report
+1. Copy the original photo into the `images/` folder. Supported formats are JPG/JPEG, PNG, and WEBP.
+2. Give it a unique filename containing only letters, numbers, periods, underscores, or hyphens. For example: `image32.jpg`. Keep the filename's capitalization exactly the same.
+3. Open `images/manifest.json` in a code editor. Add the filename to the `"images"` array, including quotation marks and a comma after the previous entry. The final entry must not have a trailing comma. For example:
 
-- Source assets and exact relative paths: verified in the project.
-- Local dependency modules and import-map paths: verified against the supplied MindAR package; Three.js 0.160.0 is used to satisfy MindAR's `sRGBEncoding` import.
-- Builder logic: implemented with image-load validation, per-image errors, compilation progress, nonempty binary validation, and two generated output downloads.
-- Browser builder compilation: passed for all five source photos; generated and installed the matching MindAR database and target manifest.
-- Local game load and five-target setup validation: passed.
-- End-of-round camera shutdown and per-image one-score rule: implemented; physical-device win-flow test remains unverified.
-- Mobile camera permissions, real-image pose tracking, and GitHub Pages deployment: not verified in this environment; these require a supported device / published HTTPS site.
+   ```json
+   {
+     "images": ["image1.jpg", "image2.jpg", "image32.jpg"]
+   }
+   ```
+
+4. Save the JSON and check that it remains valid. Each filename must be unique, and each file must exist in `images/`.
+5. Rebuild the database using the steps below. The builder loads and previews every list entry and shows errors for missing or unreadable files.
+
+### Remove an image
+
+1. Open `images/manifest.json` and delete the unwanted filename and its adjacent comma as needed.
+2. You may also delete the unused image file from `images/`; it is not included in tracking unless it remains in the JSON list.
+3. Save the JSON and rebuild the database. Do not manually delete a target from `target-manifest.json`; target indexes are generated and must match the binary database exactly.
+4. Keep at least five entries in the list unless you also change the game's five-smash goal in `game.js`.
+
+### Replace an image but keep its filename
+
+Replace the file in `images/` with the new photo, keeping its exact filename. Rebuild the target database so the compiled features match the new image. If you change the filename too, update the corresponding list entry in `images/manifest.json`.
+
+### Rebuild and publish
+
+1. From this folder, start a local web server (for example, `python -m http.server 8000`) and open `http://localhost:8000/target-builder.html`. A secure HTTPS site also works.
+2. Confirm every image in the list has a preview, filename, and dimensions. The build button stays disabled if any image fails to load or the list contains fewer than five images.
+3. Press **Build Image Database** and leave the page open. Larger image lists can take longer and use more memory than a small database.
+4. Wait for the success message. The builder verifies that MindAR compiled the expected number of targets and returned a nonempty database, then downloads `targets.mind` and `target-manifest.json`.
+5. Replace both files in this project's root together. Keep every listed original image under `images/`.
+6. Publish the complete `PumpkinSmashV6` folder to GitHub Pages. Open the HTTPS game URL and grant camera permission.
+
+Target indexes use the same order as the `"images"` array. Never reorder or change that array without rebuilding and replacing both generated files. If you update the source list but forget to rebuild, the game detects the mismatch and asks you to rebuild instead of silently using wrong indexes.
+
+## Target quality and limitations
+
+MindAR tracks the exact flat photos; it does not recognize similar real-world objects. Sharp images with distinctive, high-contrast details are generally easier to track. Keep the whole reference image visible, steady, and well lit. This is planar image tracking, not persistent world mapping; a pumpkin disappears when its image target is lost.
+
+The game uses the first five distinct images encountered in a round; after a target is smashed, it will not spawn that target again. Although the database includes all images in the list, players can choose any five by scanning those images during a round.
+
+## Troubleshooting
+
+- **Builder image failed:** verify the exact filename, capitalization, format, and path in `images/manifest.json`. Every listed file must exist in `images/`.
+- **Build button disabled:** wait for all listed photos to load successfully, confirm there are at least five entries, and verify that the local compiler files under `vendor/mind-ar/` are present.
+- **Compilation takes a long time:** large target lists need more CPU, memory, and build time. Keep the page open; do not reload during compilation. If the browser runs out of memory, build a smaller image list.
+- **Game says to rebuild:** the generated target list and `images/manifest.json` differ. Rebuild and upload both output files together.
+- **Camera error:** use HTTPS or localhost, allow camera access, and close other apps using the camera. Modern Chrome on Android and Safari on iOS are the primary targets; embedded in-app browsers may not support the required APIs.
+- **An image is not recognized:** verify it was included in the last build, then improve lighting, focus, and framing. Replace low-detail or repetitive artwork with a more distinctive target if needed.
+
+The current `target-manifest.json` may be out of date after changing the image list. Rebuild both generated target files before publishing so the target order matches `images/manifest.json`.

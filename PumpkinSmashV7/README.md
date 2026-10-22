@@ -1,6 +1,6 @@
 # Pumpkin Smash! V7 — image-tracked AR
 
-Pumpkin Smash! is a static, mobile-first Halloween game. MindAR Image Tracking 1.2.5 recognizes the images listed in `images/manifest.json` and anchors a Three.js pumpkin to a detected image. The game currently includes 31 image targets. Each image can score only once in a round, and a round ends after five different images have been smashed.
+Pumpkin Smash! is a static, mobile-first Halloween game. MindAR Image Tracking 1.2.5 recognizes the images listed in `images/manifest.json` and anchors a Three.js pumpkin to a detected image. The current image list contains 45 targets (`image1.jpg` through `image45.jpg`). Each image can score only once in a round, and a round ends after five different images have been smashed.
 
 ## Project files
 
@@ -59,7 +59,7 @@ Replace the file in `images/` with the new photo, keeping its exact filename. Re
 
 1. From this folder, start a local web server (for example, `python -m http.server 8000`) and open `http://localhost:8000/target-builder.html`. A secure HTTPS site also works.
 2. Confirm every image in the list has a preview, filename, and dimensions. The build button stays disabled if any image fails to load or the list contains fewer than five images.
-3. Press **Build Image Database** and leave the page open. A 31-image database can take noticeably longer and use more memory than a small database.
+3. Press **Build Image Database** and leave the page open. A 45-image database can take noticeably longer and use more memory than a small database.
 4. Wait for the success message. The builder verifies that MindAR compiled the expected number of targets and returned a nonempty database, then downloads `targets.mind` and `target-manifest.json`.
 5. Replace both files in this project's root together. Keep every listed original image under `images/`.
 6. Publish the complete `PumpkinSmashV7` folder to GitHub Pages. Open the HTTPS game URL and grant camera permission.
@@ -81,9 +81,9 @@ The game uses the first five distinct images encountered in a round; after a tar
 - **Camera error:** use HTTPS or localhost, allow camera access, and close other apps using the camera. Modern Chrome on Android and Safari on iOS are the primary targets; embedded in-app browsers may not support the required APIs.
 - **An image is not recognized:** verify it was included in the last build, then improve lighting, focus, and framing. Replace low-detail or repetitive artwork with a more distinctive target if needed.
 
-## Validation report
+## Current target database
 
-- Confirmed that `images/manifest.json` lists 31 unique image files and all 31 files exist.
-- Confirmed the builder reads the image list dynamically rather than using a hard-coded five-image array.
-- The updated 31-image database has not yet been generated. Run the target builder and replace `targets.mind` and `target-manifest.json` before publishing or playing with all 31 targets.
+The builder loads every image in `images/manifest.json`; the current list contains 45 images. The checked-in `target-manifest.json` still describes the previous 31-image database. Build a new database and replace both `targets.mind` and `target-manifest.json` before publishing, or the game will report that the target database does not match the image list.
+
+- Confirmed that all 45 listed image files exist.
 - Physical-device camera tracking and GitHub Pages deployment have not been tested here.

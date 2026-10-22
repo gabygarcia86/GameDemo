@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-22T00:55:45.633Z",
+  "generatedAt": "2026-10-22T21:38:16.729Z",
   "trackingLibrary": "MindAR Image Tracking 1.2.5",
-  "targetCount": 31,
+  "targetCount": 45,
   "targets": [
     {
       "index": 0,
@@ -217,6 +217,104 @@
     {
       "index": 30,
       "filename": "image31.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 31,
+      "filename": "image32.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 32,
+      "filename": "image33.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 33,
+      "filename": "image34.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 34,
+      "filename": "image35.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 35,
+      "filename": "image36.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 36,
+      "filename": "image37.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 37,
+      "filename": "image38.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 38,
+      "filename": "image39.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 39,
+      "filename": "image40.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 40,
+      "filename": "image41.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 41,
+      "filename": "image42.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 42,
+      "filename": "image43.jpg",
+      "width": 2048,
+      "height": 1536,
+      "aspectRatio": 0.75
+    },
+    {
+      "index": 43,
+      "filename": "image44.jpg",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 1.3333333333333333
+    },
+    {
+      "index": 44,
+      "filename": "image45.jpg",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 1.3333333333333333

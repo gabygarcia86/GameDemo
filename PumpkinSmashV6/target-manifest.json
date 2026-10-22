@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "generatedAt": "2026-10-22T00:01:44.410Z",
+  "trackingLibrary": "MindAR Image Tracking 1.2.5",
+  "targetCount": 3,
+  "targets": [
+    {
+      "index": 0,
+      "filename": "image1.jpg",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 1.7777777777777777
+    },
+    {
+      "index": 1,
+      "filename": "image2.jpg",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 1.7777777777777777
+    },
+    {
+      "index": 2,
+      "filename": "image3.jpg",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 1.7777777777777777
+    }
+  ]
+}

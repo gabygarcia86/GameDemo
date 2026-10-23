@@ -1,14 +1,14 @@
 {
   "schema": 1,
-  "generatedAt": "2026-10-21T23:34:00.348Z",
+  "generatedAt": "2026-10-23T00:32:28.943Z",
   "library": {
     "name": "mind-ar",
     "version": "1.2.5",
     "three": "0.186.1"
   },
   "mindFile": "targets.mind",
-  "mindFileBytes": 1963417,
-  "mindFileSha256": "42da87368ae667080011f3c34df3b2630b5c24ba6711aeadbb44abdf3ef9c385",
+  "mindFileBytes": 47146135,
+  "mindFileSha256": "0d625ffe8f7a3cf2fa80d433c1b89e5c654ac5cfd43aae9aac773cc5fe6c457e",
   "coordinateNote": "Anchor group origin = image center. 1 anchor unit = target width. +x right, +y up, +z out of the image toward the viewer.",
   "targets": [
     {
@@ -25,8 +25,8 @@
       },
       "features": {
         "total": 292,
-        "maxima": 171,
-        "minima": 121,
+        "maxima": 172,
+        "minima": 120,
         "gridCoverage": 0.545
       },
       "quality": {
@@ -75,9 +75,1263 @@
       },
       "features": {
         "total": 494,
-        "maxima": 188,
-        "minima": 306,
+        "maxima": 189,
+        "minima": 305,
         "gridCoverage": 0.894
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 3,
+      "file": "image4.jpg",
+      "label": "Image 4 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 475,
+        "maxima": 316,
+        "minima": 159,
+        "gridCoverage": 1
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 4,
+      "file": "image5.jpg",
+      "label": "Image 5 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 492,
+        "maxima": 304,
+        "minima": 188,
+        "gridCoverage": 0.979
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 5,
+      "file": "image6.jpg",
+      "label": "Image 6 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 477,
+        "maxima": 348,
+        "minima": 129,
+        "gridCoverage": 0.938
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 6,
+      "file": "image7.jpg",
+      "label": "Image 7 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 482,
+        "maxima": 352,
+        "minima": 130,
+        "gridCoverage": 0.979
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 7,
+      "file": "image8.jpg",
+      "label": "Image 8 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 475,
+        "maxima": 319,
+        "minima": 156,
+        "gridCoverage": 0.938
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 8,
+      "file": "image9.jpg",
+      "label": "Image 9 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 473,
+        "maxima": 278,
+        "minima": 195,
+        "gridCoverage": 0.938
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 9,
+      "file": "image10.jpg",
+      "label": "Image 10 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 484,
+        "maxima": 244,
+        "minima": 240,
+        "gridCoverage": 1
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 10,
+      "file": "image11.jpg",
+      "label": "Image 11 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 438,
+        "maxima": 304,
+        "minima": 134,
+        "gridCoverage": 0.917
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 11,
+      "file": "image12.jpg",
+      "label": "Image 12 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 401,
+        "maxima": 219,
+        "minima": 182,
+        "gridCoverage": 0.813
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 12,
+      "file": "image13.jpg",
+      "label": "Image 13 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 469,
+        "maxima": 281,
+        "minima": 188,
+        "gridCoverage": 0.938
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 13,
+      "file": "image14.jpg",
+      "label": "Image 14 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 495,
+        "maxima": 271,
+        "minima": 224,
+        "gridCoverage": 0.979
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 14,
+      "file": "image15.jpg",
+      "label": "Image 15 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 487,
+        "maxima": 286,
+        "minima": 201,
+        "gridCoverage": 0.958
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 15,
+      "file": "image16.jpg",
+      "label": "Image 16 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 500,
+        "maxima": 250,
+        "minima": 250,
+        "gridCoverage": 0.958
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 16,
+      "file": "image17.jpg",
+      "label": "Image 17 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 500,
+        "maxima": 275,
+        "minima": 225,
+        "gridCoverage": 1
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 17,
+      "file": "image18.jpg",
+      "label": "Image 18 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 500,
+        "maxima": 193,
+        "minima": 307,
+        "gridCoverage": 1
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 18,
+      "file": "image19.jpg",
+      "label": "Image 19 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 490,
+        "maxima": 315,
+        "minima": 175,
+        "gridCoverage": 0.979
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 19,
+      "file": "image20.jpg",
+      "label": "Image 20 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 488,
+        "maxima": 268,
+        "minima": 220,
+        "gridCoverage": 0.979
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 20,
+      "file": "image21.jpg",
+      "label": "Image 21 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 497,
+        "maxima": 278,
+        "minima": 219,
+        "gridCoverage": 1
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 21,
+      "file": "image22.jpg",
+      "label": "Image 22 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 500,
+        "maxima": 284,
+        "minima": 216,
+        "gridCoverage": 1
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 22,
+      "file": "image23.jpg",
+      "label": "Image 23 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 443,
+        "maxima": 337,
+        "minima": 106,
+        "gridCoverage": 0.896
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 23,
+      "file": "image24.jpg",
+      "label": "Image 24 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 453,
+        "maxima": 346,
+        "minima": 107,
+        "gridCoverage": 0.958
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 24,
+      "file": "image25.jpg",
+      "label": "Image 25 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 459,
+        "maxima": 334,
+        "minima": 125,
+        "gridCoverage": 0.938
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 25,
+      "file": "image26.jpg",
+      "label": "Image 26 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 474,
+        "maxima": 332,
+        "minima": 142,
+        "gridCoverage": 0.958
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 26,
+      "file": "image27.jpg",
+      "label": "Image 27 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 480,
+        "maxima": 302,
+        "minima": 178,
+        "gridCoverage": 0.979
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 27,
+      "file": "image28.jpg",
+      "label": "Image 28 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 484,
+        "maxima": 361,
+        "minima": 123,
+        "gridCoverage": 0.979
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 28,
+      "file": "image29.jpg",
+      "label": "Image 29 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 495,
+        "maxima": 379,
+        "minima": 116,
+        "gridCoverage": 1
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 29,
+      "file": "image30.jpg",
+      "label": "Image 30 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 482,
+        "maxima": 344,
+        "minima": 138,
+        "gridCoverage": 0.958
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 30,
+      "file": "image31.jpg",
+      "label": "Image 31 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 487,
+        "maxima": 358,
+        "minima": 129,
+        "gridCoverage": 1
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 31,
+      "file": "image32.jpg",
+      "label": "Image 32 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 441,
+        "maxima": 359,
+        "minima": 82,
+        "gridCoverage": 0.854
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 32,
+      "file": "image33.jpg",
+      "label": "Image 33 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 491,
+        "maxima": 380,
+        "minima": 111,
+        "gridCoverage": 1
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 33,
+      "file": "image34.jpg",
+      "label": "Image 34 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 490,
+        "maxima": 395,
+        "minima": 95,
+        "gridCoverage": 1
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 34,
+      "file": "image35.jpg",
+      "label": "Image 35 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 500,
+        "maxima": 426,
+        "minima": 74,
+        "gridCoverage": 1
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 35,
+      "file": "image36.jpg",
+      "label": "Image 36 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 475,
+        "maxima": 390,
+        "minima": 85,
+        "gridCoverage": 0.979
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 36,
+      "file": "image37.jpg",
+      "label": "Image 37 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 482,
+        "maxima": 389,
+        "minima": 93,
+        "gridCoverage": 0.979
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 37,
+      "file": "image38.jpg",
+      "label": "Image 38 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 442,
+        "maxima": 372,
+        "minima": 70,
+        "gridCoverage": 0.896
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 38,
+      "file": "image39.jpg",
+      "label": "Image 39 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 326,
+        "maxima": 275,
+        "minima": 51,
+        "gridCoverage": 0.646
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 39,
+      "file": "image40.jpg",
+      "label": "Image 40 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 279,
+        "maxima": 238,
+        "minima": 41,
+        "gridCoverage": 0.542
+      },
+      "quality": {
+        "rating": "fair",
+        "heuristic": true,
+        "notes": [
+          "Relatively few distinctive features. Expect slower detection and more tracking loss."
+        ]
+      }
+    },
+    {
+      "index": 40,
+      "file": "image41.jpg",
+      "label": "Image 41 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 408,
+        "maxima": 366,
+        "minima": 42,
+        "gridCoverage": 0.896
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 41,
+      "file": "image42.jpg",
+      "label": "Image 42 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 350,
+        "maxima": 312,
+        "minima": 38,
+        "gridCoverage": 0.75
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 42,
+      "file": "image43.jpg",
+      "label": "Image 43 - ",
+      "width": 2048,
+      "height": 1536,
+      "aspectRatio": 1.33333,
+      "shorterSide": 1536,
+      "center": {
+        "x": 1024,
+        "y": 768
+      },
+      "features": {
+        "total": 366,
+        "maxima": 262,
+        "minima": 104,
+        "gridCoverage": 0.833
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 43,
+      "file": "image44.jpg",
+      "label": "Image 44 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 480,
+        "maxima": 386,
+        "minima": 94,
+        "gridCoverage": 0.958
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 44,
+      "file": "image45.jpg",
+      "label": "Image 45 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 234,
+        "maxima": 135,
+        "minima": 99,
+        "gridCoverage": 0.542
+      },
+      "quality": {
+        "rating": "fair",
+        "heuristic": true,
+        "notes": [
+          "Relatively few distinctive features. Expect slower detection and more tracking loss."
+        ]
+      }
+    },
+    {
+      "index": 45,
+      "file": "image46.jpg",
+      "label": "Image 46 - ",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 0.5625,
+      "shorterSide": 1152,
+      "center": {
+        "x": 576,
+        "y": 1024
+      },
+      "features": {
+        "total": 292,
+        "maxima": 172,
+        "minima": 120,
+        "gridCoverage": 0.545
+      },
+      "quality": {
+        "rating": "fair",
+        "heuristic": true,
+        "notes": [
+          "Relatively few distinctive features. Expect slower detection and more tracking loss."
+        ]
+      }
+    },
+    {
+      "index": 46,
+      "file": "image47.jpg",
+      "label": "Image 47 - ",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 0.5625,
+      "shorterSide": 1152,
+      "center": {
+        "x": 576,
+        "y": 1024
+      },
+      "features": {
+        "total": 495,
+        "maxima": 282,
+        "minima": 213,
+        "gridCoverage": 0.909
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 47,
+      "file": "image48.jpg",
+      "label": "Image 48 - ",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 0.5625,
+      "shorterSide": 1152,
+      "center": {
+        "x": 576,
+        "y": 1024
+      },
+      "features": {
+        "total": 494,
+        "maxima": 189,
+        "minima": 305,
+        "gridCoverage": 0.894
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 48,
+      "file": "image49.jpg",
+      "label": "Image 49 - ",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 0.5625,
+      "shorterSide": 1152,
+      "center": {
+        "x": 576,
+        "y": 1024
+      },
+      "features": {
+        "total": 482,
+        "maxima": 188,
+        "minima": 294,
+        "gridCoverage": 0.924
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 49,
+      "file": "image50.jpg",
+      "label": "Image 50 - ",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 0.5625,
+      "shorterSide": 1152,
+      "center": {
+        "x": 576,
+        "y": 1024
+      },
+      "features": {
+        "total": 472,
+        "maxima": 234,
+        "minima": 238,
+        "gridCoverage": 0.894
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 50,
+      "file": "image51.jpg",
+      "label": "Image 51 - ",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 0.5625,
+      "shorterSide": 1152,
+      "center": {
+        "x": 576,
+        "y": 1024
+      },
+      "features": {
+        "total": 331,
+        "maxima": 114,
+        "minima": 217,
+        "gridCoverage": 0.576
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 51,
+      "file": "image52.jpg",
+      "label": "Image 52 - ",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 0.5625,
+      "shorterSide": 1152,
+      "center": {
+        "x": 576,
+        "y": 1024
+      },
+      "features": {
+        "total": 500,
+        "maxima": 135,
+        "minima": 365,
+        "gridCoverage": 0.879
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 52,
+      "file": "image53.jpg",
+      "label": "Image 53 - ",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 0.5625,
+      "shorterSide": 1152,
+      "center": {
+        "x": 576,
+        "y": 1024
+      },
+      "features": {
+        "total": 495,
+        "maxima": 119,
+        "minima": 376,
+        "gridCoverage": 0.939
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 53,
+      "file": "image54.jpg",
+      "label": "Image 54 - ",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 0.5625,
+      "shorterSide": 1152,
+      "center": {
+        "x": 576,
+        "y": 1024
+      },
+      "features": {
+        "total": 454,
+        "maxima": 90,
+        "minima": 364,
+        "gridCoverage": 0.879
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 54,
+      "file": "image55.jpg",
+      "label": "Image 55 - ",
+      "width": 1536,
+      "height": 2048,
+      "aspectRatio": 0.75,
+      "shorterSide": 1536,
+      "center": {
+        "x": 768,
+        "y": 1024
+      },
+      "features": {
+        "total": 500,
+        "maxima": 337,
+        "minima": 163,
+        "gridCoverage": 1
       },
       "quality": {
         "rating": "good",

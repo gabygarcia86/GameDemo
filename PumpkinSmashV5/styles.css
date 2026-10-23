@@ -1,0 +1,246 @@
+/* Pumpkin Smash! gameplay styles (the Target Builder has its own builder.css). */
+
+:root {
+  --bg: #12101a;
+  --panel: rgba(24, 20, 36, 0.94);
+  --text: #f6f1e8;
+  --muted: #c3bbd3;
+  --orange: #ff7a1a;
+  --amber: #ffb938;
+  --purple: #8f5cff;
+  --ok: #5fd38d;
+  --bad: #ff6b6b;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+/* Game page only: fixed full-screen camera view. */
+body { overflow: hidden; position: fixed; inset: 0; width: 100%; }
+
+#stage {
+  position: fixed;
+  inset: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: radial-gradient(900px 600px at 70% 0%, #2a1d44 0%, #0b0911 70%);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+#stage video { background: #000; pointer-events: none; }
+/* The engine sets width/height on the video once the camera is live and removes them when it stops, so an idle
+   <video> never shows up as a black box behind the start screen. */
+/* Kept rendered (1px, transparent) rather than display:none, because some mobile browsers stop decoding hidden video. */
+#stage video:not([width]) { position: absolute; left: 0; top: 0; width: 1px; height: 1px; opacity: 0; }
+#stage canvas { display: block; }
+
+/* ---------- HUD ---------- */
+#hud {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none; /* taps pass through to the stage; only buttons catch them */
+  padding: calc(var(--safe-top) + 10px) calc(var(--safe-right) + 10px) 0 calc(var(--safe-left) + 10px);
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  align-items: center;
+  gap: 8px;
+}
+#hud[hidden] { display: none; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(14, 11, 22, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 0.92rem;
+  line-height: 1.2;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+.chip-btn {
+  pointer-events: auto;
+  min-height: 48px;      /* large touch target */
+  min-width: 48px;
+  justify-content: center;
+  cursor: pointer;
+  font-family: inherit;
+}
+.chip-btn:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+.chip-score { margin-left: auto; margin-right: auto; font-size: 1.1rem; color: var(--amber); border-color: rgba(255, 185, 56, 0.55); min-height: 44px; }
+#btn-sound { margin-left: 0; }
+
+.hud-row { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 8px; }
+.chip-status { font-weight: 600; font-size: 0.82rem; }
+.chip-status[data-state="on"], .chip-status[data-state="tracking"] { border-color: var(--ok); color: #d8ffe8; }
+.chip-status[data-state="starting"], .chip-status[data-state="searching"] { border-color: var(--amber); color: #ffe9b8; }
+.chip-status[data-state="error"], .chip-status[data-state="lost"] { border-color: var(--bad); color: #ffd6d6; }
+
+/* ---------- Banner / toast ---------- */
+.banner {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--safe-bottom) + 22px);
+  transform: translateX(-50%);
+  z-index: 12;
+  width: min(92vw, 520px);
+  padding: 12px 18px;
+  border-radius: 16px;
+  background: rgba(14, 11, 22, 0.88);
+  border: 2px solid var(--purple);
+  color: var(--text);
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.05rem;
+  text-shadow: 0 1px 2px #000;
+  pointer-events: none;
+}
+.banner[hidden] { display: none; }
+.banner[data-kind="warn"] { border-color: var(--amber); }
+.banner[data-kind="lost"] { border-color: var(--bad); }
+
+.toast {
+  position: fixed;
+  left: 50%;
+  top: 38%;
+  z-index: 20;
+  transform: translate(-50%, -50%) scale(0.6);
+  opacity: 0;
+  pointer-events: none;
+  font-weight: 900;
+  font-size: clamp(2rem, 9vw, 3.4rem);
+  letter-spacing: 0.02em;
+  color: var(--amber);
+  text-shadow: 0 3px 0 #7a2c00, 0 0 18px rgba(255, 122, 26, 0.9);
+  white-space: nowrap;
+}
+.toast.show { animation: pop 0.75s ease-out; }
+@keyframes pop {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  25% { opacity: 1; transform: translate(-50%, -60%) scale(1.15); }
+  100% { opacity: 0; transform: translate(-50%, -110%) scale(1); }
+}
+
+/* ---------- Screens ---------- */
+.screen {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: calc(var(--safe-top) + 16px) calc(var(--safe-right) + 16px) calc(var(--safe-bottom) + 16px) calc(var(--safe-left) + 16px);
+  background: rgba(10, 8, 16, 0.78);
+  overflow-y: auto;
+}
+.screen[hidden] { display: none; }
+
+.card {
+  width: min(94vw, 460px);
+  background: var(--panel);
+  border: 2px solid #3a3157;
+  border-radius: 22px;
+  padding: 26px 22px;
+  text-align: center;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(143, 92, 255, 0.25);
+}
+.card-error { border-color: var(--bad); }
+
+.eyebrow { margin: 0 0 6px; color: var(--amber); letter-spacing: 0.16em; text-transform: uppercase; font-size: 0.74rem; font-weight: 800; }
+
+.title {
+  margin: 0 0 12px;
+  font-family: Impact, "Arial Black", "Segoe UI Black", system-ui, sans-serif;
+  font-weight: 900;
+  font-size: clamp(2.6rem, 13vw, 3.8rem);
+  line-height: 0.98;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+.title span:first-child { color: var(--orange); text-shadow: 0 4px 0 #6a2500, 0 0 24px rgba(255, 122, 26, 0.45); }
+.title span:last-child { color: var(--purple); text-shadow: 0 4px 0 #2c1a66, 0 0 24px rgba(143, 92, 255, 0.5); }
+.title-small { font-size: clamp(2.2rem, 11vw, 3rem); color: var(--orange); }
+
+.h2 { margin: 6px 0 8px; font-size: 1.4rem; color: var(--amber); }
+.lede { margin: 0 0 12px; color: var(--text); }
+.lede.small { color: var(--muted); }
+.fine { margin: 10px 0 0; color: var(--muted); font-size: 0.85rem; }
+.mono { font-family: ui-monospace, Menlo, Consolas, monospace; overflow-wrap: anywhere; }
+a { color: var(--amber); }
+
+.big-score { margin: 4px 0 8px; font-size: 2.6rem; font-weight: 900; color: var(--amber); }
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 0 28px;
+  border-radius: 16px;
+  border: 3px solid transparent;
+  font: 800 1.15rem/1 inherit;
+  font-family: inherit;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  touch-action: manipulation;
+}
+.btn:focus-visible { outline: 4px solid var(--amber); outline-offset: 3px; }
+.btn-primary { background: var(--orange); color: #1a0d00; box-shadow: 0 5px 0 #8a3a00; }
+.btn-primary:active { transform: translateY(3px); box-shadow: 0 2px 0 #8a3a00; }
+.btn-secondary { background: transparent; color: var(--text); border-color: var(--purple); }
+.btn-row { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 8px; }
+#screen-start .btn-primary { width: 100%; margin: 8px 0 4px; }
+
+/* ---------- Spinner ---------- */
+.spinner {
+  width: 54px; height: 54px; margin: 0 auto 10px;
+  border-radius: 50%;
+  border: 6px solid rgba(143, 92, 255, 0.25);
+  border-top-color: var(--orange);
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- Debug (only with ?debug=1) ---------- */
+.debug {
+  position: fixed; right: 6px; bottom: 6px; z-index: 40; margin: 0; max-width: 60vw;
+  padding: 6px 8px; font: 10px/1.3 ui-monospace, Menlo, Consolas, monospace;
+  color: #bfffd0; background: rgba(0, 0, 0, 0.7); border-radius: 6px; pointer-events: none; white-space: pre-wrap;
+}
+.debug[hidden] { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .toast.show { animation: none; opacity: 1; transform: translate(-50%, -50%); }
+  .spinner { animation-duration: 2.4s; }
+}
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .card { padding: 14px 18px; }
+  .title { font-size: 2.2rem; margin-bottom: 6px; }
+  .lede { margin-bottom: 6px; }
+  .banner { bottom: calc(var(--safe-bottom) + 10px); padding: 8px 14px; font-size: 0.95rem; }
+}

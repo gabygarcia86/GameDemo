@@ -1,0 +1,89 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-10-21T23:34:00.348Z",
+  "library": {
+    "name": "mind-ar",
+    "version": "1.2.5",
+    "three": "0.186.1"
+  },
+  "mindFile": "targets.mind",
+  "mindFileBytes": 1963417,
+  "mindFileSha256": "42da87368ae667080011f3c34df3b2630b5c24ba6711aeadbb44abdf3ef9c385",
+  "coordinateNote": "Anchor group origin = image center. 1 anchor unit = target width. +x right, +y up, +z out of the image toward the viewer.",
+  "targets": [
+    {
+      "index": 0,
+      "file": "image1.jpg",
+      "label": "Image 1 - dark cabinet, lamp and shelf of photos",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 0.5625,
+      "shorterSide": 1152,
+      "center": {
+        "x": 576,
+        "y": 1024
+      },
+      "features": {
+        "total": 292,
+        "maxima": 171,
+        "minima": 121,
+        "gridCoverage": 0.545
+      },
+      "quality": {
+        "rating": "fair",
+        "heuristic": true,
+        "notes": [
+          "Relatively few distinctive features. Expect slower detection and more tracking loss."
+        ]
+      }
+    },
+    {
+      "index": 1,
+      "file": "image2.jpg",
+      "label": "Image 2 - hand-coloured play ball on a tile floor (weak tracking target)",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 0.5625,
+      "shorterSide": 1152,
+      "center": {
+        "x": 576,
+        "y": 1024
+      },
+      "features": {
+        "total": 374,
+        "maxima": 141,
+        "minima": 233,
+        "gridCoverage": 0.621
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    },
+    {
+      "index": 2,
+      "file": "image3.jpg",
+      "label": "Image 3 - white double door with pumpkin wreath and garland",
+      "width": 1152,
+      "height": 2048,
+      "aspectRatio": 0.5625,
+      "shorterSide": 1152,
+      "center": {
+        "x": 576,
+        "y": 1024
+      },
+      "features": {
+        "total": 494,
+        "maxima": 188,
+        "minima": 306,
+        "gridCoverage": 0.894
+      },
+      "quality": {
+        "rating": "good",
+        "heuristic": true,
+        "notes": []
+      }
+    }
+  ]
+}

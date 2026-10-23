@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Target Builder - Pumpkin Smash!</title>
+  <link rel="stylesheet" href="builder.css">
+</head>
+<body>
+  <header class="page-header">
+    <p class="eyebrow">Pumpkin Smash! tools</p>
+    <h1>Target Builder</h1>
+    <p class="lede">Compiles the photos listed in <code>images/manifest.json</code> into one tracking database
+      (<code>targets.mind</code>) plus a manifest the game uses to double-check it. Everything runs in this browser tab,
+      using the copy of the compiler stored in this project. Nothing is uploaded anywhere.</p>
+    <p><a class="back-link" href="index.html">&larr; Back to the game</a></p>
+  </header>
+
+  <main>
+    <section aria-labelledby="h-env">
+      <h2 id="h-env">1. Compiler</h2>
+      <div id="compiler-status" class="status status-info" role="status">Loading the compiler&hellip;</div>
+    </section>
+
+    <section aria-labelledby="h-images">
+      <h2 id="h-images">2. Source images</h2>
+      <div id="images-status" class="status status-info" role="status">Loading image list&hellip;</div>
+      <ul id="image-grid" class="image-grid" aria-label="Reference images"></ul>
+    </section>
+
+    <section aria-labelledby="h-build">
+      <h2 id="h-build">3. Build</h2>
+      <p>Compiling takes roughly 15&ndash;30 seconds per photo on a laptop and longer on a phone. Keep this tab open and in the foreground.</p>
+      <button id="build-btn" class="btn btn-primary" type="button" disabled>Build Image Database</button>
+      <div class="progress-wrap">
+        <div id="progress" class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Compile progress">
+          <div id="progress-bar" class="progress-bar"></div>
+        </div>
+        <span id="progress-label" class="progress-label">Not started</span>
+      </div>
+      <div id="build-status" class="status status-info" role="status" hidden></div>
+    </section>
+
+    <section id="results" aria-labelledby="h-results" hidden>
+      <h2 id="h-results">4. Results</h2>
+      <div class="table-scroll">
+        <table class="results-table">
+          <caption class="sr-only">Compiled targets</caption>
+          <thead>
+            <tr><th scope="col">Index</th><th scope="col">File</th><th scope="col">Size (px)</th><th scope="col">Features</th><th scope="col">Spread</th><th scope="col">Rating</th></tr>
+          </thead>
+          <tbody id="results-body"></tbody>
+        </table>
+      </div>
+      <p class="fine">Rating is a rough heuristic from feature count and how evenly the features spread over the image. It is not an official MindAR measure. Real detection on a phone is the true test.</p>
+      <ul id="quality-notes" class="notes"></ul>
+
+      <h3>Download</h3>
+      <p class="downloads">
+        <a id="dl-mind" class="btn btn-primary" href="#" download="targets.mind">Download targets.mind</a>
+        <a id="dl-manifest" class="btn btn-secondary" href="#" download="target-manifest.json">Download target-manifest.json</a>
+      </p>
+      <p id="file-facts" class="fine"></p>
+    </section>
+
+    <section aria-labelledby="h-where">
+      <h2 id="h-where">Where the files go</h2>
+      <div class="table-scroll">
+        <table class="results-table">
+          <thead><tr><th scope="col">File</th><th scope="col">Put it in</th><th scope="col">Notes</th></tr></thead>
+          <tbody>
+            <tr><td><code>targets.mind</code></td><td>Project <strong>root</strong> (next to <code>index.html</code>)</td><td>Replaces the old database. Must be uploaded together with the manifest below.</td></tr>
+            <tr><td><code>target-manifest.json</code></td><td>Project <strong>root</strong></td><td>The game checks the target count and sizes in this file against <code>targets.mind</code>.</td></tr>
+            <tr><td><code>image1.jpg</code>, <code>image2.jpg</code>, <code>image3.jpg</code></td><td><code>images/</code> folder</td><td>The source photos. Nothing is downloaded for these; they are already there.</td></tr>
+            <tr><td><code>images/manifest.json</code></td><td><code>images/</code> folder</td><td>Edit this by hand to add, remove or reorder photos, then rebuild here.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="fine">Filenames are case-sensitive on GitHub Pages: <code>Image1.JPG</code> is not <code>image1.jpg</code>.</p>
+    </section>
+
+    <section aria-labelledby="h-add">
+      <h2 id="h-add">Adding or replacing a photo</h2>
+      <ol>
+        <li>Copy the new photo into <code>images/</code>.</li>
+        <li>Edit <code>images/manifest.json</code>: add or change an entry. Its position in the list is its target index.</li>
+        <li>Reload this page, check the thumbnails, and press <strong>Build Image Database</strong>.</li>
+        <li>Replace <code>targets.mind</code> and <code>target-manifest.json</code> in the project root and commit all changed files.</li>
+      </ol>
+    </section>
+  </main>
+
+  <footer class="page-footer">
+    <p>Compiler: MindAR 1.2.5 (MIT), stored in <code>vendor/mindar/</code>.</p>
+  </footer>
+
+  <script type="module" src="builder.js"></script>
+</body>
+</html>

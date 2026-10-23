@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "description": "Source list for the tracking database. Order here = target index in targets.mind. If you add, remove, reorder or replace images, re-run the target builder (target-builder.html) and replace targets.mind and target-manifest.json.",
+  "targets": [
+    { "index": 0, "file": "image1.jpg", "label": "Image 1 - dark cabinet, lamp and shelf of photos" },
+    { "index": 1, "file": "image2.jpg", "label": "Image 2 - hand-coloured play ball on a tile floor (weak tracking target)" },
+    { "index": 2, "file": "image3.jpg", "label": "Image 3 - white double door with pumpkin wreath and garland" }
+  ]
+}

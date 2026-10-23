@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#12101a">
+  <meta name="description" content="Pumpkin Smash! A camera-based Halloween game: point your phone at the reference photos and smash the pumpkins.">
+  <title>Pumpkin Smash!</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Camera view. The engine adds the WebGL canvas on top of the video. -->
+  <div id="stage" aria-label="Camera view">
+    <video id="cam" playsinline muted autoplay></video>
+  </div>
+
+  <!-- In-game HUD: small chips so the camera view stays clear -->
+  <div id="hud" hidden>
+    <button id="btn-exit" class="chip chip-btn" type="button" aria-label="Exit to start screen">&larr; Exit</button>
+    <div id="chip-score" class="chip chip-score" aria-label="Score 0 of 5"><span aria-hidden="true">&#127875;</span> <span id="score-text">0 / 5</span></div>
+    <button id="btn-sound" class="chip chip-btn" type="button" aria-pressed="true" aria-label="Sound on">&#128266;</button>
+    <div class="hud-row">
+      <div id="chip-camera" class="chip chip-status" data-state="off">Camera: off</div>
+      <div id="chip-tracking" class="chip chip-status" data-state="idle">Tracking: idle</div>
+    </div>
+  </div>
+
+  <div id="banner" class="banner" role="status" aria-live="polite" hidden></div>
+  <div id="toast" class="toast" aria-hidden="true"></div>
+  <pre id="debug" class="debug" hidden></pre>
+
+  <!-- Start screen -->
+  <section id="screen-start" class="screen" aria-labelledby="title">
+    <div class="card">
+      <p class="eyebrow">A camera-powered Halloween game</p>
+      <h1 id="title" class="title"><span>Pumpkin</span> <span>Smash!</span></h1>
+      <p class="lede">Point your camera at one of the three reference photos. A pumpkin pops up on it. Tap it to smash it!</p>
+      <p class="lede small">Smash <strong id="goal-text">5</strong> pumpkins to win.</p>
+      <button id="btn-start" class="btn btn-primary" type="button">Start Game</button>
+      <p class="fine">Uses your camera. Everything is processed on your device and nothing is uploaded.</p>
+      <p class="fine"><a href="target-builder.html">Target builder (setup tool)</a></p>
+    </div>
+  </section>
+
+  <!-- Loading -->
+  <section id="screen-loading" class="screen" aria-labelledby="loading-title" hidden>
+    <div class="card">
+      <div class="spinner" aria-hidden="true"></div>
+      <h2 id="loading-title" class="h2">Getting ready&hellip;</h2>
+      <p id="loading-text" class="lede" role="status" aria-live="polite">Loading&hellip;</p>
+    </div>
+  </section>
+
+  <!-- Error -->
+  <section id="screen-error" class="screen" role="alertdialog" aria-labelledby="error-title" aria-describedby="error-text" hidden>
+    <div class="card card-error">
+      <h2 id="error-title" class="h2">Something went wrong</h2>
+      <p id="error-text" class="lede"></p>
+      <p id="error-detail" class="fine mono"></p>
+      <p id="error-link" class="fine" hidden></p>
+      <div class="btn-row">
+        <button id="btn-retry" class="btn btn-primary" type="button">Try Again</button>
+        <button id="btn-error-home" class="btn btn-secondary" type="button">Back to Start</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- End -->
+  <section id="screen-end" class="screen" aria-labelledby="end-title" hidden>
+    <div class="card">
+      <p class="eyebrow">Round complete</p>
+      <h2 id="end-title" class="title title-small">All smashed!</h2>
+      <p class="big-score"><span aria-hidden="true">&#127875;</span> <span id="end-score">5 / 5</span></p>
+      <p id="end-time" class="lede"></p>
+      <div class="btn-row">
+        <button id="btn-again" class="btn btn-primary" type="button">Play Again</button>
+        <button id="btn-end-home" class="btn btn-secondary" type="button">Back to Start</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Shown by the watchdog below if the game's own script cannot load -->
+  <section id="boot-error" class="screen" role="alert" hidden>
+    <div class="card card-error">
+      <h2 class="h2">The game could not load</h2>
+      <p id="boot-error-text" class="lede"></p>
+      <div class="btn-row">
+        <button id="btn-reload" class="btn btn-primary" type="button">Reload</button>
+      </div>
+    </div>
+  </section>
+
+  <noscript>
+    <section class="screen"><div class="card card-error"><h2 class="h2">JavaScript is required</h2>
+      <p class="lede">Pumpkin Smash! needs JavaScript to run the camera and image tracking.</p></div></section>
+  </noscript>
+
+  <!-- Classic (non-module) watchdog: reports a failed game.js load, which a module cannot report about itself. -->
+  <script>
+    (function () {
+      var boot = (window.__psBoot = { ready: false });
+      function show(msg) {
+        if (boot.ready) return;
+        var s = document.getElementById('screen-start');
+        if (s) s.hidden = true;
+        document.getElementById('boot-error-text').textContent = msg;
+        document.getElementById('boot-error').hidden = false;
+        document.getElementById('btn-reload').onclick = function () { location.reload(); };
+      }
+      window.addEventListener('DOMContentLoaded', function () {
+        var m = document.getElementById('game-module');
+        if (m) m.addEventListener('error', function () {
+          console.error('[pumpkin] game.js failed to load');
+          show('The game script (game.js or config.js) could not be loaded. Check your connection and reload. If you host this yourself, make sure every file was uploaded and the filenames match exactly (they are case-sensitive).');
+        });
+      });
+      setTimeout(function () {
+        show('The game is taking too long to start. Check your connection and reload.');
+      }, 12000);
+      window.addEventListener('error', function (e) {
+        if (!boot.ready) console.error('[pumpkin] startup error:', e.message);
+      });
+    })();
+  </script>
+  <script id="game-module" type="module" src="game.js"></script>
+</body>
+</html>

@@ -28,6 +28,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid #ffe49a; outline-offs
 #ar-container video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 #ar-container canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: none; }
 .shade { z-index: 1; pointer-events: none; background: linear-gradient(180deg, rgba(12, 7, 17, .32), transparent 35%, transparent 70%, rgba(12, 7, 17, .48)); }
+.mindar-ui-scanning { pointer-events: none; }
 .hidden { display: none !important; }
 
 .screen { position: absolute; z-index: 5; inset: 0; display: grid; place-items: center; padding: calc(16px + var(--safe-top)) 16px calc(16px + var(--safe-bottom)); background: rgba(9, 6, 14, .48); }

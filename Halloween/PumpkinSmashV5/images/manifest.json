@@ -230,52 +230,42 @@
     {
       "index": 45,
       "file": "image46.jpg",
-      "label": "Image 46 - Indoor: duplicate of image 1 (identical file)"
+      "label": "Image 46 - Indoor: Galaga arcade cabinet with blue ottomans and comic-book rug"
     },
     {
       "index": 46,
       "file": "image47.jpg",
-      "label": "Image 47 - Indoor: Galaga arcade cabinet with blue ottomans and comic-book rug"
+      "label": "Image 47 - Indoor: white rotating bookshelf of brochures on a wood floor"
     },
     {
       "index": 47,
       "file": "image48.jpg",
-      "label": "Image 48 - Indoor: duplicate of image 3 (identical file)"
+      "label": "Image 48 - Indoor: rolled-up blue mat in a corner on a wood floor"
     },
     {
       "index": 48,
       "file": "image49.jpg",
-      "label": "Image 49 - Indoor: white rotating bookshelf of brochures on a wood floor"
+      "label": "Image 49 - Indoor: cardboard box of bags in a corner on a tile floor"
     },
     {
       "index": 49,
       "file": "image50.jpg",
-      "label": "Image 50 - Indoor: rolled-up blue mat in a corner on a wood floor"
+      "label": "Image 50 - Indoor: framed infinity-symbol print on the wall, hats below"
     },
     {
       "index": 50,
       "file": "image51.jpg",
-      "label": "Image 51 - Indoor: cardboard box of bags in a corner on a tile floor"
+      "label": "Image 51 - Indoor: framed 'Greetings from Fort Lauderdale' wedding photo"
     },
     {
       "index": 51,
       "file": "image52.jpg",
-      "label": "Image 52 - Indoor: framed infinity-symbol print on the wall, hats below"
+      "label": "Image 52 - Indoor: hand-painted FAMILY canvas on a plain wall"
     },
     {
       "index": 52,
       "file": "image53.jpg",
-      "label": "Image 53 - Indoor: framed 'Greetings from Fort Lauderdale' wedding photo"
-    },
-    {
-      "index": 53,
-      "file": "image54.jpg",
-      "label": "Image 54 - Indoor: hand-painted FAMILY canvas on a plain wall"
-    },
-    {
-      "index": 54,
-      "file": "image55.jpg",
-      "label": "Image 55 - Yard, day: rainbow-wig clown skeleton in red toy car on the lawn"
+      "label": "Image 53 - Yard, day: rainbow-wig clown skeleton in red toy car on the lawn"
     }
   ]
 }

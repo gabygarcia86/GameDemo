@@ -4,7 +4,12 @@ Each clip is a looping MJPEG file that headless Chromium can play as a fake webc
 sidecar records where the centre of the photograph is in video pixels, so tests can compare the tracked
 pumpkin position with ground truth.
 
+It also writes two clips for EVERY photo in <images_dir>/manifest.json, used by `game.test.mjs --only=all`:
+  all-img<N>-straight  the photo upright and centred, filling most of the frame height
+  all-img<N>-hard      the photo smaller, rotated and tilted away in perspective (a harder, more realistic view)
+
 usage: python3 -I make-test-videos.py <images_dir> <out_dir>
+Set FFMPEG=<path to ffmpeg> if ffmpeg is not on PATH.
 """
 import json, math, subprocess, sys, os
 import numpy as np
@@ -14,6 +19,7 @@ images_dir, out_dir = sys.argv[1], sys.argv[2]
 os.makedirs(out_dir, exist_ok=True)
 VW, VH = 1280, 720
 BG = (92, 88, 84)
+FFMPEG = os.environ.get('FFMPEG', 'ffmpeg')
 
 def homography(src, dst):
     A = []
@@ -54,7 +60,7 @@ def write_clip(name, frame, centre):
     jpg = os.path.join(out_dir, f'{name}.jpg')
     frame.save(jpg, quality=95)
     out = os.path.join(out_dir, f'{name}.mjpeg')
-    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-loop', '1', '-i', jpg, '-t', '2', '-r', '15',
+    subprocess.run([FFMPEG, '-y', '-loglevel', 'error', '-loop', '1', '-i', jpg, '-t', '2', '-r', '15',
                     '-vf', 'format=yuvj420p', '-c:v', 'mjpeg', '-q:v', '2', '-f', 'mjpeg', out], check=True)
     with open(os.path.join(out_dir, f'{name}.json'), 'w') as f:
         json.dump({'name': name, 'video': [VW, VH], 'centre': centre}, f)
@@ -94,7 +100,7 @@ for k in range(FRAMES):
     f.save(os.path.join(seq_dir, f'f{k:03d}.jpg'), quality=95)
     path_pts.append(c)
 mov = os.path.join(out_dir, 'img3-moving.mjpeg')
-subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-framerate', '15', '-i', os.path.join(seq_dir, 'f%03d.jpg'),
+subprocess.run([FFMPEG, '-y', '-loglevel', 'error', '-framerate', '15', '-i', os.path.join(seq_dir, 'f%03d.jpg'),
                 '-vf', 'format=yuvj420p', '-c:v', 'mjpeg', '-q:v', '2', '-f', 'mjpeg', mov], check=True)
 with open(os.path.join(out_dir, 'img3-moving.json'), 'w') as fh:
     json.dump({'name': 'img3-moving', 'video': [VW, VH], 'path': path_pts}, fh)
@@ -107,3 +113,21 @@ with open(os.path.join(out_dir, 'img3-lose.mjpeg'), 'wb') as out:
     for _ in range(3):
         out.write(open(os.path.join(out_dir, 'blank.mjpeg'), 'rb').read())
 print('img3-lose written')
+
+# Every photo in the manifest: a straight view and a hard view, each with its true centre in the sidecar.
+manifest = json.load(open(os.path.join(images_dir, 'manifest.json'), encoding='utf-8'))
+for entry in manifest['targets']:
+    n = entry['index'] + 1
+    photo = Image.open(os.path.join(images_dir, entry['file'])).convert('RGB')
+    aspect = photo.width / photo.height
+    height = 640 if aspect <= 1 else min(640, VW * 0.8 / aspect)
+    f, c = make_frame(photo, rect_quad(VW / 2, VH / 2, height, aspect=aspect))
+    write_clip(f'all-img{n}-straight', f, c)
+    # Hard: ~65% of the straight size, rotated 12 degrees, right edge pushed away (shorter) to fake a 3D tilt.
+    q = rect_quad(VW * 0.47, VH * 0.5, height * 0.65, angle_deg=12, aspect=aspect)
+    for a, b in ((1, 2),):
+        mx, my = (q[a][0] + q[b][0]) / 2, (q[a][1] + q[b][1]) / 2
+        q[a] = (mx + (q[a][0] - mx) * 0.82, my + (q[a][1] - my) * 0.82)
+        q[b] = (mx + (q[b][0] - mx) * 0.82, my + (q[b][1] - my) * 0.82)
+    f, c = make_frame(photo, q)
+    write_clip(f'all-img{n}-hard', f, c)

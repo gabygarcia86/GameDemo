@@ -1,6 +1,6 @@
 # Pumpkin Smash!
 
-A camera-based Halloween game for phones and desktops. Point the camera at one of three reference photographs and a 3D
+A camera-based Halloween game for phones and desktops. Point the camera at one of the 53 reference photographs and a 3D
 pumpkin appears on the photo, locked to its position, rotation and perspective. Tap it to smash it. Smash five to win.
 
 - Image tracking: [MindAR](https://github.com/hiukim/mind-ar-js) 1.2.5 (image target tracker, runs in the browser)
@@ -12,15 +12,16 @@ pumpkin appears on the photo, locked to its position, rotation and perspective. 
 
 |                                  |                                                                                                                                                      |
 | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **What you point the camera at** | The three reference photographs themselves, shown on another screen or printed. The game recognises _those pictures_, not similar real-world scenes. |
+| **What you point the camera at** | The reference photographs in `images/` themselves, shown on another screen or printed. The game recognises _those pictures_, not similar real-world scenes. |
 | **Image 2 does not track**       | The full photo of the play ball on the tile floor is not detected (see "Known limitations"). Images 1 and 3 work.                                    |
+| **Images 4–55 are untested**     | They are in the database, but the automated tests only cover images 1–3. Try each one on your phone.                                                 |
 | **Tested on a real phone?**      | **No.** Everything was tested in headless Chromium with a fake webcam. See `TEST-REPORT.md`.                                                         |
 
 ## Run it
 
 Camera access needs **HTTPS** (or `localhost`). Opening `index.html` by double-clicking will not work.
 
-Local test: from the folder _above_ `pumpkin-smash/`:
+Local test: from the folder _above_ `PumpkinSmashV5/`:
 
 ```
 python -m http.server 8123
@@ -40,8 +41,8 @@ All paths in the code are relative, so the repository sub-folder (`/<repo-name>/
 
 ```
 index.html  styles.css  game.js  engine.js  pumpkin.js  config.js   the game
-targets.mind  target-manifest.json                                  the compiled image database (3 targets)
-images/image1.jpg image2.jpg image3.jpg manifest.json               your original photos + the target order
+targets.mind  target-manifest.json                                  the compiled image database (53 targets)
+images/image1.jpg … image53.jpg  manifest.json                      your original photos + the target order
 vendor/three, vendor/mindar                                         the libraries (checksums in vendor/CHECKSUMS.txt)
 target-builder.html  builder.js  builder.css                        rebuilds the database in your browser
 tests/                                                              automated browser tests
@@ -49,6 +50,8 @@ tests/                                                              automated br
 
 `targets.mind` and `target-manifest.json` **must always be uploaded together**. The game checks that they match and shows
 "Image database is not usable" if they do not.
+
+`imageN.jpg` is always target index N-1 (image 1 is index 0).
 
 ## Settings
 
@@ -94,9 +97,9 @@ Add `?debug=1` to the URL for a live status panel (tracking state, pumpkin scree
 
 ## Known limitations
 
-- **Image 2 (full photo) is not detected** by the tracker. Tested at normal distance and with the camera held close. See the optional crop above.
+- **Image 2 (full photo) is not detected** by the tracker. Tested at normal distance and with the camera held close. A crop tightly around the ball was detected in a test, so a closer photo of the ball is the likely fix.
 - **Image 1 is a "fair" target** (large flat dark areas): expect slower lock-on and occasional loss.
-- **Planar tracking only.** It tracks flat pictures; it is not world mapping and will not recognise the real cabinet, door or ball.
+- **Planar tracking only.** It tracks flat pictures; it is not world mapping and will not recognise the real yard decorations, furniture or rooms.
 - **Not tested on physical phones, iOS Safari, or with a printed photo.** Real cameras add noise, glare and motion blur that the test clips do not.
 - A phone showing the photo on its own screen can have glare/moire; printing the photos (matte) usually tracks better.
 - **First detection takes a moment** while the tracker warms up. Speed varies a lot by device.
@@ -111,7 +114,16 @@ Requires Node 18+, Playwright with Chromium, Python 3 with Pillow and numpy, and
 python3 tests/make-test-videos.py images clips          # synthetic webcam clips with known geometry
 node tests/builder.test.mjs --base=http://127.0.0.1:8123/pumpkin-smash
 node tests/game.test.mjs   --base=http://127.0.0.1:8123/pumpkin-smash --clips=clips
+node tests/game.test.mjs   --base=http://127.0.0.1:8123/pumpkin-smash --clips=clips --only=all --variant=straight
+node tests/game.test.mjs   --base=http://127.0.0.1:8123/pumpkin-smash --clips=clips --only=all --variant=hard
 ```
+
+The builder test reads `images/manifest.json` and checks every listed photo, and that a fresh build matches the committed
+`targets.mind`. `--only=all` tries every photo in the manifest one at a time (`--images=4,9` for a subset): `straight` shows
+the photo upright and centred, `hard` shows it smaller, rotated and tilted. Set `FFMPEG=<path>` if ffmpeg is not on PATH.
+
+On Windows, Python's `http.server` can drop connections under the test load (`ERR_CONNECTION_RESET`, then a `DEPENDENCY`
+error). Any other static server works.
 
 ## Licences
 

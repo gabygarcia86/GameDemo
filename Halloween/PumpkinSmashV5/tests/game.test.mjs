@@ -2,6 +2,7 @@
 //
 //   node tests/game.test.mjs --base=http://127.0.0.1:8123/pumpkin-smash --clips=<dir from make-test-videos.py>
 //        [--shots=<dir>] [--only=track,smash,lost,errors,blank,moving]
+//   node tests/game.test.mjs ... --only=all [--variant=straight|hard] [--images=4,9] [--detect=60000]   (every photo)
 //
 // These are real browser runs of the real game, but the "camera" is a looping video of a flat picture of the photos, so
 // they prove tracking logic and placement against known geometry, NOT performance or behaviour on a physical phone.
@@ -251,8 +252,53 @@ async function errorCases() {
   await errorCase('library fails to download', 'DEPENDENCY', 'game files did not load', { routes: (p) => p.route('**/vendor/three/three.module.js', (r) => r.abort('failed')) });
 }
 
+// ------------------------------------------------------------------ 7. every photo in images/manifest.json
+// Opt-in (--only=all): one browser per photo, so it takes a while. --variant=straight|hard picks the clip set from
+// make-test-videos.py; --images=4,9,12 limits the run to those image numbers; --detect=<ms> is the per-photo time limit.
+async function allCase() {
+  const variant = arg('variant', 'straight');
+  const detectMs = Number(arg('detect', '60000'));
+  const pick = arg('images', '').split(',').filter(Boolean).map(Number);
+  const targets = (await (await fetch(`${BASE}/images/manifest.json`)).json()).targets
+    .filter((t) => !pick.length || pick.includes(t.index + 1));
+  const summary = [];
+  for (const t of targets) {
+    const n = t.index + 1;
+    const clipName = `all-img${n}-${variant}`;
+    const row = { image: n, file: t.file, variant, detected: false, seconds: null, active: null, centreErrPx: null };
+    const { browser, page, logs } = await launch(clipName);
+    try {
+      await startGame(page);
+      const t0 = Date.now();
+      row.detected = await waitPlaying(page, detectMs);
+      row.seconds = row.detected ? Number(((Date.now() - t0) / 1000).toFixed(1)) : null;
+      if (row.detected) {
+        await sleep(1200); // let the One-Euro filter settle
+        const s = await snap(page);
+        row.active = s.active + 1;
+        const c = s.engine.imageCenterScreen[s.active];
+        const tc = truth(clipName).centre;
+        row.centreErrPx = c ? Number(dist(c, { x: tc[0], y: tc[1] }).toFixed(1)) : null;
+        if (row.active !== n || !(row.centreErrPx <= TRACK_TOL_PX)) await page.screenshot({ path: path.join(SHOTS, `all-${clipName}.png`) });
+      }
+      const errs = logs.filter((l) => /^(error|pageerror)/.test(l) && !/swiftshader|GPU stall|WebGL/i.test(l));
+      row.consoleErrors = errs.length;
+    } finally { await browser.close(); }
+    const label = `all ${variant}: image ${n}`;
+    check(`${label} detected within ${detectMs / 1000}s`, row.detected, row.detected ? `${row.seconds}s` : t.label);
+    if (row.detected) {
+      check(`${label} recognised as the right photo`, row.active === n, `recognised as image ${row.active}`);
+      check(`${label} centre within ${TRACK_TOL_PX}px`, row.centreErrPx !== null && row.centreErrPx <= TRACK_TOL_PX, `${row.centreErrPx}px`);
+    }
+    summary.push(row);
+  }
+  fs.writeFileSync(path.join(SHOTS, `all-${variant}-summary.json`), JSON.stringify(summary, null, 2));
+  console.log('\nimage  detected  seconds  as  centre-err');
+  for (const r of summary) console.log(`${String(r.image).padStart(5)}  ${r.detected ? 'yes' : 'NO '}       ${String(r.seconds ?? '-').padStart(5)}  ${String(r.active ?? '-').padStart(3)}  ${r.centreErrPx ?? '-'}`);
+}
+
 // ------------------------------------------------------------------ run
-const run = { track: async () => {
+const run = { all: allCase, track: async () => {
   await trackingCase('img1-straight', 0, 'image1 straight');
   await trackingCase('img2-straight', 1, 'image2 straight');
   await trackingCase('img3-straight', 2, 'image3 straight');

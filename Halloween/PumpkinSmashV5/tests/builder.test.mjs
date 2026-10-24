@@ -11,6 +11,13 @@ const SHOTS = arg('shots', '/tmp');
 const results = [];
 const check = (name, pass, detail = '') => { results.push({ name, pass, detail }); console.log(`${pass ? 'PASS' : 'FAIL'}  ${name}${detail ? ' :: ' + detail : ''}`); };
 
+// The expected images come from the served manifest, so the checks follow whatever photo set is in images/.
+const EXPECTED = (await (await fetch(`${BASE}/images/manifest.json`)).json()).targets;
+const COMMITTED = await (await fetch(`${BASE}/target-manifest.json`)).json();
+const N = EXPECTED.length;
+const BUILD_TIMEOUT_MS = Math.max(240000, N * 90000); // compiling is roughly linear in the number of photos
+console.log(`manifest lists ${N} images`);
+
 const browser = await chromium.launch({ args: LAUNCH_ARGS });
 
 async function open(viewport, setup) {
@@ -27,11 +34,16 @@ async function open(viewport, setup) {
 // ---- 1. Happy path (desktop) ----
 {
   const { ctx, page } = await open({ width: 1100, height: 800 });
-  await page.waitForFunction(() => document.querySelectorAll('#image-grid .state-ok').length === 3 || document.querySelectorAll('#image-grid .state-error').length > 0, null, { timeout: 30000 });
-  const thumbs = await page.$$eval('#image-grid img', (els) => els.map((e) => ({ ok: e.complete && e.naturalWidth > 0, w: e.naturalWidth, h: e.naturalHeight })));
-  check('builder: 3 thumbnails render', thumbs.length === 3 && thumbs.every((t) => t.ok), JSON.stringify(thumbs));
+  await page.waitForFunction((n) => document.querySelectorAll('#image-grid .state-ok').length === n || document.querySelectorAll('#image-grid .state-error').length > 0, N, { timeout: 30000 + N * 2000 });
+  const thumbs = await page.$$eval('#image-grid img', (els) => els.map((e) => ({ ok: e.complete && e.naturalWidth > 0, w: e.naturalWidth, h: e.naturalHeight, src: e.getAttribute('src') })));
+  const broken = thumbs.filter((t) => !t.ok).map((t) => t.src);
+  check(`builder: all ${N} thumbnails render`, thumbs.length === N && broken.length === 0, `${thumbs.length} shown, broken: ${broken.join(', ') || 'none'}`);
+  const thumbFiles = thumbs.map((t) => (t.src || '').split('/').pop());
+  const wrongOrder = EXPECTED.filter((e, i) => thumbFiles[i] !== e.file).map((e) => e.file);
+  check('builder: thumbnails are in manifest order', wrongOrder.length === 0, wrongOrder.join(', '));
   const dimsText = await page.$$eval('#image-grid [data-role=dims]', (els) => els.map((e) => e.textContent));
-  check('builder: dimensions shown for each image', dimsText.every((t) => /1152 .* 2048 px/.test(t)), dimsText.join(' | '));
+  const badDims = dimsText.filter((t, i) => !thumbs[i] || !t.includes(`${thumbs[i].w} × ${thumbs[i].h} px`));
+  check('builder: dimensions shown for each image', dimsText.length === N && badDims.length === 0, badDims.join(' | '));
   const btnEnabled = await page.$eval('#build-btn', (b) => !b.disabled);
   check('builder: Build button enabled once compiler and images are ready', btnEnabled);
   const premature = await page.$eval('#results', (r) => r.hidden);
@@ -41,7 +53,7 @@ async function open(viewport, setup) {
   // Real progress: sample the progress bar while compiling.
   const samples = new Set();
   const start = Date.now();
-  while (Date.now() - start < 240000) {
+  while (Date.now() - start < BUILD_TIMEOUT_MS) {
     const v = await page.$eval('#progress', (p) => Number(p.getAttribute('aria-valuenow')));
     samples.add(v);
     if (!(await page.$eval('#results', (r) => r.hidden))) break;
@@ -50,12 +62,12 @@ async function open(viewport, setup) {
     await page.waitForTimeout(500);
   }
   const resultsVisible = !(await page.$eval('#results', (r) => r.hidden));
-  check('builder: build completes and shows results', resultsVisible, `progress values seen: ${[...samples].sort((a, b) => a - b).join(',')}`);
+  check('builder: build completes and shows results', resultsVisible, `${((Date.now() - start) / 1000).toFixed(0)} s, progress values seen: ${[...samples].sort((a, b) => a - b).join(',')}`);
   check('builder: progress advanced through intermediate values', samples.size >= 3);
 
   if (resultsVisible) {
     const rows = await page.$$eval('#results-body tr', (trs) => trs.map((tr) => [...tr.children].map((td) => td.textContent)));
-    check('builder: results table lists 3 targets', rows.length === 3, JSON.stringify(rows));
+    check(`builder: results table lists ${N} targets`, rows.length === N, `${rows.length} rows`);
     const okMsg = await page.$eval('#build-status', (s) => s.className + ' :: ' + s.textContent);
     check('builder: success message shown only after verification', /status-ok/.test(okMsg), okMsg);
 
@@ -68,10 +80,16 @@ async function open(viewport, setup) {
     const sz = fs.statSync(path.join(dir, 'targets.mind')).size;
     check('builder: downloaded targets.mind is non-empty', sz > 100000, `${sz} bytes`);
     const man = JSON.parse(fs.readFileSync(path.join(dir, 'target-manifest.json'), 'utf8'));
-    check('builder: manifest lists 3 targets with indexes 0..2 and correct files',
-      man.targets.length === 3 && man.targets.every((t, i) => t.index === i && t.file === `image${i + 1}.jpg`),
-      man.targets.map((t) => `${t.index}:${t.file}:${t.width}x${t.height}:${t.quality.rating}`).join(' '));
+    const mismatched = EXPECTED.filter((e, i) => !man.targets[i] || man.targets[i].index !== i || man.targets[i].file !== e.file || man.targets[i].label !== e.label);
+    check(`builder: manifest lists ${N} targets with indexes 0..${N - 1}, files and labels as in images/manifest.json`,
+      man.targets.length === N && mismatched.length === 0,
+      `${man.targets.length} targets, mismatched: ${mismatched.map((e) => e.file).join(', ') || 'none'}`);
     check('builder: manifest byte count matches downloaded file', man.mindFileBytes === sz, `${man.mindFileBytes} vs ${sz}`);
+    // The committed database should be what a fresh build produces (the compiler is deterministic).
+    check('builder: committed targets.mind matches a fresh build', man.mindFileSha256 === COMMITTED.mindFileSha256,
+      `fresh ${man.mindFileSha256.slice(0, 12)}… vs committed ${COMMITTED.mindFileSha256.slice(0, 12)}…`);
+    const weak = man.targets.filter((t) => t.quality.rating !== 'good').map((t) => `${t.file}:${t.quality.rating}(${t.features.total})`);
+    console.log(`builder ratings below "good": ${weak.join(' ') || 'none'}`);
     console.log('MANIFEST_SUMMARY', JSON.stringify(man.targets.map((t) => ({ file: t.file, features: t.features, quality: t.quality }))));
   }
 
@@ -88,7 +106,7 @@ async function open(viewport, setup) {
 // ---- 2. Mobile viewport scroll ----
 {
   const { ctx, page } = await open({ width: 390, height: 780 });
-  await page.waitForFunction(() => document.querySelectorAll('#image-grid .state-ok').length === 3, null, { timeout: 30000 });
+  await page.waitForFunction((n) => document.querySelectorAll('#image-grid .state-ok').length === n, N, { timeout: 30000 + N * 2000 });
   const sc = await page.evaluate(async () => {
     window.scrollTo(0, 1e6); await new Promise((r) => setTimeout(r, 100));
     return { scrollable: document.documentElement.scrollHeight > window.innerHeight, moved: window.scrollY > 0, hScroll: document.documentElement.scrollWidth > window.innerWidth + 1 };
@@ -117,7 +135,7 @@ async function open(viewport, setup) {
   const { ctx, page } = await open({ width: 1000, height: 800 }, async (p) => {
     await p.route('**/images/image2.jpg', (r) => r.fulfill({ status: 404, body: 'nope' }));
   });
-  await page.waitForFunction(() => document.querySelectorAll('#image-grid .state-error').length === 1 && document.querySelectorAll('#image-grid .state-ok').length === 2, null, { timeout: 20000 });
+  await page.waitForFunction((n) => document.querySelectorAll('#image-grid .state-error').length === 1 && document.querySelectorAll('#image-grid .state-ok').length === n - 1, N, { timeout: 20000 + N * 2000 });
   const msg = await page.$eval('#card-1 [data-role=state]', (s) => s.textContent);
   check('builder: missing image flagged on its own card', /Failed: HTTP 404/.test(msg), msg);
   check('builder: Build disabled when an image failed to load', await page.$eval('#build-btn', (b) => b.disabled));

@@ -7,8 +7,8 @@
     "three": "0.186.1"
   },
   "mindFile": "targets.mind",
-  "mindFileBytes": 47146135,
-  "mindFileSha256": "0d625ffe8f7a3cf2fa80d433c1b89e5c654ac5cfd43aae9aac773cc5fe6c457e",
+  "mindFileBytes": 45804566,
+  "mindFileSha256": "7cbffb5a15219789ae7f9cd5aa986f9936e714dad3a3020bbea7f78a06d6f574",
   "coordinateNote": "Anchor group origin = image center. 1 anchor unit = target width. +x right, +y up, +z out of the image toward the viewer.",
   "targets": [
     {
@@ -1100,33 +1100,7 @@
     {
       "index": 45,
       "file": "image46.jpg",
-      "label": "Image 46 - Indoor: duplicate of image 1 (identical file)",
-      "width": 1152,
-      "height": 2048,
-      "aspectRatio": 0.5625,
-      "shorterSide": 1152,
-      "center": {
-        "x": 576,
-        "y": 1024
-      },
-      "features": {
-        "total": 292,
-        "maxima": 172,
-        "minima": 120,
-        "gridCoverage": 0.545
-      },
-      "quality": {
-        "rating": "fair",
-        "heuristic": true,
-        "notes": [
-          "Relatively few distinctive features. Expect slower detection and more tracking loss."
-        ]
-      }
-    },
-    {
-      "index": 46,
-      "file": "image47.jpg",
-      "label": "Image 47 - Indoor: Galaga arcade cabinet with blue ottomans and comic-book rug",
+      "label": "Image 46 - Indoor: Galaga arcade cabinet with blue ottomans and comic-book rug",
       "width": 1152,
       "height": 2048,
       "aspectRatio": 0.5625,
@@ -1148,33 +1122,9 @@
       }
     },
     {
-      "index": 47,
-      "file": "image48.jpg",
-      "label": "Image 48 - Indoor: duplicate of image 3 (identical file)",
-      "width": 1152,
-      "height": 2048,
-      "aspectRatio": 0.5625,
-      "shorterSide": 1152,
-      "center": {
-        "x": 576,
-        "y": 1024
-      },
-      "features": {
-        "total": 494,
-        "maxima": 189,
-        "minima": 305,
-        "gridCoverage": 0.894
-      },
-      "quality": {
-        "rating": "good",
-        "heuristic": true,
-        "notes": []
-      }
-    },
-    {
-      "index": 48,
-      "file": "image49.jpg",
-      "label": "Image 49 - Indoor: white rotating bookshelf of brochures on a wood floor",
+      "index": 46,
+      "file": "image47.jpg",
+      "label": "Image 47 - Indoor: white rotating bookshelf of brochures on a wood floor",
       "width": 1152,
       "height": 2048,
       "aspectRatio": 0.5625,
@@ -1196,9 +1146,9 @@
       }
     },
     {
-      "index": 49,
-      "file": "image50.jpg",
-      "label": "Image 50 - Indoor: rolled-up blue mat in a corner on a wood floor",
+      "index": 47,
+      "file": "image48.jpg",
+      "label": "Image 48 - Indoor: rolled-up blue mat in a corner on a wood floor",
       "width": 1152,
       "height": 2048,
       "aspectRatio": 0.5625,
@@ -1220,9 +1170,9 @@
       }
     },
     {
-      "index": 50,
-      "file": "image51.jpg",
-      "label": "Image 51 - Indoor: cardboard box of bags in a corner on a tile floor",
+      "index": 48,
+      "file": "image49.jpg",
+      "label": "Image 49 - Indoor: cardboard box of bags in a corner on a tile floor",
       "width": 1152,
       "height": 2048,
       "aspectRatio": 0.5625,
@@ -1244,9 +1194,9 @@
       }
     },
     {
-      "index": 51,
-      "file": "image52.jpg",
-      "label": "Image 52 - Indoor: framed infinity-symbol print on the wall, hats below",
+      "index": 49,
+      "file": "image50.jpg",
+      "label": "Image 50 - Indoor: framed infinity-symbol print on the wall, hats below",
       "width": 1152,
       "height": 2048,
       "aspectRatio": 0.5625,
@@ -1268,9 +1218,9 @@
       }
     },
     {
-      "index": 52,
-      "file": "image53.jpg",
-      "label": "Image 53 - Indoor: framed 'Greetings from Fort Lauderdale' wedding photo",
+      "index": 50,
+      "file": "image51.jpg",
+      "label": "Image 51 - Indoor: framed 'Greetings from Fort Lauderdale' wedding photo",
       "width": 1152,
       "height": 2048,
       "aspectRatio": 0.5625,
@@ -1292,9 +1242,9 @@
       }
     },
     {
-      "index": 53,
-      "file": "image54.jpg",
-      "label": "Image 54 - Indoor: hand-painted FAMILY canvas on a plain wall",
+      "index": 51,
+      "file": "image52.jpg",
+      "label": "Image 52 - Indoor: hand-painted FAMILY canvas on a plain wall",
       "width": 1152,
       "height": 2048,
       "aspectRatio": 0.5625,
@@ -1316,9 +1266,9 @@
       }
     },
     {
-      "index": 54,
-      "file": "image55.jpg",
-      "label": "Image 55 - Yard, day: rainbow-wig clown skeleton in red toy car on the lawn",
+      "index": 52,
+      "file": "image53.jpg",
+      "label": "Image 53 - Yard, day: rainbow-wig clown skeleton in red toy car on the lawn",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,

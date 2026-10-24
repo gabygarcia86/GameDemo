@@ -41,7 +41,7 @@ All paths in the code are relative, so the repository sub-folder (`/<repo-name>/
 
 ```
 index.html  styles.css  game.js  engine.js  pumpkin.js  config.js   the game
-creatures.js                                                        the flying bats and floating ghosts
+creatures.js  orientation.js                                        the bats and ghosts, kept in place by the motion sensors
 targets.mind  target-manifest.json                                  the compiled image database (51 targets)
 images/image1.jpg … image51.jpg  manifest.json                      your original photos + the target order
 vendor/three, vendor/mindar                                         the libraries (checksums in vendor/CHECKSUMS.txt)
@@ -61,9 +61,9 @@ keep it between 0.20 and 0.30), `surfaceGap`, tap forgiveness, tracking filters,
 
 - `smoothing`: how steady the pumpkin is. Small, jitter-sized pose changes are eased in slowly (`stillRate`); real camera
   motion is followed quickly (`moveRate`). Lower `stillRate` = steadier but slower to settle. Set `smoothing: null` for the raw tracker pose.
-- `creatures`: the number of bats (they swarm while you scan, and fly off when a pumpkin appears) and ghosts (they drift in and
-  out the whole game, keeping to the sides while a pumpkin is up), or `enabled: false` to turn them off. They are decoration
-  only: taps go straight through them.
+- `creatures`: the number of bats (5: they circle overhead while you scan, and fly up and away when a pumpkin appears) and
+  ghosts (3: they float at eye level all around you, fading in and out), or `enabled: false` to turn them off. They are
+  decoration only: taps go straight through them.
 
 ## How placement works
 
@@ -74,8 +74,12 @@ perspective change. Nothing is positioned from screen coordinates. Each frame th
 latest pose (see `smoothing` above), which removes most of the tracker's jitter. When the tracker reports the photo lost, the anchor is
 hidden, the pumpkin is removed, and the player is told to find a photo.
 
-The bats and ghosts are not anchored to anything: the tracker only knows where the photos are, not the room, so they fly
-around in front of the camera (camera space).
+The bats and ghosts are placed in the room around the player: bats circle 8–35° above the horizon (look up to see more of
+them), ghosts float at about eye level in every direction. The phone's motion sensors (`orientation.js`) keep them in place
+as the phone turns or tilts. Browsers only report the phone's rotation, not its position, so stepping around does not
+change your angle to them; they are kept a few metres' worth away so this is hard to notice. On iOS the game asks for
+motion-sensor permission when Start is tapped. Without sensors (desktop, or permission denied) they still fly, but the
+view does not follow the phone.
 
 ## Add or replace reference photos
 

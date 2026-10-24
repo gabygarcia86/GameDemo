@@ -1,32 +1,20 @@
 // Ambient Halloween creatures, built from Three.js primitives only (no model files), like pumpkin.js.
-//   Bats   swarm across the view while the player is scanning for a photo, and fly off once a pumpkin appears.
-//   Ghosts fade in at random spots, drift and bob for a few seconds, then fade out. While a pumpkin is up they keep
-//          to the sides of the screen so they never cover it.
-// The tracker only knows where the photos are, not the room, so the creatures live in CAMERA space: the scene camera
-// sits at the origin looking down -z, and every position is picked inside its view frustum. Sizes and speeds are
-// expressed as fractions of the view height at the creature's depth, so they look the same on any camera.
+//   Bats   circle overhead (8-35 degrees above the horizon) while the player is scanning for a photo, and fly up and
+//          away once a pumpkin appears.
+//   Ghosts float at about eye level all around the player, drifting slowly, fading in and out. While a pumpkin is up,
+//          a ghost that ends up in the middle of the view fades away so it never covers the pumpkin.
+// They live in a ROOM frame centred on the player: +y up, -z the way the phone first faced (see orientation.js). The
+// phone's motion sensors rotate that frame against the camera, so the creatures stay put in the room as the phone turns.
+// Without sensors (desktop, or permission denied) the camera is treated as held level and facing -z.
+// Units are the tracker's (a photo filling most of the view is roughly 3000 away); creatures are placed 2500-7000 away.
 
 import * as THREE from './vendor/three/three.module.js';
 
 const TAU = Math.PI * 2;
+const UP = new THREE.Vector3(0, 1, 0);
+const ORIGIN = new THREE.Vector3();
 const rand = (a, b) => a + Math.random() * (b - a);
 const clamp01 = (v) => Math.min(1, Math.max(0, v));
-
-// ---------------------------------------------------------------- view helpers
-function tanHalfFov(cam) {
-  return Math.tan(THREE.MathUtils.degToRad(cam.fov) / 2);
-}
-
-// Point at normalised screen coords (ndcX, ndcY in -1..1 = edge to edge) and the given depth in front of the camera.
-function pointInView(out, cam, ndcX, ndcY, depth) {
-  const hh = depth * tanHalfFov(cam);
-  return out.set(ndcX * hh * cam.aspect, ndcY * hh, -depth);
-}
-
-function ndcOf(p, cam) {
-  const hh = Math.max(1e-6, -p.z * tanHalfFov(cam));
-  return { x: p.x / (hh * cam.aspect), y: p.y / hh };
-}
 
 // ---------------------------------------------------------------- bat
 // Local space: +z is forward (the direction of flight), +y up, wings along x. Wingspan is about 1.1 units.
@@ -56,7 +44,7 @@ function buildBatParts() {
     earGeo: new THREE.ConeGeometry(0.022, 0.07, 4),
     eyeGeo: new THREE.SphereGeometry(0.012, 6, 4),
     wingGeo: buildWingGeometry(),
-    // A faint purple glow keeps them readable against dark night-time photos.
+    // A faint purple glow keeps them readable against a dark sky or night-time photos.
     furMat: new THREE.MeshStandardMaterial({ color: '#241829', emissive: '#2a0f3a', roughness: 0.85 }),
     wingMat: new THREE.MeshStandardMaterial({ color: '#33223f', emissive: '#2a1040', roughness: 0.7, side: THREE.DoubleSide }),
     eyeMat: new THREE.MeshBasicMaterial({ color: '#ff6a1f' }),
@@ -98,14 +86,20 @@ function createBat(parts) {
   obj.visible = false;
   return {
     obj, model, wings,
-    vel: new THREE.Vector3(),
-    goal: new THREE.Vector3(),
-    active: false,
-    leaving: false,
-    delay: rand(0, 2.5),
+    stage: 'away',          // away | arriving | circling | leaving
+    delay: rand(0, 3),
+    centre: new THREE.Vector3(), // middle of the circle it flies around
+    radius: 1000,
+    angle: 0,
+    turnRate: 0.7,          // radians per second around the circle (sign = direction)
+    lift: 0,                // extra height while arriving from / leaving to the sky
+    circleTime: 0,          // seconds left before it flies off and returns near wherever the player now faces
+    relocating: false,
+    prev: new THREE.Vector3(),
     phase: rand(0, TAU),
     flapHz: rand(5.5, 8),
-    speed: rand(0.55, 0.9), // view half-heights per second
+    seed: rand(0, TAU),
+    time: 0,
   };
 }
 
@@ -165,12 +159,14 @@ function createGhost(parts) {
   return {
     obj, geo, base, bodyMat, faceMat, arms,
     stage: 'wait',          // wait | in | float | out
-    wait: rand(0.3, 3),
+    wait: rand(0.5, 4),
     life: 0,
     fade: 0,
     seed: rand(0, TAU),
-    home: new THREE.Vector3(),
-    drift: new THREE.Vector3(),
+    azimuth: 0,             // direction around the player (radians, 0 = -z)
+    distance: 5000,
+    height: 0,
+    orbit: 0,               // slow drift around the player (radians per second)
     time: 0,
   };
 }
@@ -193,12 +189,16 @@ function waveHem(g) {
   pos.needsUpdate = true;
 }
 
+// Point at the given azimuth (0 = -z, positive = turning left), horizontal distance and height.
+function roomPoint(out, azimuth, distance, height) {
+  return out.set(-Math.sin(azimuth) * distance, height, -Math.cos(azimuth) * distance);
+}
+
 // ---------------------------------------------------------------- the flock
 export function createCreatures(config) {
   const cfg = config.creatures || {};
   const enabled = cfg.enabled !== false;
-  const near = cfg.nearDepth || 1200;
-  const far = cfg.farDepth || 6000;
+  // `root` turns the room frame into camera space each frame (the inverse of the phone's rotation).
   const root = new THREE.Group();
   root.name = 'creatures';
 
@@ -206,122 +206,134 @@ export function createCreatures(config) {
   const ghostParts = buildGhostParts();
   const bats = [];
   const ghosts = [];
-  const batCount = enabled ? (cfg.bats ?? 9) : 0;
-  const ghostCount = enabled ? (cfg.ghosts ?? 4) : 0;
+  const batCount = enabled ? (cfg.bats ?? 5) : 0;
+  const ghostCount = enabled ? (cfg.ghosts ?? 3) : 0;
   for (let i = 0; i < batCount; i++) { const b = createBat(batParts); bats.push(b); root.add(b.obj); }
   for (let i = 0; i < ghostCount; i++) { const g = createGhost(ghostParts); ghosts.push(g); root.add(g.obj); }
 
   let mode = 'off'; // off | scanning | playing
+  let heading = 0;  // azimuth the camera currently faces
+  const m4 = new THREE.Matrix4();
   const tmp = new THREE.Vector3();
+  const look = new THREE.Vector3();
+
+  // Turn obj so its +z faces `target` (both in the room frame), staying upright.
+  function face(obj, target) {
+    m4.lookAt(target, obj.position, UP);
+    obj.quaternion.setFromRotationMatrix(m4);
+  }
 
   // ---- bats
-  function pickBatGoal(b, cam) {
-    pointInView(b.goal, cam, rand(-0.85, 0.85), rand(-0.65, 0.8), rand(near, far));
+  function startCircle(b) {
+    // Mostly ahead of the player, so a few circle at the top of the view and more show when they look up.
+    const az = heading + (Math.random() < 0.7 ? rand(-0.6, 0.6) : rand(-Math.PI, Math.PI));
+    const dist = rand(2200, 4000);
+    const elevation = THREE.MathUtils.degToRad(rand(8, 35));
+    roomPoint(b.centre, az, dist, dist * Math.tan(elevation));
+    b.radius = rand(800, 1600); // wide circles, so they sweep in and out of view
+    b.turnRate = rand(0.45, 0.85) * (Math.random() < 0.5 ? -1 : 1);
+    b.angle = rand(0, TAU);
+    b.circleTime = rand(12, 20);
+    b.obj.scale.setScalar(rand(280, 400) / 1.1); // wingspan in room units
   }
 
-  function enterBat(b, cam) {
-    const depth = rand(near, far);
-    const side = Math.random() < 0.5 ? -1 : 1;
-    pointInView(b.obj.position, cam, side * 1.35, rand(-0.5, 0.9), depth);
-    // Wingspan 10-16% of the view height at mid depth, so nearer bats look bigger.
-    const span = rand(0.1, 0.16) * 2 * ((near + far) / 2) * tanHalfFov(cam);
-    b.obj.scale.setScalar(span / 1.1);
-    pickBatGoal(b, cam);
-    b.vel.set(0, 0, 0);
-    b.active = true;
-    b.leaving = false;
-    b.obj.visible = true;
-  }
-
-  function updateBat(b, dt, cam) {
-    if (!b.active) {
+  function updateBat(b, dt) {
+    b.time += dt;
+    if (b.stage === 'away') {
       if (mode !== 'scanning') return;
       b.delay -= dt;
       if (b.delay > 0) return;
-      enterBat(b, cam);
+      startCircle(b);
+      b.lift = rand(2500, 4000); // swoop down out of the sky
+      b.stage = 'arriving';
+      b.obj.visible = true;
     }
-    const p = b.obj.position;
-    if (mode !== 'scanning' && !b.leaving) {
-      // Scatter: head for whichever side is closer, and up, out of view.
-      b.leaving = true;
-      const n = ndcOf(p, cam);
-      pointInView(b.goal, cam, (n.x < 0 ? -1 : 1) * 2.2, rand(0.6, 1.6), Math.max(near, -p.z));
-    } else if (mode === 'scanning' && b.leaving) {
-      b.leaving = false;
-      pickBatGoal(b, cam);
+    if (mode !== 'scanning' && b.stage !== 'leaving') { b.stage = 'leaving'; b.relocating = false; }
+    else if (mode === 'scanning' && b.stage === 'leaving' && !b.relocating) b.stage = 'arriving';
+
+    if (b.stage === 'arriving') {
+      b.lift *= Math.exp(-dt * 1.2);
+      if (b.lift < 5) { b.lift = 0; b.stage = 'circling'; }
+    } else if (b.stage === 'circling') {
+      b.circleTime -= dt;
+      if (b.circleTime <= 0) { b.stage = 'leaving'; b.relocating = true; }
+    } else if (b.stage === 'leaving') {
+      b.lift += dt * (800 + b.lift * 1.5); // climbs faster and faster
+      if (b.lift > 9000) {
+        b.stage = 'away';
+        b.obj.visible = false;
+        b.delay = b.relocating ? rand(0.2, 1) : rand(0.3, 2.5);
+        b.relocating = false;
+        return;
+      }
     }
 
-    const unit = Math.max(near * 0.5, -p.z) * tanHalfFov(cam); // half the view height at this depth
-    tmp.subVectors(b.goal, p);
-    if (!b.leaving && tmp.length() < 0.3 * unit) { pickBatGoal(b, cam); tmp.subVectors(b.goal, p); }
-    tmp.normalize().multiplyScalar(b.speed * unit * (b.leaving ? 1.6 : 1));
-    b.vel.lerp(tmp, 1 - Math.exp(-dt * 2.2)); // smooth, swooping turns
-    p.addScaledVector(b.vel, dt);
-    if (b.vel.lengthSq() > 1e-6) b.obj.lookAt(tmp.copy(p).add(b.vel));
+    b.angle += b.turnRate * dt;
+    const p = b.obj.position;
+    b.prev.copy(p);
+    p.set(
+      b.centre.x + Math.cos(b.angle) * b.radius,
+      b.centre.y + b.lift + Math.sin(b.time * 1.3 + b.seed) * 120,
+      b.centre.z + Math.sin(b.angle) * b.radius
+    );
+    tmp.subVectors(p, b.prev);
+    if (tmp.lengthSq() > 1e-6) face(b.obj, look.copy(p).add(tmp));
 
     b.phase += dt * b.flapHz * TAU;
     const s = Math.sin(b.phase);
     for (const w of b.wings) w.pivot.rotation.z = w.side * (0.2 + 0.8 * s);
     b.model.position.y = -0.03 * s;
-
-    if (b.leaving) {
-      const n = ndcOf(p, cam);
-      if (Math.abs(n.x) > 1.5 || n.y > 1.5) {
-        b.active = false;
-        b.obj.visible = false;
-        b.delay = rand(0.2, 2.5);
-      }
-    }
   }
 
   // ---- ghosts
-  function spawnGhost(g, cam) {
-    const depth = rand(near * 1.2, far * 0.85);
+  function spawnGhost(g) {
+    // Anywhere around the player except straight ahead, so a ghost never pops up in their face.
     const side = Math.random() < 0.5 ? -1 : 1;
-    // While a pumpkin is up, only the outer parts of the screen.
-    const nx = mode === 'playing' ? side * rand(0.55, 0.85) : rand(-0.8, 0.8);
-    pointInView(g.home, cam, nx, rand(-0.5, 0.55), depth);
-    const unit = depth * tanHalfFov(cam);
-    g.drift.set(rand(0.03, 0.12) * (mode === 'playing' ? Math.sign(nx) : side), rand(-0.03, 0.06), 0).multiplyScalar(unit);
-    g.obj.scale.setScalar(rand(0.1, 0.15) * 2 * unit); // 10-15% of the view height
-    g.obj.position.copy(g.home);
+    g.azimuth = heading + side * rand(0.15, Math.PI);
+    g.distance = rand(4000, 6500);
+    g.height = g.distance * rand(-0.06, 0.12);
+    g.orbit = rand(0.02, 0.06) * (Math.random() < 0.5 ? -1 : 1);
+    g.obj.scale.setScalar(g.distance * rand(0.09, 0.13)); // about 5-7 degrees tall
     g.stage = 'in';
     g.fade = 0;
-    g.life = rand(4, 8);
+    g.life = rand(7, 12);
     g.obj.visible = true;
   }
 
-  function updateGhost(g, dt, cam) {
+  // True when the ghost sits near the middle of the camera's view (where the pumpkin is).
+  function inCentreOfView(g, viewQuatInv) {
+    tmp.copy(g.obj.position).applyQuaternion(viewQuatInv);
+    return tmp.z < 0 && Math.hypot(tmp.x, tmp.y) < -tmp.z * 0.4; // within ~22 degrees of straight ahead
+  }
+
+  function updateGhost(g, dt, viewQuatInv) {
     g.time += dt;
     if (g.stage === 'wait') {
       if (mode === 'off') return;
       g.wait -= dt;
       if (g.wait > 0) return;
-      spawnGhost(g, cam);
+      spawnGhost(g);
     }
 
-    g.home.addScaledVector(g.drift, dt);
-    const unit = -g.home.z * tanHalfFov(cam);
-    g.obj.position.copy(g.home);
-    g.obj.position.y += Math.sin(g.time * 1.6 + g.seed) * 0.06 * unit;
-    g.obj.lookAt(0, 0, 0); // face the viewer
+    g.azimuth += g.orbit * dt;
+    roomPoint(g.obj.position, g.azimuth, g.distance, g.height + Math.sin(g.time * 1.4 + g.seed) * g.distance * 0.012);
+    face(g.obj, ORIGIN); // always turned toward the player
     g.obj.rotateZ(Math.sin(g.time * 1.1 + g.seed) * 0.12);
     for (const a of g.arms) a.arm.rotation.z = a.side * (-1.15 + 0.25 * Math.sin(g.time * 2.2 + g.seed + a.side));
     waveHem(g);
 
     if (g.stage === 'in') {
-      g.fade = Math.min(1, g.fade + dt / 0.9);
+      g.fade = Math.min(1, g.fade + dt / 1.2);
       if (g.fade >= 1) g.stage = 'float';
     } else if (g.stage === 'float') {
       g.life -= dt;
-      const n = ndcOf(g.home, cam);
-      const blocking = mode === 'playing' && Math.abs(n.x) < 0.45;
-      if (g.life <= 0 || mode === 'off' || blocking || Math.abs(n.x) > 1.1 || Math.abs(n.y) > 1.1) g.stage = 'out';
+      const blocking = mode === 'playing' && inCentreOfView(g, viewQuatInv);
+      if (g.life <= 0 || mode === 'off' || blocking) g.stage = 'out';
     } else if (g.stage === 'out') {
-      g.fade = Math.max(0, g.fade - dt / 0.8);
+      g.fade = Math.max(0, g.fade - dt / 1);
       if (g.fade <= 0) {
         g.stage = 'wait';
-        g.wait = rand(1, 4);
+        g.wait = rand(2, 6);
         g.obj.visible = false;
       }
     }
@@ -330,19 +342,38 @@ export function createCreatures(config) {
     g.faceMat.opacity = 0.9 * k;
   }
 
-  function update(dt, cam) {
+  // viewQuat: the camera's rotation in the room frame (from orientation.js), or null for "level, facing -z".
+  function update(dt, viewQuat) {
     if (!enabled || dt <= 0) return;
-    for (const b of bats) updateBat(b, dt, cam);
-    for (const g of ghosts) updateGhost(g, dt, cam);
+    if (viewQuat) {
+      root.quaternion.copy(viewQuat).invert();
+      tmp.set(0, 0, -1).applyQuaternion(viewQuat);
+      heading = Math.atan2(-tmp.x, -tmp.z);
+    } else {
+      root.quaternion.identity();
+      heading = 0;
+    }
+    for (const b of bats) updateBat(b, dt);
+    for (const g of ghosts) updateGhost(g, dt, root.quaternion);
   }
 
   function setMode(m) { mode = m; }
 
-  function info() {
+  // Debug / tests: how many are out, and how many of those are inside the camera's view right now.
+  function info(cam) {
+    const onScreen = (list) => list.filter((c) => {
+      if (!c.obj.visible) return false;
+      tmp.copy(c.obj.position).applyQuaternion(root.quaternion);
+      if (tmp.z >= 0) return false;
+      tmp.applyMatrix4(cam.projectionMatrix);
+      return Math.abs(tmp.x) <= 1 && Math.abs(tmp.y) <= 1;
+    }).length;
     return {
       mode,
       bats: bats.filter((b) => b.obj.visible).length,
       ghosts: ghosts.filter((g) => g.obj.visible).length,
+      batsInView: onScreen(bats),
+      ghostsInView: onScreen(ghosts),
     };
   }
 

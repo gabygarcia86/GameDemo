@@ -140,6 +140,14 @@ function unlockAudio() {
   }
 }
 
+// iOS only reports the motion sensors after the player allows it, and only asks from inside a tap. The bats and ghosts
+// use the sensors to stay put in the room as the phone turns; without them they stay in one fixed arrangement.
+function requestMotionPermission() {
+  const DOE = window.DeviceOrientationEvent;
+  if (!DOE || typeof DOE.requestPermission !== 'function') return; // Android / desktop: no permission step
+  DOE.requestPermission().catch((err) => console.warn('[pumpkin] motion sensors unavailable (creatures stay fixed)', err));
+}
+
 function playSmash() {
   if (!audio.on || !audio.ctx) return;
   try {
@@ -288,7 +296,7 @@ const events = {
   },
 };
 
-// Bats swarm while the player is searching for a photo; ghosts stay out (at the sides) while a pumpkin is up.
+// Bats circle overhead while the player is searching for a photo; only the ghosts stay out while a pumpkin is up.
 function ambientMode() {
   if (S.suspended) return 'off';
   if (S.state === 'scanning') return 'scanning';
@@ -404,6 +412,7 @@ async function beginSession() {
   setTrackChip('idle');
   showScreen('loading');
   unlockAudio(); // we are inside a user gesture here
+  requestMotionPermission();
 
   try {
     setLoading('Loading the game engine…');

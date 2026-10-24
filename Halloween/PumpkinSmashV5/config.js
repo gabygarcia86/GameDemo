@@ -35,13 +35,12 @@ export const CONFIG = {
     angleNoiseDeg: 1.5,         // rotation jitter
   },
 
-  // ---- Ambient creatures (camera space, purely decorative; taps go through them) ----
+  // ---- Ambient creatures (placed around the player in the room; purely decorative, taps go through them) ----
+  // The phone's motion sensors keep them in place as it turns (rotation only: browsers do not report position).
   creatures: {
     enabled: true,
-    bats: 9,                    // swarm while scanning, fly off when a pumpkin appears
-    ghosts: 4,                  // drift in and out the whole game, keeping to the sides while a pumpkin is up
-    nearDepth: 1200,            // depth range in tracker units (a photo filling half the view is ~5000 away)
-    farDepth: 6000,
+    bats: 5,                    // circle overhead while scanning, fly up and away when a pumpkin appears
+    ghosts: 3,                  // float at eye level all around, fading in and out; never in the middle of the view mid-play
   },
 
   // ---- Camera ----

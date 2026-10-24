@@ -12,6 +12,7 @@ import * as THREE from './vendor/three/three.module.js';
 import { Controller, Compiler } from './vendor/mindar/mindar-image.prod.js';
 import { createPumpkin } from './pumpkin.js';
 import { createCreatures } from './creatures.js';
+import { createOrientation } from './orientation.js';
 
 const DEG = Math.PI / 180;
 
@@ -51,6 +52,7 @@ export class Engine {
     this.clock = new THREE.Clock();
     this.pumpkin = null;
     this.creatures = null;
+    this.orientation = createOrientation(); // phone rotation, so the creatures stay put in the room
 
     // Reusable scratch objects (nothing is allocated per frame)
     this._m = new THREE.Matrix4();
@@ -112,7 +114,7 @@ export class Engine {
     if (dt > 0) this.fps += (1 / dt - this.fps) * 0.1;
     this._smoothAnchors(dt);
     this.pumpkin.update(dt);
-    this.creatures.update(dt, this.camera);
+    this.creatures.update(dt, this.orientation.update(dt));
 
     // Pumpkin screen motion (used to ignore taps while the camera is sweeping)
     if (this.activeIndex >= 0 && this.pumpkin.root.visible && this.anchors[this.activeIndex] && this.anchors[this.activeIndex].group.visible) {
@@ -405,7 +407,7 @@ export class Engine {
     }
   }
 
-  // Which ambient creatures are out: 'scanning' (bats + ghosts), 'playing' (ghosts at the sides) or 'off'.
+  // Which ambient creatures are out: 'scanning' (bats + ghosts), 'playing' (ghosts only) or 'off'.
   setAmbientMode(mode) {
     this.creatures.setMode(mode);
   }
@@ -566,7 +568,8 @@ export class Engine {
       anchors: this.anchors.map((a, i) => ({ index: i, tracked: a.tracked, visible: a.group.visible })),
       activeIndex: this.activeIndex,
       pumpkin: { visible: this.pumpkin.root.visible, busy: this.pumpkin.busy, screen: s ? { x: s.x, y: s.y, radiusPx: s.radiusPx, onScreen: s.visible } : null },
-      creatures: this.creatures.info(),
+      creatures: { ...this.creatures.info(this.camera), motionSensor: this.orientation.active },
+      view: { fov: Math.round(this.camera.fov), aspect: Number(this.camera.aspect.toFixed(2)) },
       anchorDistance: this.activeIndex >= 0 ? Math.round(this.anchors[this.activeIndex].tPos.length()) : null,
       motionPxPerSec: Math.round(this.motionPxPerSec),
       fps: Math.round(this.fps),
@@ -582,6 +585,7 @@ export class Engine {
     this.renderer.setAnimationLoop(null);
     this.pumpkin.dispose();
     this.creatures.dispose();
+    this.orientation.dispose();
     for (const a of this.anchors) a.group.removeFromParent();
     this.anchors = [];
     this.renderer.dispose();

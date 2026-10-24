@@ -14,7 +14,7 @@
     {
       "index": 0,
       "file": "image1.jpg",
-      "label": "Image 1 - dark cabinet, lamp and shelf of photos",
+      "label": "Image 1 - Indoor: black dresser with lamp and shelf of framed photos",
       "width": 1152,
       "height": 2048,
       "aspectRatio": 0.5625,
@@ -40,7 +40,7 @@
     {
       "index": 1,
       "file": "image2.jpg",
-      "label": "Image 2 - hand-coloured play ball on a tile floor (weak tracking target)",
+      "label": "Image 2 - Indoor: doodled beach ball on a tile floor against the wall (does not track reliably)",
       "width": 1152,
       "height": 2048,
       "aspectRatio": 0.5625,
@@ -64,7 +64,7 @@
     {
       "index": 2,
       "file": "image3.jpg",
-      "label": "Image 3 - white double door with pumpkin wreath and garland",
+      "label": "Image 3 - Indoor: white double front door with pumpkin wreath, bat garland and round rug",
       "width": 1152,
       "height": 2048,
       "aspectRatio": 0.5625,
@@ -88,7 +88,7 @@
     {
       "index": 3,
       "file": "image4.jpg",
-      "label": "Image 4 - ",
+      "label": "Image 4 - Yard, day: skeleton with hands on head beside the walkway, wooden fence behind",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -112,7 +112,7 @@
     {
       "index": 4,
       "file": "image5.jpg",
-      "label": "Image 5 - ",
+      "label": "Image 5 - Yard, day: skeleton with arms up on the lawn, dead-tree props and clown behind",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -136,7 +136,7 @@
     {
       "index": 5,
       "file": "image6.jpg",
-      "label": "Image 6 - ",
+      "label": "Image 6 - Yard, day: skeleton on the curved walkway, clown in red toy car, street behind",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -160,7 +160,7 @@
     {
       "index": 6,
       "file": "image7.jpg",
-      "label": "Image 7 - ",
+      "label": "Image 7 - Yard, day: wide view of the curved walkway and driveway with skeletons on the lawn",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -184,7 +184,7 @@
     {
       "index": 7,
       "file": "image8.jpg",
-      "label": "Image 8 - ",
+      "label": "Image 8 - Yard, day: red-and-white TICKETS booth with clown skeleton, giant skeleton waving behind",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -208,7 +208,7 @@
     {
       "index": 8,
       "file": "image9.jpg",
-      "label": "Image 9 - ",
+      "label": "Image 9 - Yard, day: TICKETS booth close-up, giant skeleton at right",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -232,7 +232,7 @@
     {
       "index": 9,
       "file": "image10.jpg",
-      "label": "Image 10 - ",
+      "label": "Image 10 - Yard, day: TICKETS booth from the side, by the fence and utility pole",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -256,7 +256,7 @@
     {
       "index": 10,
       "file": "image11.jpg",
-      "label": "Image 11 - ",
+      "label": "Image 11 - Yard, day: giant skeleton waving by the fence, purple-wig skeleton behind",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -280,7 +280,7 @@
     {
       "index": 11,
       "file": "image12.jpg",
-      "label": "Image 12 - ",
+      "label": "Image 12 - Yard, day: giant skeleton waving, front view against the fence and sky",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -304,7 +304,7 @@
     {
       "index": 12,
       "file": "image13.jpg",
-      "label": "Image 13 - ",
+      "label": "Image 13 - Yard, day: giant skeleton reaching out, side view by the utility pole",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -328,7 +328,7 @@
     {
       "index": 13,
       "file": "image14.jpg",
-      "label": "Image 14 - ",
+      "label": "Image 14 - Yard, day: purple-wig skeleton fortune teller at a black-draped table",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -352,7 +352,7 @@
     {
       "index": 14,
       "file": "image15.jpg",
-      "label": "Image 15 - ",
+      "label": "Image 15 - Yard, day: purple-wig fortune teller, front view with Halloween QR-code sign",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -376,7 +376,7 @@
     {
       "index": 15,
       "file": "image16.jpg",
-      "label": "Image 16 - ",
+      "label": "Image 16 - Yard, day: skeleton in polka-dot clown tie crouched by a wicker side table",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -400,7 +400,7 @@
     {
       "index": 16,
       "file": "image17.jpg",
-      "label": "Image 17 - ",
+      "label": "Image 17 - Yard, day: crouching clown-tie skeleton, fortune teller in the background",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -424,7 +424,7 @@
     {
       "index": 17,
       "file": "image18.jpg",
-      "label": "Image 18 - ",
+      "label": "Image 18 - Yard, day: crouching skeleton by a side table, wide view against the fence",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -448,7 +448,7 @@
     {
       "index": 18,
       "file": "image19.jpg",
-      "label": "Image 19 - ",
+      "label": "Image 19 - Yard, day: top-hat skeleton at a table with a skeleton laid across it",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -472,7 +472,7 @@
     {
       "index": 19,
       "file": "image20.jpg",
-      "label": "Image 20 - ",
+      "label": "Image 20 - Yard, day: top-hat skeleton table scene, front view against the fence",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -496,7 +496,7 @@
     {
       "index": 20,
       "file": "image21.jpg",
-      "label": "Image 21 - ",
+      "label": "Image 21 - Yard, day: skeleton in a toilet by the fence gate, yard and props behind",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -520,7 +520,7 @@
     {
       "index": 21,
       "file": "image22.jpg",
-      "label": "Image 22 - ",
+      "label": "Image 22 - Yard, day: skeleton bursting from a toilet under green slime, close-up",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -544,7 +544,7 @@
     {
       "index": 22,
       "file": "image23.jpg",
-      "label": "Image 23 - ",
+      "label": "Image 23 - Yard, day: dead-tree prop between palm trees, monsters behind",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -568,7 +568,7 @@
     {
       "index": 23,
       "file": "image24.jpg",
-      "label": "Image 24 - ",
+      "label": "Image 24 - Yard, day: dead-tree prop and pumpkin-head creature beside the house",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -592,7 +592,7 @@
     {
       "index": 24,
       "file": "image25.jpg",
-      "label": "Image 25 - ",
+      "label": "Image 25 - Yard, day: dead tree, pumpkin-head creature and werewolf by the house",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -616,7 +616,7 @@
     {
       "index": 25,
       "file": "image26.jpg",
-      "label": "Image 26 - ",
+      "label": "Image 26 - Yard, day: clown skeleton in purple-and-yellow suit under palm trees",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -640,7 +640,7 @@
     {
       "index": 26,
       "file": "image27.jpg",
-      "label": "Image 27 - ",
+      "label": "Image 27 - Yard, day: clown skeleton under the palms, pumpkin-head creature above",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -664,7 +664,7 @@
     {
       "index": 27,
       "file": "image28.jpg",
-      "label": "Image 28 - ",
+      "label": "Image 28 - Yard, day: clown skeleton by a palm trunk, wide view toward the fence",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -688,7 +688,7 @@
     {
       "index": 28,
       "file": "image29.jpg",
-      "label": "Image 29 - ",
+      "label": "Image 29 - Yard, day: strongman skeleton lifting a pumpkin barbell by the walkway",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -712,7 +712,7 @@
     {
       "index": 29,
       "file": "image30.jpg",
-      "label": "Image 30 - ",
+      "label": "Image 30 - Yard, day: strongman skeleton with werewolf and house behind",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -736,7 +736,7 @@
     {
       "index": 30,
       "file": "image31.jpg",
-      "label": "Image 31 - ",
+      "label": "Image 31 - Yard, day: strongman skeleton front view, clown and monsters behind",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -760,7 +760,7 @@
     {
       "index": 31,
       "file": "image32.jpg",
-      "label": "Image 32 - ",
+      "label": "Image 32 - Yard, night: purple-wig fortune teller lit by skull path lights",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -784,7 +784,7 @@
     {
       "index": 32,
       "file": "image33.jpg",
-      "label": "Image 33 - ",
+      "label": "Image 33 - Yard, night: top-hat skeleton table scene",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -808,7 +808,7 @@
     {
       "index": 33,
       "file": "image34.jpg",
-      "label": "Image 34 - ",
+      "label": "Image 34 - Yard, night: skeleton with arms up, blue-lit trees and monsters behind",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -832,7 +832,7 @@
     {
       "index": 34,
       "file": "image35.jpg",
-      "label": "Image 35 - ",
+      "label": "Image 35 - Yard, night: rainbow-wig clown skeleton in red toy car",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -856,7 +856,7 @@
     {
       "index": 35,
       "file": "image36.jpg",
-      "label": "Image 36 - ",
+      "label": "Image 36 - Yard, night: clown skeleton under the palm trees, lit from below",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -880,7 +880,7 @@
     {
       "index": 36,
       "file": "image37.jpg",
-      "label": "Image 37 - ",
+      "label": "Image 37 - Yard, night: strongman skeleton with pumpkin barbell, front view",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -904,7 +904,7 @@
     {
       "index": 37,
       "file": "image38.jpg",
-      "label": "Image 38 - ",
+      "label": "Image 38 - Yard, night: strongman skeleton, slightly wider view",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -928,7 +928,7 @@
     {
       "index": 38,
       "file": "image39.jpg",
-      "label": "Image 39 - ",
+      "label": "Image 39 - Yard, night: skeleton lounging in a pink lawn chair by the street",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -952,7 +952,7 @@
     {
       "index": 39,
       "file": "image40.jpg",
-      "label": "Image 40 - ",
+      "label": "Image 40 - Yard, night: street-corner sign with skeletons and lights beyond",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -978,7 +978,7 @@
     {
       "index": 40,
       "file": "image41.jpg",
-      "label": "Image 41 - ",
+      "label": "Image 41 - Yard, night: skeleton kneeling by the street, streetlight behind",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -1002,7 +1002,7 @@
     {
       "index": 41,
       "file": "image42.jpg",
-      "label": "Image 42 - ",
+      "label": "Image 42 - Yard, night: kneeling skeleton under a spotlight, view down the street",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -1026,7 +1026,7 @@
     {
       "index": 42,
       "file": "image43.jpg",
-      "label": "Image 43 - ",
+      "label": "Image 43 - Yard, night: tightrope skeleton between ladders under pennant flags",
       "width": 2048,
       "height": 1536,
       "aspectRatio": 1.33333,
@@ -1050,7 +1050,7 @@
     {
       "index": 43,
       "file": "image44.jpg",
-      "label": "Image 44 - ",
+      "label": "Image 44 - Yard, night: cowgirl skeleton with guitar behind an RIP tombstone",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -1074,7 +1074,7 @@
     {
       "index": 44,
       "file": "image45.jpg",
-      "label": "Image 45 - ",
+      "label": "Image 45 - Rooftop, night: rainbow-wig clown skeleton, close-up",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,
@@ -1100,7 +1100,7 @@
     {
       "index": 45,
       "file": "image46.jpg",
-      "label": "Image 46 - ",
+      "label": "Image 46 - Indoor: duplicate of image 1 (identical file)",
       "width": 1152,
       "height": 2048,
       "aspectRatio": 0.5625,
@@ -1126,7 +1126,7 @@
     {
       "index": 46,
       "file": "image47.jpg",
-      "label": "Image 47 - ",
+      "label": "Image 47 - Indoor: Galaga arcade cabinet with blue ottomans and comic-book rug",
       "width": 1152,
       "height": 2048,
       "aspectRatio": 0.5625,
@@ -1150,7 +1150,7 @@
     {
       "index": 47,
       "file": "image48.jpg",
-      "label": "Image 48 - ",
+      "label": "Image 48 - Indoor: duplicate of image 3 (identical file)",
       "width": 1152,
       "height": 2048,
       "aspectRatio": 0.5625,
@@ -1174,7 +1174,7 @@
     {
       "index": 48,
       "file": "image49.jpg",
-      "label": "Image 49 - ",
+      "label": "Image 49 - Indoor: white rotating bookshelf of brochures on a wood floor",
       "width": 1152,
       "height": 2048,
       "aspectRatio": 0.5625,
@@ -1198,7 +1198,7 @@
     {
       "index": 49,
       "file": "image50.jpg",
-      "label": "Image 50 - ",
+      "label": "Image 50 - Indoor: rolled-up blue mat in a corner on a wood floor",
       "width": 1152,
       "height": 2048,
       "aspectRatio": 0.5625,
@@ -1222,7 +1222,7 @@
     {
       "index": 50,
       "file": "image51.jpg",
-      "label": "Image 51 - ",
+      "label": "Image 51 - Indoor: cardboard box of bags in a corner on a tile floor",
       "width": 1152,
       "height": 2048,
       "aspectRatio": 0.5625,
@@ -1246,7 +1246,7 @@
     {
       "index": 51,
       "file": "image52.jpg",
-      "label": "Image 52 - ",
+      "label": "Image 52 - Indoor: framed infinity-symbol print on the wall, hats below",
       "width": 1152,
       "height": 2048,
       "aspectRatio": 0.5625,
@@ -1270,7 +1270,7 @@
     {
       "index": 52,
       "file": "image53.jpg",
-      "label": "Image 53 - ",
+      "label": "Image 53 - Indoor: framed 'Greetings from Fort Lauderdale' wedding photo",
       "width": 1152,
       "height": 2048,
       "aspectRatio": 0.5625,
@@ -1294,7 +1294,7 @@
     {
       "index": 53,
       "file": "image54.jpg",
-      "label": "Image 54 - ",
+      "label": "Image 54 - Indoor: hand-painted FAMILY canvas on a plain wall",
       "width": 1152,
       "height": 2048,
       "aspectRatio": 0.5625,
@@ -1318,7 +1318,7 @@
     {
       "index": 54,
       "file": "image55.jpg",
-      "label": "Image 55 - ",
+      "label": "Image 55 - Yard, day: rainbow-wig clown skeleton in red toy car on the lawn",
       "width": 1536,
       "height": 2048,
       "aspectRatio": 0.75,

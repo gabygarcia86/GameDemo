@@ -90,8 +90,7 @@ same setup. The builder's feature heuristic rated image 2 "good", so that rating
 
 Likely reason (not proven): the only distinctive content is the ball, about a tenth of the frame, in front of a plain wall and
 repeating floor tiles. A **ball-only crop** of the same photo compiled and was detected (first detection ~7 s, 95/104 samples).
-It is provided as an optional drop-in (`optional-image2-ball-crop/`), not applied by default because it changes which picture
-the player must point at.
+That drop-in was later removed from the project as no longer needed.
 
 ## Defects found and fixed during testing
 1. A black rectangle (the idle `<video>`) showed at the top-left of the start screen. Fixed in `styles.css` / `engine.js`; verified by screenshot and a re-run of the restart tests (20/20).

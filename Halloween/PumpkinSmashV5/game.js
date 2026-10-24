@@ -282,8 +282,19 @@ const events = {
   },
   onCameraEnded() { recoverCamera(); },
   onFatal(err) { failSession(err); },
-  onFrame() { if (DEBUG) updateDebug(); },
+  onFrame() {
+    if (S.engine) S.engine.setAmbientMode(ambientMode());
+    if (DEBUG) updateDebug();
+  },
 };
+
+// Bats swarm while the player is searching for a photo; ghosts stay out (at the sides) while a pumpkin is up.
+function ambientMode() {
+  if (S.suspended) return 'off';
+  if (S.state === 'scanning') return 'scanning';
+  if (S.state === 'playing' || S.state === 'smashing' || S.state === 'between') return 'playing';
+  return 'off';
+}
 
 // Deterministic choice when several targets are visible: the first visible index after the previous host
 // (cyclic order). With nothing hosted yet that is simply the lowest visible index.

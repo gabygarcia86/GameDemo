@@ -7,7 +7,7 @@ export const CONFIG = {
 
   // ---- Pumpkin placement (all relative to the tracked image) ----
   // Pumpkin diameter as a fraction of the image's SHORTER side. 0.20-0.30 is the intended range.
-  pumpkinScale: 0.25,
+  pumpkinScale: 0.275,
   // Gap between the back of the pumpkin and the image plane, in image-width units (avoids z-fighting).
   surfaceGap: 0.004,
 
@@ -24,6 +24,25 @@ export const CONFIG = {
   filterBeta: null,             // One-Euro filter beta   (library default 1000). Higher = less lag when moving.
   warmupTolerance: null,        // frames of stable tracking before a target is reported (default 5)
   missTolerance: null,          // missed frames before a target is reported lost (default 5)
+
+  // ---- Pumpkin steadiness (smoothing of the tracked pose, on top of MindAR's filter). null = raw tracker pose ----
+  // Changes no bigger than the noise levels are treated as tracker jitter and eased in slowly (stillRate); bigger
+  // changes are real camera motion and are followed quickly (moveRate), so the pumpkin stays steady without lagging.
+  smoothing: {
+    stillRate: 4,               // per second. Lower = steadier, but slower to settle after a small move.
+    moveRate: 25,               // per second, used for real motion
+    posNoise: 0.006,            // position jitter, as a fraction of the camera-to-photo distance
+    angleNoiseDeg: 1.5,         // rotation jitter
+  },
+
+  // ---- Ambient creatures (camera space, purely decorative; taps go through them) ----
+  creatures: {
+    enabled: true,
+    bats: 9,                    // swarm while scanning, fly off when a pumpkin appears
+    ghosts: 4,                  // drift in and out the whole game, keeping to the sides while a pumpkin is up
+    nearDepth: 1200,            // depth range in tracker units (a photo filling half the view is ~5000 away)
+    farDepth: 6000,
+  },
 
   // ---- Camera ----
   camera: {

@@ -1,6 +1,6 @@
 # Pumpkin Smash!
 
-A camera-based Halloween game for phones and desktops. Point the camera at one of the 53 reference photographs and a 3D
+A camera-based Halloween game for phones and desktops. Point the camera at one of the 51 reference photographs and a 3D
 pumpkin appears on the photo, locked to its position, rotation and perspective. Tap it to smash it. Smash five to win.
 
 - Image tracking: [MindAR](https://github.com/hiukim/mind-ar-js) 1.2.5 (image target tracker, runs in the browser)
@@ -14,7 +14,7 @@ pumpkin appears on the photo, locked to its position, rotation and perspective. 
 | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **What you point the camera at** | The reference photographs in `images/` themselves, shown on another screen or printed. The game recognises _those pictures_, not similar real-world scenes. |
 | **Image 2 does not track**       | The full photo of the play ball on the tile floor is not detected (see "Known limitations"). Images 1 and 3 work.                                    |
-| **Images 4–55 are untested**     | They are in the database, but the automated tests only cover images 1–3. Try each one on your phone.                                                 |
+| **Some photos need a straight view** | In simulated tests every photo except image 2 is found straight on; a few need the phone close and square-on (see `images/README.md`). |
 | **Tested on a real phone?**      | **No.** Everything was tested in headless Chromium with a fake webcam. See `TEST-REPORT.md`.                                                         |
 
 ## Run it
@@ -41,8 +41,9 @@ All paths in the code are relative, so the repository sub-folder (`/<repo-name>/
 
 ```
 index.html  styles.css  game.js  engine.js  pumpkin.js  config.js   the game
-targets.mind  target-manifest.json                                  the compiled image database (53 targets)
-images/image1.jpg … image53.jpg  manifest.json                      your original photos + the target order
+creatures.js                                                        the flying bats and floating ghosts
+targets.mind  target-manifest.json                                  the compiled image database (51 targets)
+images/image1.jpg … image51.jpg  manifest.json                      your original photos + the target order
 vendor/three, vendor/mindar                                         the libraries (checksums in vendor/CHECKSUMS.txt)
 target-builder.html  builder.js  builder.css                        rebuilds the database in your browser
 tests/                                                              automated browser tests
@@ -55,16 +56,26 @@ tests/                                                              automated br
 
 ## Settings
 
-`config.js` holds the tunables: `smashesToWin` (5), `pumpkinScale` (0.25 = pumpkin diameter is 25% of the photo's shorter side;
-keep it between 0.20 and 0.30), `surfaceGap`, tap forgiveness, tracking smoothing, camera resolution.
+`config.js` holds the tunables: `smashesToWin` (5), `pumpkinScale` (0.275 = pumpkin diameter is 27.5% of the photo's shorter side;
+keep it between 0.20 and 0.30), `surfaceGap`, tap forgiveness, tracking filters, camera resolution, and:
+
+- `smoothing`: how steady the pumpkin is. Small, jitter-sized pose changes are eased in slowly (`stillRate`); real camera
+  motion is followed quickly (`moveRate`). Lower `stillRate` = steadier but slower to settle. Set `smoothing: null` for the raw tracker pose.
+- `creatures`: the number of bats (they swarm while you scan, and fly off when a pumpkin appears) and ghosts (they drift in and
+  out the whole game, keeping to the sides while a pumpkin is up), or `enabled: false` to turn them off. They are decoration
+  only: taps go straight through them.
 
 ## How placement works
 
 MindAR reports a 4x4 pose matrix for each detected photo. `engine.js` multiplies it by a fixed transform that moves the origin
 from the photo's bottom-left corner to its **centre** and scales so 1 unit = the photo's width. The pumpkin is a child of that
 anchor at local (0, 0, +radius), so it sits at the middle of the photo, just in front of it, and inherits every rotation and
-perspective change. Nothing is positioned from screen coordinates. When the tracker reports the photo lost, the anchor is
+perspective change. Nothing is positioned from screen coordinates. Each frame the drawn pose eases toward the tracker's
+latest pose (see `smoothing` above), which removes most of the tracker's jitter. When the tracker reports the photo lost, the anchor is
 hidden, the pumpkin is removed, and the player is told to find a photo.
+
+The bats and ghosts are not anchored to anything: the tracker only knows where the photos are, not the room, so they fly
+around in front of the camera (camera space).
 
 ## Add or replace reference photos
 

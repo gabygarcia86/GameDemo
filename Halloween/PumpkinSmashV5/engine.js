@@ -11,6 +11,9 @@
 import * as THREE from './vendor/three/three.module.js';
 import { Controller, Compiler } from './vendor/mindar/mindar-image.prod.js';
 import { createPumpkin } from './pumpkin.js';
+import { createCreatures } from './creatures.js';
+
+const DEG = Math.PI / 180;
 
 const fail = (code, message, cause) => {
   const e = new Error(message);
@@ -47,6 +50,7 @@ export class Engine {
     this.renderer = null;
     this.clock = new THREE.Clock();
     this.pumpkin = null;
+    this.creatures = null;
 
     // Reusable scratch objects (nothing is allocated per frame)
     this._m = new THREE.Matrix4();
@@ -97,13 +101,18 @@ export class Engine {
     this.pumpkin = createPumpkin(this.config);
     this.pumpkin.root.visible = false;
 
+    this.creatures = createCreatures(this.config);
+    this.scene.add(this.creatures.root);
+
     this.renderer.setAnimationLoop(() => this._tick());
   }
 
   _tick() {
     const dt = Math.min(0.05, this.clock.getDelta());
     if (dt > 0) this.fps += (1 / dt - this.fps) * 0.1;
+    this._smoothAnchors(dt);
     this.pumpkin.update(dt);
+    this.creatures.update(dt, this.camera);
 
     // Pumpkin screen motion (used to ignore taps while the camera is sweeping)
     if (this.activeIndex >= 0 && this.pumpkin.root.visible && this.anchors[this.activeIndex] && this.anchors[this.activeIndex].group.visible) {
@@ -332,7 +341,12 @@ export class Engine {
         new THREE.Quaternion(),
         new THREE.Vector3(w, w, w)
       );
-      this.anchors.push({ group, post, tracked: false, width: w, height: h });
+      this.anchors.push({
+        group, post, tracked: false, width: w, height: h,
+        // Smoothed pose (what is drawn) and the latest pose from the tracker (what it eases toward).
+        pos: new THREE.Vector3(), quat: new THREE.Quaternion(), scl: new THREE.Vector3(1, 1, 1),
+        tPos: new THREE.Vector3(), tQuat: new THREE.Quaternion(), tScl: new THREE.Vector3(1, 1, 1),
+      });
     }
     this.activeIndex = -1;
   }
@@ -352,15 +366,48 @@ export class Engine {
       return;
     }
 
-    // Pose straight from the tracker, every update, no screen-space placement anywhere.
+    // Pose from the tracker, every update, no screen-space placement anywhere. It becomes the target that
+    // _smoothAnchors eases toward each frame; a newly found image snaps straight to it.
     this._m.fromArray(data.worldMatrix).multiply(a.post);
-    a.group.matrix.copy(this._m);
-    a.group.matrixWorldNeedsUpdate = true;
+    this._m.decompose(a.tPos, a.tQuat, a.tScl);
+    if (!a.tracked || !this.config.smoothing) {
+      a.pos.copy(a.tPos);
+      a.quat.copy(a.tQuat);
+      a.scl.copy(a.tScl);
+      a.group.matrix.compose(a.pos, a.quat, a.scl);
+      a.group.matrixWorldNeedsUpdate = true;
+    }
     a.group.visible = true;
     if (!a.tracked) {
       a.tracked = true;
       if (this.events.onTargetFound) this.events.onTargetFound(i);
     }
+  }
+
+  // Adaptive smoothing of every visible anchor (see CONFIG.smoothing). Jitter-sized differences between the drawn
+  // pose and the tracker's latest pose are eased out slowly; real motion is followed quickly.
+  _smoothAnchors(dt) {
+    const sm = this.config.smoothing;
+    if (!sm || dt <= 0) return;
+    for (const a of this.anchors) {
+      if (!a.group.visible) continue;
+      const posErr = a.pos.distanceTo(a.tPos) / Math.max(1e-6, a.tPos.length());
+      const angErr = a.quat.angleTo(a.tQuat);
+      const motion = Math.max(posErr / sm.posNoise, angErr / (sm.angleNoiseDeg * DEG)); // 1 = at the noise level
+      const k = Math.min(1, Math.max(0, (motion - 1) / 2));
+      const rate = sm.stillRate + (sm.moveRate - sm.stillRate) * k;
+      const alpha = 1 - Math.exp(-rate * dt);
+      a.pos.lerp(a.tPos, alpha);
+      a.quat.slerp(a.tQuat, alpha);
+      a.scl.lerp(a.tScl, alpha);
+      a.group.matrix.compose(a.pos, a.quat, a.scl);
+      a.group.matrixWorldNeedsUpdate = true;
+    }
+  }
+
+  // Which ambient creatures are out: 'scanning' (bats + ghosts), 'playing' (ghosts at the sides) or 'off'.
+  setAmbientMode(mode) {
+    this.creatures.setMode(mode);
   }
 
   // ------------------------------------------------------------------ pumpkin
@@ -519,6 +566,8 @@ export class Engine {
       anchors: this.anchors.map((a, i) => ({ index: i, tracked: a.tracked, visible: a.group.visible })),
       activeIndex: this.activeIndex,
       pumpkin: { visible: this.pumpkin.root.visible, busy: this.pumpkin.busy, screen: s ? { x: s.x, y: s.y, radiusPx: s.radiusPx, onScreen: s.visible } : null },
+      creatures: this.creatures.info(),
+      anchorDistance: this.activeIndex >= 0 ? Math.round(this.anchors[this.activeIndex].tPos.length()) : null,
       motionPxPerSec: Math.round(this.motionPxPerSec),
       fps: Math.round(this.fps),
       canvas: { w: this.renderer.domElement.clientWidth, h: this.renderer.domElement.clientHeight },
@@ -532,6 +581,7 @@ export class Engine {
     this.stopCamera();
     this.renderer.setAnimationLoop(null);
     this.pumpkin.dispose();
+    this.creatures.dispose();
     for (const a of this.anchors) a.group.removeFromParent();
     this.anchors = [];
     this.renderer.dispose();

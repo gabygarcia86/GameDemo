@@ -29,7 +29,14 @@ export class InputManager {
     this.onKeyDown = this.onKeyDown.bind(this);
     this.onKeyUp = this.onKeyUp.bind(this);
     this.releaseAll = this.releaseAll.bind(this);
-    const block = (e) => this.enabled && e.cancelable && e.preventDefault();
+    // Cancelling touchstart also suppresses the click that follows it on
+    // mobile, so touches on UI controls (pause button, pause overlay) must be
+    // left alone or those buttons and sliders stop working.
+    const block = (e) => {
+      if (!this.enabled || !e.cancelable) return;
+      if (e.target instanceof Element && e.target.closest('[data-ui]')) return;
+      e.preventDefault();
+    };
 
     surface.addEventListener('pointerdown', this.onPointerDown);
     surface.addEventListener('pointerup', this.onPointerUp);

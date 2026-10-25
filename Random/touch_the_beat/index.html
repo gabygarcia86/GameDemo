@@ -1,323 +1,487 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <meta name="theme-color" content="#05040f">
-  <meta name="description" content="Touch the Beat — a neon four-lane rhythm game for phones with automatic song-to-chart compilation.">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="format-detection" content="telephone=no">
-  <title>Touch the Beat</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2305040f'/%3E%3Crect x='8' y='14' width='10' height='22' rx='4' fill='%2300f0ff'/%3E%3Crect x='21' y='24' width='10' height='22' rx='4' fill='%23ff2bd6'/%3E%3Crect x='34' y='10' width='10' height='22' rx='4' fill='%23a64dff'/%3E%3Crect x='47' y='28' width='10' height='22' rx='4' fill='%23b6ff1a'/%3E%3Crect x='6' y='52' width='52' height='3' rx='1.5' fill='%23fff' opacity='.8'/%3E%3C/svg%3E">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Rajdhani:wght@500;600;700&display=swap">
-  <link rel="stylesheet" href="styles/main.css">
-</head>
-<body data-screen="boot">
-  <canvas id="stage" aria-hidden="true"></canvas>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport"
+            content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+        <meta name="theme-color" content="#05040f">
+        <meta name="description"
+            content="Touch the Beat — a neon four-lane rhythm game for phones with automatic song-to-chart compilation.">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style"
+            content="black-translucent">
+        <meta name="format-detection" content="telephone=no">
+        <title>Touch the Beat</title>
+        <link rel="icon" href="icon/favicon.ico" type="image/x-icon">
+        <link rel="icon" type="image/png" sizes="16x16" href="icon/icon-16.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="icon/icon-32.png">
+        <link rel="icon" type="image/png" sizes="128x128"
+            href="icon/icon-128.png">
+        <link rel="icon" type="image/png" sizes="256x256"
+            href="icon/icon-256.png">
+        <link rel="apple-touch-icon" sizes="256x256" href="icon/icon-256.png">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800;900&family=Rajdhani:wght@500;600;700&display=swap">
+        <link rel="stylesheet" href="styles/main.css">
+    </head>
+    <body data-screen="boot">
+        <canvas id="stage" aria-hidden="true"></canvas>
 
-  <main id="ui">
-    <!-- ============================== MAIN MENU -->
-    <section class="screen" id="screen-menu" aria-label="Main menu">
-      <div class="menu-inner">
-        <h1 class="logo" aria-label="Touch the Beat">
-          <span class="logo-word w1" data-text="TOUCH" aria-hidden="true">TOUCH</span>
-          <span class="logo-word w2" data-text="THE" aria-hidden="true">THE</span>
-          <span class="logo-word w3" data-text="BEAT" aria-hidden="true">BEAT</span>
-        </h1>
-        <div class="logo-eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-        <p class="tagline">Four lanes. One pulse. Tap in time.</p>
-        <nav class="menu-buttons">
-          <button class="btn btn-primary btn-big" id="btn-play">Play</button>
-          <p class="quick-song" id="quick-song"></p>
-          <button class="btn" id="btn-library">Song Library</button>
-          <button class="btn" id="btn-settings">Settings</button>
-          <button class="btn btn-ghost" id="btn-howto">How to Play</button>
-        </nav>
-        <footer class="menu-foot">
-          <a href="../index.html">‹ Random games</a>
-          <button class="link-btn" id="btn-fullscreen" type="button">Fullscreen</button>
-        </footer>
-      </div>
-    </section>
+        <main id="ui">
+            <!-- ============================== MAIN MENU -->
+            <section class="screen" id="screen-menu" aria-label="Main menu">
+                <div class="menu-inner">
+                    <h1 class="logo" aria-label="Touch the Beat">
+                        <span class="logo-word w1" data-text="TOUCH"
+                            aria-hidden="true">TOUCH</span>
+                        <span class="logo-word w2" data-text="THE"
+                            aria-hidden="true">THE</span>
+                        <span class="logo-word w3" data-text="BEAT"
+                            aria-hidden="true">BEAT</span>
+                    </h1>
+                    <div class="logo-eq"
+                        aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                    <p class="tagline">Four lanes. One pulse. Tap in time.</p>
+                    <nav class="menu-buttons">
+                        <button class="btn btn-primary btn-big"
+                            id="btn-play">Play</button>
+                        <p class="quick-song" id="quick-song"></p>
+                        <button class="btn" id="btn-library">Song
+                            Library</button>
+                        <button class="btn" id="btn-settings">Settings</button>
+                        <button class="btn btn-ghost" id="btn-howto">How to
+                            Play</button>
+                    </nav>
+                    <footer class="menu-foot">
+                        <a href="../../index.html">‹ Back</a>
+                        <button class="link-btn" id="btn-fullscreen"
+                            type="button">Fullscreen</button>
+                    </footer>
+                </div>
+            </section>
 
-    <!-- ============================== SONG SELECT -->
-    <section class="screen" id="screen-songs" aria-label="Song library">
-      <header class="topbar">
-        <button class="icon-btn" data-back aria-label="Back">‹</button>
-        <h2>Song Library</h2>
-        <button class="btn btn-small" id="btn-import">Import Songs</button>
-      </header>
-      <div class="songs-layout">
-        <div class="song-list-wrap">
-          <input type="search" id="song-search" class="search" placeholder="Search songs or artists" autocomplete="off" aria-label="Search songs">
-          <ul class="song-list" id="song-list" role="listbox" aria-label="Songs"></ul>
-          <p class="library-note" id="library-note"></p>
-        </div>
-        <aside class="song-detail" id="song-detail" aria-live="polite">
-          <canvas class="song-wave" id="song-wave" aria-hidden="true"></canvas>
-          <div class="detail-head">
-            <h3 id="detail-title">—</h3>
-            <p id="detail-artist"></p>
-          </div>
-          <dl class="detail-stats">
-            <div><dt>Length</dt><dd id="detail-duration">—</dd></div>
-            <div><dt>BPM</dt><dd id="detail-bpm">—</dd></div>
-            <div><dt>Meter</dt><dd id="detail-meter">—</dd></div>
-            <div><dt>Source</dt><dd id="detail-source">—</dd></div>
-          </dl>
-          <div class="confidence" title="How confident the automatic analysis is about tempo, beats and grid alignment">
-            <div class="confidence-head"><span>Chart confidence</span><strong id="detail-confidence">—</strong></div>
-            <div class="meter"><i id="detail-confidence-bar"></i></div>
-            <p class="confidence-parts" id="detail-confidence-parts"></p>
-          </div>
-          <div class="difficulty-tabs" id="difficulty-tabs" role="radiogroup" aria-label="Difficulty">
-            <button role="radio" data-diff="easy"><span>Easy</span><small></small></button>
-            <button role="radio" data-diff="normal"><span>Normal</span><small></small></button>
-            <button role="radio" data-diff="hard"><span>Hard</span><small></small></button>
-          </div>
-          <p class="detail-best" id="detail-best"></p>
-          <div class="detail-actions">
-            <button class="btn" id="btn-preview">▶ Preview</button>
-            <button class="btn btn-primary" id="btn-start">Play</button>
-          </div>
-          <div class="detail-secondary">
-            <button class="btn btn-small btn-ghost" id="btn-compile">Recompile…</button>
-            <button class="btn btn-small btn-ghost" id="btn-export">Export charts</button>
-            <button class="btn btn-small btn-ghost btn-danger" id="btn-delete">Delete</button>
-          </div>
-          <p class="detail-warnings" id="detail-warnings"></p>
-        </aside>
-      </div>
-      <input type="file" id="file-input" multiple accept="audio/*,.mp3,.wav,.ogg,.oga,.opus,.m4a,.aac,.flac,.webm,.json" hidden>
-    </section>
+            <!-- ============================== SONG SELECT -->
+            <section class="screen" id="screen-songs" aria-label="Song library">
+                <header class="topbar">
+                    <button class="icon-btn" data-back
+                        aria-label="Back">‹</button>
+                    <h2>Song Library</h2>
+                    <button class="btn btn-small" id="btn-import">Import
+                        Songs</button>
+                </header>
+                <div class="songs-layout">
+                    <div class="song-list-wrap">
+                        <input type="search" id="song-search" class="search"
+                            placeholder="Search songs or artists"
+                            autocomplete="off" aria-label="Search songs">
+                        <ul class="song-list" id="song-list" role="listbox"
+                            aria-label="Songs"></ul>
+                        <p class="library-note" id="library-note"></p>
+                    </div>
+                    <aside class="song-detail" id="song-detail"
+                        aria-live="polite">
+                        <canvas class="song-wave" id="song-wave"
+                            aria-hidden="true"></canvas>
+                        <div class="detail-head">
+                            <h3 id="detail-title">—</h3>
+                            <p id="detail-artist"></p>
+                        </div>
+                        <dl class="detail-stats">
+                            <div><dt>Length</dt><dd
+                                    id="detail-duration">—</dd></div>
+                            <div><dt>BPM</dt><dd id="detail-bpm">—</dd></div>
+                            <div><dt>Meter</dt><dd
+                                    id="detail-meter">—</dd></div>
+                            <div><dt>Source</dt><dd
+                                    id="detail-source">—</dd></div>
+                        </dl>
+                        <div class="confidence"
+                            title="How confident the automatic analysis is about tempo, beats and grid alignment">
+                            <div class="confidence-head"><span>Chart
+                                    confidence</span><strong
+                                    id="detail-confidence">—</strong></div>
+                            <div class="meter"><i
+                                    id="detail-confidence-bar"></i></div>
+                            <p class="confidence-parts"
+                                id="detail-confidence-parts"></p>
+                        </div>
+                        <div class="difficulty-tabs" id="difficulty-tabs"
+                            role="radiogroup" aria-label="Difficulty">
+                            <button role="radio"
+                                data-diff="easy"><span>Easy</span><small></small></button>
+                            <button role="radio"
+                                data-diff="normal"><span>Normal</span><small></small></button>
+                            <button role="radio"
+                                data-diff="hard"><span>Hard</span><small></small></button>
+                        </div>
+                        <p class="detail-best" id="detail-best"></p>
+                        <div class="detail-actions">
+                            <button class="btn" id="btn-preview">▶
+                                Preview</button>
+                            <button class="btn btn-primary"
+                                id="btn-start">Play</button>
+                        </div>
+                        <div class="detail-secondary">
+                            <button class="btn btn-small btn-ghost"
+                                id="btn-compile">Recompile…</button>
+                            <button class="btn btn-small btn-ghost"
+                                id="btn-export">Export charts</button>
+                            <button class="btn btn-small btn-ghost btn-danger"
+                                id="btn-delete">Delete</button>
+                        </div>
+                        <p class="detail-warnings" id="detail-warnings"></p>
+                    </aside>
+                </div>
+                <input type="file" id="file-input" multiple
+                    accept="audio/*,.mp3,.wav,.ogg,.oga,.opus,.m4a,.aac,.flac,.webm,.json"
+                    hidden>
+            </section>
 
-    <!-- ============================== LOADING -->
-    <section class="screen" id="screen-loading" aria-label="Loading">
-      <div class="loading-box">
-        <div class="spinner" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-        <h2 id="loading-title">Loading</h2>
-        <p id="loading-stage">Preparing…</p>
-        <div class="progress"><i id="loading-bar"></i></div>
-        <p class="loading-hint" id="loading-hint"></p>
-        <button class="btn btn-small btn-ghost" id="loading-cancel" hidden>Cancel</button>
-      </div>
-    </section>
+            <!-- ============================== LOADING -->
+            <section class="screen" id="screen-loading" aria-label="Loading">
+                <div class="loading-box">
+                    <div class="spinner"
+                        aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+                    <h2 id="loading-title">Loading</h2>
+                    <p id="loading-stage">Preparing…</p>
+                    <div class="progress"><i id="loading-bar"></i></div>
+                    <p class="loading-hint" id="loading-hint"></p>
+                    <button class="btn btn-small btn-ghost" id="loading-cancel"
+                        hidden>Cancel</button>
+                </div>
+            </section>
 
-    <!-- ============================== GAMEPLAY -->
-    <section class="screen screen-game" id="screen-game" aria-label="Gameplay">
-      <button class="pause-btn" id="btn-pause" data-ui aria-label="Pause"><span></span><span></span></button>
-      <div class="overlay" id="pause-overlay" data-ui hidden>
-        <div class="panel pause-panel">
-          <h2>Paused</h2>
-          <p class="pause-song" id="pause-song"></p>
-          <button class="btn btn-primary" id="btn-resume">Resume</button>
-          <button class="btn" id="btn-restart">Restart</button>
-          <div class="pause-quick">
-            <label>Note speed <output id="pause-speed-out"></output>
-              <input type="range" id="pause-speed" min="1" max="10" step="0.5">
-            </label>
-            <label>Audio offset <output id="pause-offset-out"></output>
-              <input type="range" id="pause-offset" min="-300" max="300" step="5">
-            </label>
-          </div>
-          <button class="btn btn-ghost" id="btn-quit">Quit to library</button>
-        </div>
-      </div>
-    </section>
+            <!-- ============================== GAMEPLAY -->
+            <section class="screen screen-game" id="screen-game"
+                aria-label="Gameplay">
+                <button class="pause-btn" id="btn-pause" data-ui
+                    aria-label="Pause"><span></span><span></span></button>
+                <div class="overlay" id="pause-overlay" data-ui hidden>
+                    <div class="panel pause-panel">
+                        <h2>Paused</h2>
+                        <p class="pause-song" id="pause-song"></p>
+                        <button class="btn btn-primary"
+                            id="btn-resume">Resume</button>
+                        <button class="btn" id="btn-restart">Restart</button>
+                        <div class="pause-quick">
+                            <label>Note speed <output
+                                    id="pause-speed-out"></output>
+                                <input type="range" id="pause-speed" min="1"
+                                    max="10" step="0.5">
+                            </label>
+                            <label>Audio offset <output
+                                    id="pause-offset-out"></output>
+                                <input type="range" id="pause-offset" min="-300"
+                                    max="300" step="5">
+                            </label>
+                        </div>
+                        <button class="btn btn-ghost" id="btn-quit">Quit to
+                            library</button>
+                    </div>
+                </div>
+            </section>
 
-    <!-- ============================== RESULTS -->
-    <section class="screen" id="screen-results" aria-label="Results">
-      <div class="results-inner">
-        <p class="results-song" id="results-song"></p>
-        <div class="grade" id="results-grade" aria-label="Grade">S</div>
-        <p class="results-badges" id="results-badges"></p>
-        <div class="results-score" id="results-score">0</div>
-        <div class="results-grid">
-          <div><span>Accuracy</span><strong id="results-accuracy">0%</strong></div>
-          <div><span>Max combo</span><strong id="results-combo">0</strong></div>
-          <div><span>Holds</span><strong id="results-holds">0/0</strong></div>
-        </div>
-        <ul class="judgement-bars" id="results-judgements"></ul>
-        <p class="results-hint" id="results-hint"></p>
-        <div class="results-actions">
-          <button class="btn btn-primary" id="btn-replay">Replay</button>
-          <button class="btn" id="btn-results-songs">Song Select</button>
-        </div>
-      </div>
-    </section>
+            <!-- ============================== RESULTS -->
+            <section class="screen" id="screen-results" aria-label="Results">
+                <div class="results-inner">
+                    <p class="results-song" id="results-song"></p>
+                    <div class="grade" id="results-grade"
+                        aria-label="Grade">S</div>
+                    <p class="results-badges" id="results-badges"></p>
+                    <div class="results-score" id="results-score">0</div>
+                    <div class="results-grid">
+                        <div><span>Accuracy</span><strong
+                                id="results-accuracy">0%</strong></div>
+                        <div><span>Max combo</span><strong
+                                id="results-combo">0</strong></div>
+                        <div><span>Holds</span><strong
+                                id="results-holds">0/0</strong></div>
+                    </div>
+                    <ul class="judgement-bars" id="results-judgements"></ul>
+                    <p class="results-hint" id="results-hint"></p>
+                    <div class="results-actions">
+                        <button class="btn btn-primary"
+                            id="btn-replay">Replay</button>
+                        <button class="btn" id="btn-results-songs">Song
+                            Select</button>
+                    </div>
+                </div>
+            </section>
 
-    <!-- ============================== SETTINGS -->
-    <section class="screen" id="screen-settings" aria-label="Settings">
-      <header class="topbar">
-        <button class="icon-btn" data-back aria-label="Back">‹</button>
-        <h2>Settings</h2>
-        <span></span>
-      </header>
-      <form class="settings-form" id="settings-form" onsubmit="return false">
-        <fieldset>
-          <legend>Audio</legend>
-          <label class="row">Master volume <output data-for="masterVolume"></output>
-            <input type="range" name="masterVolume" min="0" max="1" step="0.01"></label>
-          <label class="row">Music volume <output data-for="musicVolume"></output>
-            <input type="range" name="musicVolume" min="0" max="1" step="0.01"></label>
-          <label class="row">Sound effects volume <output data-for="sfxVolume"></output>
-            <input type="range" name="sfxVolume" min="0" max="1" step="0.01"></label>
-          <label class="row check"><input type="checkbox" name="hitSounds"> Hit sounds</label>
-        </fieldset>
-        <fieldset>
-          <legend>Gameplay</legend>
-          <label class="row">Note speed <output data-for="noteSpeed"></output>
-            <input type="range" name="noteSpeed" min="1" max="10" step="0.5"></label>
-          <label class="row">Highway
-            <select name="highway"><option value="3d">3D perspective</option><option value="flat">Flat</option></select></label>
-          <label class="row">Timing windows
-            <select name="timingWindows">
-              <option value="lenient">Lenient (±195 ms good)</option>
-              <option value="standard">Standard (±150 ms good)</option>
-              <option value="strict">Strict (±120 ms good)</option>
-            </select></label>
-        </fieldset>
-        <fieldset>
-          <legend>Timing calibration</legend>
-          <label class="row">Audio latency offset <output data-for="audioOffsetMs"></output>
-            <input type="range" name="audioOffsetMs" min="-300" max="300" step="1"></label>
-          <label class="row">Visual offset <output data-for="visualOffsetMs"></output>
-            <input type="range" name="visualOffsetMs" min="-150" max="150" step="1"></label>
-          <p class="hint">Raise the audio offset if your hits are judged <em>late</em> (common with Bluetooth headphones). The visual offset moves notes on screen without changing judgement.</p>
-          <button class="btn btn-small" type="button" id="btn-calibrate">Calibrate with tap test</button>
-        </fieldset>
-        <fieldset>
-          <legend>Display</legend>
-          <label class="row">Visual effects quality
-            <select name="quality">
-              <option value="auto">Auto (adapts to frame rate)</option>
-              <option value="high">High</option>
-              <option value="medium">Medium</option>
-              <option value="low">Low (reduced effects)</option>
-            </select></label>
-          <label class="row check"><input type="checkbox" name="reducedMotion"> Reduced motion (no shake, softer flashes)</label>
-          <label class="row check"><input type="checkbox" name="showFps"> Show frame rate</label>
-        </fieldset>
-        <fieldset>
-          <legend>Keyboard</legend>
-          <p class="hint">Lanes: <kbd>D</kbd> <kbd>F</kbd> <kbd>J</kbd> <kbd>K</kbd> (or <kbd>1</kbd>–<kbd>4</kbd>, or arrow keys). Pause: <kbd>Esc</kbd> / <kbd>Space</kbd>.</p>
-        </fieldset>
-        <fieldset>
-          <legend>Data on this device</legend>
-          <div class="row-buttons">
-            <button class="btn btn-small btn-ghost" type="button" id="btn-reset-scores">Reset best scores</button>
-            <button class="btn btn-small btn-ghost btn-danger" type="button" id="btn-clear-imports">Delete imported songs</button>
-            <button class="btn btn-small btn-ghost" type="button" id="btn-reset-settings">Restore default settings</button>
-          </div>
-        </fieldset>
-      </form>
-    </section>
+            <!-- ============================== SETTINGS -->
+            <section class="screen" id="screen-settings" aria-label="Settings">
+                <header class="topbar">
+                    <button class="icon-btn" data-back
+                        aria-label="Back">‹</button>
+                    <h2>Settings</h2>
+                    <span></span>
+                </header>
+                <form class="settings-form" id="settings-form"
+                    onsubmit="return false">
+                    <fieldset>
+                        <legend>Audio</legend>
+                        <label class="row">Master volume <output
+                                data-for="masterVolume"></output>
+                            <input type="range" name="masterVolume" min="0"
+                                max="1" step="0.01"></label>
+                        <label class="row">Music volume <output
+                                data-for="musicVolume"></output>
+                            <input type="range" name="musicVolume" min="0"
+                                max="1" step="0.01"></label>
+                        <label class="row">Sound effects volume <output
+                                data-for="sfxVolume"></output>
+                            <input type="range" name="sfxVolume" min="0" max="1"
+                                step="0.01"></label>
+                        <label class="row check"><input type="checkbox"
+                                name="hitSounds"> Hit sounds</label>
+                    </fieldset>
+                    <fieldset>
+                        <legend>Gameplay</legend>
+                        <label class="row">Note speed <output
+                                data-for="noteSpeed"></output>
+                            <input type="range" name="noteSpeed" min="1"
+                                max="10" step="0.5"></label>
+                        <label class="row">Highway
+                            <select name="highway"><option value="3d">3D
+                                    perspective</option><option
+                                    value="flat">Flat</option></select></label>
+                        <label class="row">Timing windows
+                            <select name="timingWindows">
+                                <option value="lenient">Lenient (±195 ms
+                                    good)</option>
+                                <option value="standard">Standard (±150 ms
+                                    good)</option>
+                                <option value="strict">Strict (±120 ms
+                                    good)</option>
+                            </select></label>
+                    </fieldset>
+                    <fieldset>
+                        <legend>Timing calibration</legend>
+                        <label class="row">Audio latency offset <output
+                                data-for="audioOffsetMs"></output>
+                            <input type="range" name="audioOffsetMs" min="-300"
+                                max="300" step="1"></label>
+                        <label class="row">Visual offset <output
+                                data-for="visualOffsetMs"></output>
+                            <input type="range" name="visualOffsetMs" min="-150"
+                                max="150" step="1"></label>
+                        <p class="hint">Raise the audio offset if your hits are
+                            judged <em>late</em> (common with Bluetooth
+                            headphones). The visual offset moves notes on screen
+                            without changing judgement.</p>
+                        <button class="btn btn-small" type="button"
+                            id="btn-calibrate">Calibrate with tap test</button>
+                    </fieldset>
+                    <fieldset>
+                        <legend>Display</legend>
+                        <label class="row">Visual effects quality
+                            <select name="quality">
+                                <option value="auto">Auto (adapts to frame
+                                    rate)</option>
+                                <option value="high">High</option>
+                                <option value="medium">Medium</option>
+                                <option value="low">Low (reduced
+                                    effects)</option>
+                            </select></label>
+                        <label class="row check"><input type="checkbox"
+                                name="reducedMotion"> Reduced motion (no shake,
+                            softer flashes)</label>
+                        <label class="row check"><input type="checkbox"
+                                name="showFps"> Show frame rate</label>
+                    </fieldset>
+                    <fieldset>
+                        <legend>Keyboard</legend>
+                        <p class="hint">Lanes: <kbd>D</kbd> <kbd>F</kbd>
+                            <kbd>J</kbd> <kbd>K</kbd> (or
+                            <kbd>1</kbd>–<kbd>4</kbd>, or arrow keys). Pause:
+                            <kbd>Esc</kbd> / <kbd>Space</kbd>.</p>
+                    </fieldset>
+                    <fieldset>
+                        <legend>Data on this device</legend>
+                        <div class="row-buttons">
+                            <button class="btn btn-small btn-ghost"
+                                type="button" id="btn-reset-scores">Reset best
+                                scores</button>
+                            <button class="btn btn-small btn-ghost btn-danger"
+                                type="button" id="btn-clear-imports">Delete
+                                imported songs</button>
+                            <button class="btn btn-small btn-ghost"
+                                type="button" id="btn-reset-settings">Restore
+                                default settings</button>
+                        </div>
+                    </fieldset>
+                </form>
+            </section>
 
-    <!-- ============================== CALIBRATION -->
-    <section class="screen" id="screen-calibrate" aria-label="Calibration">
-      <header class="topbar">
-        <button class="icon-btn" data-back aria-label="Back">‹</button>
-        <h2>Calibration</h2>
-        <span></span>
-      </header>
-      <div class="calibrate-inner">
-        <p class="hint">Put on the headphones or speaker you play with. Press <strong>Start</strong>, then tap the pad (or press any lane key) exactly on every click.</p>
-        <button class="calib-pad" id="calib-pad" aria-label="Tap here on each click"><span id="calib-pad-label">TAP</span></button>
-        <div class="calib-dots" id="calib-dots" aria-hidden="true"></div>
-        <p class="calib-result" id="calib-result"></p>
-        <div class="row-buttons center">
-          <button class="btn btn-primary" id="btn-calib-start">Start</button>
-          <button class="btn" id="btn-calib-apply" disabled>Apply offset</button>
-        </div>
-      </div>
-    </section>
+            <!-- ============================== CALIBRATION -->
+            <section class="screen" id="screen-calibrate"
+                aria-label="Calibration">
+                <header class="topbar">
+                    <button class="icon-btn" data-back
+                        aria-label="Back">‹</button>
+                    <h2>Calibration</h2>
+                    <span></span>
+                </header>
+                <div class="calibrate-inner">
+                    <p class="hint">Put on the headphones or speaker you play
+                        with. Press <strong>Start</strong>, then tap the pad (or
+                        press any lane key) exactly on every click.</p>
+                    <button class="calib-pad" id="calib-pad"
+                        aria-label="Tap here on each click"><span
+                            id="calib-pad-label">TAP</span></button>
+                    <div class="calib-dots" id="calib-dots"
+                        aria-hidden="true"></div>
+                    <p class="calib-result" id="calib-result"></p>
+                    <div class="row-buttons center">
+                        <button class="btn btn-primary"
+                            id="btn-calib-start">Start</button>
+                        <button class="btn" id="btn-calib-apply" disabled>Apply
+                            offset</button>
+                    </div>
+                </div>
+            </section>
 
-    <!-- ============================== DIALOGS -->
-    <div class="modal" id="modal-import" hidden role="dialog" aria-modal="true" aria-labelledby="import-title">
-      <div class="panel">
-        <h2 id="import-title">Import songs</h2>
-        <p>Choose audio files from this device. They are decoded and analysed <strong>locally in your browser</strong>; nothing is uploaded.</p>
-        <p class="hint">Imported songs and their charts are saved in this browser's storage (IndexedDB) and are only available on <strong>this device and browser</strong>. Use <em>Export charts</em> to save a chart bundle, and import the audio again (optionally with the bundle) on another device.</p>
-        <p class="hint">Name files <code>Artist - Title.mp3</code> for nice metadata.</p>
-        <table class="support-table" id="support-table" aria-label="Format support in this browser"></table>
-        <div id="import-results"></div>
-        <div class="row-buttons">
-          <button class="btn btn-primary" id="btn-choose-files">Choose audio files</button>
-          <button class="btn btn-ghost" data-close>Close</button>
-        </div>
-      </div>
-    </div>
+            <!-- ============================== DIALOGS -->
+            <div class="modal" id="modal-import" hidden role="dialog"
+                aria-modal="true" aria-labelledby="import-title">
+                <div class="panel">
+                    <h2 id="import-title">Import songs</h2>
+                    <p>Choose audio files from this device. They are decoded and
+                        analysed <strong>locally in your browser</strong>;
+                        nothing is uploaded.</p>
+                    <p class="hint">Imported songs and their charts are saved in
+                        this browser's storage (IndexedDB) and are only
+                        available on <strong>this device and browser</strong>.
+                        Use <em>Export charts</em> to save a chart bundle, and
+                        import the audio again (optionally with the bundle) on
+                        another device.</p>
+                    <p class="hint">Name files <code>Artist - Title.mp3</code>
+                        for nice metadata.</p>
+                    <table class="support-table" id="support-table"
+                        aria-label="Format support in this browser"></table>
+                    <div id="import-results"></div>
+                    <div class="row-buttons">
+                        <button class="btn btn-primary"
+                            id="btn-choose-files">Choose audio files</button>
+                        <button class="btn btn-ghost" data-close>Close</button>
+                    </div>
+                </div>
+            </div>
 
-    <div class="modal" id="modal-compile" hidden role="dialog" aria-modal="true" aria-labelledby="compile-title">
-      <div class="panel">
-        <h2 id="compile-title">Recompile chart</h2>
-        <p class="hint" id="compile-song"></p>
-        <form id="compile-form" class="settings-form compact" onsubmit="return false">
-          <label class="row">Note density <output data-for="density"></output>
-            <input type="range" name="density" min="0.5" max="1.6" step="0.05"></label>
-          <label class="row">Onset sensitivity <output data-for="sensitivity"></output>
-            <input type="range" name="sensitivity" min="0.5" max="2" step="0.05"></label>
-          <label class="row">Tempo (BPM)
-            <span class="inline">
-              <input type="number" name="bpmHint" min="0" max="300" step="0.1" placeholder="auto" inputmode="decimal">
-              <button type="button" class="btn btn-small btn-ghost" data-bpm="half">½×</button>
-              <button type="button" class="btn btn-small btn-ghost" data-bpm="double">2×</button>
-              <button type="button" class="btn btn-small btn-ghost" data-bpm="auto">Auto</button>
-            </span></label>
-          <label class="row">Meter
-            <select name="beatsPerBar"><option value="0">Auto</option><option value="4">4 beats per bar</option><option value="3">3 beats per bar</option></select></label>
-          <label class="row">Chart offset <output data-for="offsetMs"></output>
-            <input type="range" name="offsetMs" min="-250" max="250" step="5"></label>
-          <label class="row">Pattern seed
-            <span class="inline"><input type="number" name="seed" min="0" max="9999" step="1" inputmode="numeric">
-            <button type="button" class="btn btn-small btn-ghost" id="btn-seed-shuffle">Shuffle</button></span></label>
-          <label class="row check"><input type="checkbox" name="holds"> Hold notes</label>
-          <label class="row check"><input type="checkbox" name="chords"> Chords</label>
-        </form>
-        <p class="hint">Poor results? If notes feel twice as fast or slow, use ½× / 2×. If notes are consistently early or late, adjust the chart offset. For quiet or ambient songs raise sensitivity.</p>
-        <div class="row-buttons">
-          <button class="btn btn-primary" id="btn-compile-run">Recompile</button>
-          <button class="btn btn-ghost" id="btn-compile-reset">Reset to default</button>
-          <button class="btn btn-ghost" data-close>Cancel</button>
-        </div>
-      </div>
-    </div>
+            <div class="modal" id="modal-compile" hidden role="dialog"
+                aria-modal="true" aria-labelledby="compile-title">
+                <div class="panel">
+                    <h2 id="compile-title">Recompile chart</h2>
+                    <p class="hint" id="compile-song"></p>
+                    <form id="compile-form" class="settings-form compact"
+                        onsubmit="return false">
+                        <label class="row">Note density <output
+                                data-for="density"></output>
+                            <input type="range" name="density" min="0.5"
+                                max="1.6" step="0.05"></label>
+                        <label class="row">Onset sensitivity <output
+                                data-for="sensitivity"></output>
+                            <input type="range" name="sensitivity" min="0.5"
+                                max="2" step="0.05"></label>
+                        <label class="row">Tempo (BPM)
+                            <span class="inline">
+                                <input type="number" name="bpmHint" min="0"
+                                    max="300" step="0.1" placeholder="auto"
+                                    inputmode="decimal">
+                                <button type="button"
+                                    class="btn btn-small btn-ghost"
+                                    data-bpm="half">½×</button>
+                                <button type="button"
+                                    class="btn btn-small btn-ghost"
+                                    data-bpm="double">2×</button>
+                                <button type="button"
+                                    class="btn btn-small btn-ghost"
+                                    data-bpm="auto">Auto</button>
+                            </span></label>
+                        <label class="row">Meter
+                            <select name="beatsPerBar"><option
+                                    value="0">Auto</option><option value="4">4
+                                    beats per bar</option><option value="3">3
+                                    beats per bar</option></select></label>
+                        <label class="row">Chart offset <output
+                                data-for="offsetMs"></output>
+                            <input type="range" name="offsetMs" min="-250"
+                                max="250" step="5"></label>
+                        <label class="row">Pattern seed
+                            <span class="inline"><input type="number"
+                                    name="seed" min="0" max="9999" step="1"
+                                    inputmode="numeric">
+                                <button type="button"
+                                    class="btn btn-small btn-ghost"
+                                    id="btn-seed-shuffle">Shuffle</button></span></label>
+                        <label class="row check"><input type="checkbox"
+                                name="holds"> Hold notes</label>
+                        <label class="row check"><input type="checkbox"
+                                name="chords"> Chords</label>
+                    </form>
+                    <p class="hint">Poor results? If notes feel twice as fast or
+                        slow, use ½× / 2×. If notes are consistently early or
+                        late, adjust the chart offset. For quiet or ambient
+                        songs raise sensitivity.</p>
+                    <div class="row-buttons">
+                        <button class="btn btn-primary"
+                            id="btn-compile-run">Recompile</button>
+                        <button class="btn btn-ghost"
+                            id="btn-compile-reset">Reset to default</button>
+                        <button class="btn btn-ghost" data-close>Cancel</button>
+                    </div>
+                </div>
+            </div>
 
-    <div class="modal" id="modal-howto" hidden role="dialog" aria-modal="true" aria-labelledby="howto-title">
-      <div class="panel">
-        <h2 id="howto-title">How to play</h2>
-        <ol class="howto">
-          <li>Notes slide down four neon lanes toward the glowing pads.</li>
-          <li><strong>Tap the lane</strong> when a note crosses its pad. Anywhere in the lane's column counts — no dragging needed.</li>
-          <li><strong>Hold notes</strong> have a glowing tail: keep your finger down until the tail ends.</li>
-          <li><strong>Chords</strong> are joined by a white line: tap those lanes together.</li>
-          <li>Chain hits to raise the multiplier (×2 at 10, ×3 at 25, ×4 at 50 combo).</li>
-          <li>Ratings: PERFECT ±45 ms, GREAT ±90 ms, GOOD ±150 ms (adjustable in Settings).</li>
-        </ol>
-        <p class="hint">Keyboard: D F J K. If timing feels off, run the calibration in Settings.</p>
-        <div class="row-buttons"><button class="btn btn-primary" data-close>Got it</button></div>
-      </div>
-    </div>
+            <div class="modal" id="modal-howto" hidden role="dialog"
+                aria-modal="true" aria-labelledby="howto-title">
+                <div class="panel">
+                    <h2 id="howto-title">How to play</h2>
+                    <ol class="howto">
+                        <li>Notes slide down four neon lanes toward the glowing
+                            pads.</li>
+                        <li><strong>Tap the lane</strong> when a note crosses
+                            its pad. Anywhere in the lane's column counts — no
+                            dragging needed.</li>
+                        <li><strong>Hold notes</strong> have a glowing tail:
+                            keep your finger down until the tail ends.</li>
+                        <li><strong>Chords</strong> are joined by a white line:
+                            tap those lanes together.</li>
+                        <li>Chain hits to raise the multiplier (×2 at 10, ×3 at
+                            25, ×4 at 50 combo).</li>
+                        <li>Ratings: PERFECT ±45 ms, GREAT ±90 ms, GOOD ±150 ms
+                            (adjustable in Settings).</li>
+                    </ol>
+                    <p class="hint">Keyboard: D F J K. If timing feels off, run
+                        the calibration in Settings.</p>
+                    <div class="row-buttons"><button class="btn btn-primary"
+                            data-close>Got it</button></div>
+                </div>
+            </div>
 
-    <div class="modal" id="modal-message" hidden role="dialog" aria-modal="true" aria-labelledby="message-title">
-      <div class="panel">
-        <h2 id="message-title"></h2>
-        <div id="message-body"></div>
-        <div class="row-buttons">
-          <button class="btn btn-primary" id="message-ok">OK</button>
-          <button class="btn btn-ghost" id="message-cancel" hidden>Cancel</button>
-        </div>
-      </div>
-    </div>
+            <div class="modal" id="modal-message" hidden role="dialog"
+                aria-modal="true" aria-labelledby="message-title">
+                <div class="panel">
+                    <h2 id="message-title"></h2>
+                    <div id="message-body"></div>
+                    <div class="row-buttons">
+                        <button class="btn btn-primary"
+                            id="message-ok">OK</button>
+                        <button class="btn btn-ghost" id="message-cancel"
+                            hidden>Cancel</button>
+                    </div>
+                </div>
+            </div>
 
-    <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  </main>
+            <div class="toast" id="toast" role="status"
+                aria-live="polite"></div>
+        </main>
 
-  <noscript><p class="noscript">Touch the Beat needs JavaScript enabled.</p></noscript>
-  <script type="module" src="src/main.js"></script>
-</body>
+        <noscript><p class="noscript">Touch the Beat needs JavaScript
+                enabled.</p></noscript>
+        <script type="module" src="src/main.js"></script>
+    </body>
 </html>

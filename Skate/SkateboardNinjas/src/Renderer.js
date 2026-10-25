@@ -48,7 +48,10 @@ export class Renderer {
     this.anchor = viewW < 900 ? CONFIG.player.narrowAnchor : CONFIG.player.screenAnchor;
     this.px = this.canvas.width / viewW;
     const unitsPerCss = viewW / cssW;
-    this.groundY = viewH - clamp(controlsCss * unitsPerCss + 10, 105, viewH * 0.42);
+    // In portrait the view is taller than the base; give half of the extra
+    // height to street below the skater so they don't sit on the controls.
+    const minBelow = 105 + (viewH - BASE_VIEW_H) * 0.5;
+    this.groundY = viewH - clamp(controlsCss * unitsPerCss + 10, minBelow, viewH * 0.42);
     this.bg.invalidate(this.px);
   }
 

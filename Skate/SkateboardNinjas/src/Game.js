@@ -3,7 +3,8 @@
 //
 // States: title (with a self-playing demo) → countdown → playing → ending
 // (time's up, waiting for a safe landing) → results. Any active state can be
-// paused.
+// paused. The customize screen opens from the title with the demo still
+// skating behind it.
 
 import { CONFIG } from './config.js';
 import { RNG, randomSeed, dailySeed, todayKey } from './rng.js';
@@ -19,6 +20,7 @@ import { Particles } from './Particles.js';
 import { Renderer } from './Renderer.js';
 import { updateKaren, hitKaren, killKaren } from './Karen.js';
 import { Shurikens } from './Shurikens.js';
+import { Customizer } from './Customizer.js';
 
 const P = CONFIG.physics;
 const S = CONFIG.scoring;
@@ -28,6 +30,7 @@ const START_X = 0;
 const UNITS_PER_METER = 40;
 const DIRS = ['up', 'down', 'left', 'right'];
 const ACTIVE = new Set(['countdown', 'playing', 'ending']);
+const MENU = new Set(['title', 'customize']);
 const fmt = (n) => Math.round(n).toLocaleString('en-US');
 const KAREN_DEBRIS = ['#36c0ae', '#f4d35e', '#f7c6a3', '#a0522d'];
 const NINJA_DEBRIS = ['#d62839', '#1c0c16', '#e9edf7', '#9c1a2b'];
@@ -63,6 +66,7 @@ export class Game {
     this.accumulator = 0;
     this.lastFrame = 0;
     this.best = storage.get('best', 0);
+    this.customizer = new Customizer(storage);
     this.demoTrick = false;
 
     const params = new URLSearchParams(location.search);
@@ -81,6 +85,8 @@ export class Game {
     this.hud.bind({
       play: () => this.newRun('random'),
       daily: () => this.newRun('daily'),
+      customize: () => this.openCustomize(),
+      customizeDone: () => this.closeCustomize(),
       again: () => this.newRun(this.mode),
       resume: () => this.resume(),
       restart: () => this.newRun(this.mode),
@@ -175,6 +181,22 @@ export class Game {
     this.hud.showScreen('title');
     this.hud.setTitleScores(this.best, this.storage.get(`daily.${todayKey()}`, 0));
     this.setupWorld(randomSeed(), true);
+  }
+
+  openCustomize() {
+    if (this.state !== 'title') return;
+    this.state = 'customize';
+    this.hud.showScreen('customize');
+    this.customizer.open();
+    this.audio.play('click');
+  }
+
+  closeCustomize() {
+    if (this.state !== 'customize') return;
+    this.customizer.close();
+    this.state = 'title';
+    this.hud.showScreen('title');
+    this.audio.play('click');
   }
 
   newRun(mode) {
@@ -274,7 +296,7 @@ export class Game {
 
     this.input.drain(this.onInput);
 
-    const running = this.state === 'title' || ACTIVE.has(this.state);
+    const running = MENU.has(this.state) || ACTIVE.has(this.state);
     if (running) {
       this.accumulator += dt;
       let steps = 0;
@@ -287,16 +309,17 @@ export class Game {
     }
 
     // Menu music on the title and results screens, once any run song has finished.
-    const menu = this.state === 'title' || this.state === 'results';
+    const menu = MENU.has(this.state) || this.state === 'results';
     if (menu && !this.audio.songActive && !this.audio.music.playing) this.audio.startMusic();
     this.audio.update();
     this.renderer.render(this, running ? this.accumulator / STEP : 1, running ? dt : 0);
-    if (this.state !== 'title') this.hud.update(this, dt);
+    if (!MENU.has(this.state)) this.hud.update(this, dt);
   }
 
   update(dt) {
     switch (this.state) {
       case 'title':
+      case 'customize':
         this.updateAttract(dt);
         break;
       case 'countdown': {
@@ -431,11 +454,13 @@ export class Game {
         if (this.state === 'playing' && this.player.state !== 'wipeout') this.throwStar();
         break;
       case 'pause':
-        if (this.state === 'paused') this.resume();
+        if (this.state === 'customize') this.closeCustomize();
+        else if (this.state === 'paused') this.resume();
         else this.pause();
         break;
       case 'confirm':
-        if (this.state === 'title') this.newRun('random');
+        if (this.state === 'customize') this.closeCustomize();
+        else if (this.state === 'title') this.newRun('random');
         else if (this.state === 'results') this.newRun(this.mode);
         else if (this.state === 'paused') this.resume();
         break;

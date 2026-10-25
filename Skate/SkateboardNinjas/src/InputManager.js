@@ -222,7 +222,7 @@ export class InputManager {
       this.emit('pause');
     } else if (code === 'Enter' || code === 'NumpadEnter') {
       // A focused button already handles Enter itself.
-      if (!(e.target instanceof HTMLElement && e.target.closest('button, summary, a'))) this.emit('confirm');
+      if (!(e.target instanceof HTMLElement && e.target.closest('button, summary, a, input'))) this.emit('confirm');
     } else if (code === 'KeyM') {
       this.emit('mute');
     }

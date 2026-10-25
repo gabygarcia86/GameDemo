@@ -436,6 +436,7 @@ button:focus-visible, summary:focus-visible, a:focus-visible { outline: 3px soli
 .btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--ink); }
 .btn-primary { background: var(--yellow); font-size: clamp(18px, 2.8vw, 26px); padding: 12px 34px; }
 .btn-secondary { background: var(--cyan); }
+.btn-pink { background: var(--pink); }
 .btn-ghost { background: transparent; color: var(--white); border-color: rgba(255, 255, 255, 0.4); box-shadow: none; }
 
 .best-row { margin: 0; font: 800 12px/1.4 var(--font-display); letter-spacing: 0.06em; color: var(--muted); }
@@ -477,12 +478,91 @@ button:focus-visible, summary:focus-visible, a:focus-visible { outline: 3px soli
 .rotate-hint { display: none; margin: 34px 0 0; font-weight: 700; font-size: 13px; color: var(--yellow); text-align: center; }
 
 .small-panel { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px; }
-.small-panel h2, .results-panel h2 {
+.small-panel h2, .results-panel h2, .custom-panel h2 {
   margin: 0;
   font: 900 clamp(26px, 5vw, 44px)/1 var(--font-display);
   font-style: italic;
   color: var(--yellow);
   text-shadow: 0 4px 0 var(--pink);
+}
+
+/* Customize */
+.custom-panel { display: flex; flex-direction: column; align-items: center; gap: 12px; width: min(880px, 100%); }
+.custom-body { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: clamp(12px, 2.5vw, 24px); width: 100%; align-items: start; }
+
+.custom-preview {
+  position: sticky;
+  top: 0;
+  display: block;
+  width: 100%;
+  aspect-ratio: 300 / 220;
+  border-radius: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  background: radial-gradient(ellipse at 30% 80%, rgba(255, 61, 127, 0.22), transparent 60%), #150c30;
+}
+
+.custom-options { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.custom-tabs { display: flex; gap: 8px; }
+.custom-group[hidden] { display: none; }
+
+.cz-chip { font-size: 12px; padding: 8px 14px; }
+.cz-chip[aria-pressed="false"] { opacity: 0.7; text-decoration: none; }
+.cz-chip.on { opacity: 1; background: var(--yellow); border-color: var(--yellow); color: var(--ink); }
+
+.cz-heading { margin: 10px 0 0; font: 900 13px/1 var(--font-display); letter-spacing: 0.08em; color: var(--yellow); text-transform: uppercase; }
+
+.cz-row {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.cz-row[hidden] { display: none; }
+
+.cz-label { font: 900 11px/1.2 var(--font-display); letter-spacing: 0.06em; color: var(--muted); text-transform: uppercase; }
+.cz-options { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.swatch {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  background: var(--c);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.22);
+  transition: transform 0.08s, box-shadow 0.08s;
+  touch-action: manipulation;
+}
+.swatch[aria-checked="true"], .swatch-custom.checked { box-shadow: 0 0 0 3px var(--yellow); transform: scale(1.12); }
+
+.swatch-custom { display: inline-block; overflow: hidden; cursor: pointer; background: conic-gradient(#ff2e55, #ffe066, #2bb673, #00c2d1, #3d7bff, #7b2ff7, #ff2e55); }
+.swatch-custom.checked::after { content: ''; position: absolute; inset: 5px; border-radius: 50%; background: var(--c); border: 2px solid var(--ink); pointer-events: none; }
+.swatch-custom input { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; opacity: 0; cursor: pointer; }
+.swatch-custom:focus-within { outline: 3px solid var(--cyan); outline-offset: 3px; }
+
+.sticker {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  font: 22px/1 "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+  touch-action: manipulation;
+}
+.sticker svg { width: 26px; height: 26px; }
+.sticker-none { font: 900 9px/1 var(--font-display); letter-spacing: 0.04em; color: var(--muted); }
+.sticker[aria-checked="true"] { border-color: var(--yellow); background: rgba(255, 210, 63, 0.2); box-shadow: 0 0 0 2px rgba(255, 210, 63, 0.35); }
+
+@media (max-width: 640px) and (orientation: portrait) {
+  .custom-body { grid-template-columns: 1fr; }
+  .custom-preview { max-width: 280px; margin: 0 auto; z-index: 1; }
+  .cz-row { grid-template-columns: 1fr; gap: 6px; }
 }
 
 /* Countdown */

@@ -120,6 +120,7 @@
           <div class="menu-buttons">
             <button id="play-btn" class="btn btn-primary" type="button">PLAY</button>
             <button id="daily-btn" class="btn btn-secondary" type="button">DAILY CHALLENGE</button>
+            <button id="customize-btn" class="btn btn-pink" type="button">CUSTOMIZE</button>
           </div>
           <p class="best-row">BEST <strong id="title-best">0</strong> <span class="dot">&bull;</span> TODAY'S DAILY <strong id="title-daily">&mdash;</strong></p>
           <div class="toggles">
@@ -174,6 +175,50 @@
         <a class="back-link" href="../index.html">&larr; Back</a>
       </div>
       <p id="rotate-hint" class="rotate-hint">Tip: turn your phone sideways for the best view.</p>
+    </section>
+
+    <!-- Customize -->
+    <section id="customize-screen" class="screen off">
+      <div class="panel custom-panel">
+        <h2>CUSTOMIZE</h2>
+        <div class="custom-body">
+          <canvas id="custom-preview" class="custom-preview" aria-label="Preview of your ninja and skateboard"></canvas>
+          <div class="custom-options">
+            <div class="custom-tabs" role="tablist">
+              <button id="tab-ninja" class="chip cz-chip on" type="button" role="tab" aria-selected="true" aria-controls="custom-ninja">NINJA</button>
+              <button id="tab-board" class="chip cz-chip" type="button" role="tab" aria-selected="false" aria-controls="custom-board">SKATEBOARD</button>
+            </div>
+            <div id="custom-ninja" class="custom-group" role="tabpanel" aria-labelledby="tab-ninja">
+              <div class="cz-row" data-key="gi" data-label="Clothes"></div>
+              <div class="cz-row" data-key="band" data-label="Headband"></div>
+              <div class="cz-row" data-key="belt" data-label="Belt"></div>
+            </div>
+            <div id="custom-board" class="custom-group" role="tabpanel" aria-labelledby="tab-board" hidden>
+              <div class="cz-row" data-key="wheel" data-label="Wheels"></div>
+              <div class="cz-row" data-key="side" data-label="Side"></div>
+              <div class="cz-row" data-key="top" data-label="Top"></div>
+              <h3 class="cz-heading">Bottom</h3>
+              <div class="cz-row">
+                <span class="cz-label">Style</span>
+                <div class="cz-options">
+                  <button class="chip cz-chip" type="button" data-mode="solid" aria-pressed="false">ONE COLOR</button>
+                  <button class="chip cz-chip" type="button" data-mode="gradient" aria-pressed="false">GRADIENT</button>
+                </div>
+              </div>
+              <div class="cz-row" data-key="bottom1" data-label="Color 1"></div>
+              <div class="cz-row" data-key="bottom2" data-label="Color 2"></div>
+              <div class="cz-row">
+                <span class="cz-label">Sticker</span>
+                <div id="cz-stickers" class="cz-options cz-stickers" role="radiogroup" aria-label="Sticker"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="menu-buttons">
+          <button id="custom-done-btn" class="btn btn-primary" type="button">DONE</button>
+          <button id="custom-reset-btn" class="btn btn-ghost" type="button">RESET</button>
+        </div>
+      </div>
     </section>
 
     <!-- Countdown -->

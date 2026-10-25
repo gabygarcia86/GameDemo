@@ -15,6 +15,8 @@ const C = {
   skin: '#f6c59c',
   band: '#ff2e55',
   bandDark: '#b3123a',
+  belt: '#ff2e55',
+  beltDark: '#b3123a',
   wrap: '#e4e7f5',
   shoe: '#14162b',
   sole: '#f5f5f5',
@@ -23,6 +25,39 @@ const C = {
   truck: '#a3abc4',
   wheel: '#ffe066',
 };
+
+// Bottom of the deck: one colour or a two-colour fade, plus an optional
+// sticker ('none', 'shuriken', or an emoji).
+const BOTTOM = { mode: 'gradient', c1: '#00c2d1', c2: '#ff2e7e', sticker: 'shuriken' };
+const EMOJI_FONT = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
+
+// Mixes a #rrggbb colour toward white (amt > 0) or black (amt < 0).
+function shade(hex, amt) {
+  const n = parseInt(hex.slice(1), 16);
+  const target = amt < 0 ? 0 : 255;
+  const a = Math.abs(amt);
+  const ch = (v) => Math.round(v + (target - v) * a);
+  return `rgb(${ch(n >> 16)}, ${ch((n >> 8) & 255)}, ${ch(n & 255)})`;
+}
+
+// Applies the player's chosen look (see Customizer.js). Shades for the far
+// limbs, gi highlight and band undersides are derived from the picked colours.
+export function setLook(look) {
+  C.gi = look.gi;
+  C.giFar = shade(look.gi, -0.28);
+  C.giLight = shade(look.gi, 0.2);
+  C.band = look.band;
+  C.bandDark = shade(look.band, -0.3);
+  C.belt = look.belt;
+  C.beltDark = shade(look.belt, -0.3);
+  C.wheel = look.wheel;
+  C.ply = look.side;
+  C.grip = look.top;
+  BOTTOM.mode = look.bottomMode;
+  BOTTOM.c1 = look.bottom1;
+  BOTTOM.c2 = look.bottom2;
+  BOTTOM.sticker = look.sticker;
+}
 
 const THIGH = 17, SHIN = 17, TORSO = 24, UPPER = 15, FORE = 14;
 const BOARD_Y = -13; // board centre above the wheels' contact point
@@ -114,6 +149,14 @@ function shuriken(ctx, s, color) {
   ctx.fill();
 }
 
+function sticker(ctx, glyph, size) {
+  ctx.font = `${size}px ${EMOJI_FONT}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#000';
+  ctx.fillText(glyph, 0, size * 0.06);
+}
+
 // Board in its own frame: centre of the deck, x toward the nose, y down.
 // flipTurns rotates around the long axis (kickflip), shoveTurns around the
 // vertical axis (shove-it); both are faked with scaling in 2D.
@@ -173,12 +216,13 @@ export function drawBoard(ctx, flipTurns = 0, shoveTurns = 0) {
   } else {
     const hh = Math.max(2.5, 10 * Math.abs(s));
     roundedBar(ctx, -34, 34, hh);
-    if (bottomShown) {
+    if (bottomShown && BOTTOM.mode === 'gradient') {
       const grad = ctx.createLinearGradient(-34, 0, 34, 0);
-      grad.addColorStop(0, '#00c2d1');
-      grad.addColorStop(0.5, '#7b2ff7');
-      grad.addColorStop(1, '#ff2e7e');
+      grad.addColorStop(0, BOTTOM.c1);
+      grad.addColorStop(1, BOTTOM.c2);
       ctx.fillStyle = grad;
+    } else if (bottomShown) {
+      ctx.fillStyle = BOTTOM.c1;
     } else {
       ctx.fillStyle = C.grip;
     }
@@ -186,10 +230,11 @@ export function drawBoard(ctx, flipTurns = 0, shoveTurns = 0) {
     ctx.lineWidth = 1.6;
     ctx.strokeStyle = C.out;
     ctx.stroke();
-    if (bottomShown) {
+    if (bottomShown && BOTTOM.sticker !== 'none') {
       ctx.save();
       ctx.scale(1, Math.abs(s));
-      shuriken(ctx, 8, '#ffe066');
+      if (BOTTOM.sticker === 'shuriken') shuriken(ctx, 8, '#ffe066');
+      else sticker(ctx, BOTTOM.sticker, 15);
       ctx.restore();
     }
   }
@@ -422,9 +467,9 @@ export class NinjaAnimator {
     ctx.save();
     ctx.translate(hipX + sl * 3, hipY - cl * 3);
     ctx.rotate(this.lean);
-    ctx.fillStyle = C.band;
+    ctx.fillStyle = C.belt;
     ctx.fillRect(-8.5, -2.4, 17, 4.8);
-    ctx.fillStyle = C.bandDark;
+    ctx.fillStyle = C.beltDark;
     ctx.fillRect(-9.5, 1.5, 4, 5.5);
     ctx.restore();
 
@@ -505,7 +550,7 @@ export class NinjaAnimator {
     limb(ctx, hipX - 3, hipY, J.jx, J.jy, J.ex, J.ey, 8, C.giFar);
     shoe(ctx, J.ex, J.ey, 0.4);
     limb(ctx, hipX, hipY, 0, -6, neckX, neckY, 15, C.gi);
-    ctx.fillStyle = C.band;
+    ctx.fillStyle = C.belt;
     ctx.fillRect(-8.5, 1, 17, 4.8);
     this.drawHead(ctx, 1, -29, 0.3);
     solveIK(hipX + 3, hipY, 20, 22 + flail, THIGH, SHIN, -1, J);

@@ -25,6 +25,7 @@ export class HUD {
       bar: $('combo-bar-fill'),
       announce: $('announce'),
       title: $('title-screen'),
+      customize: $('customize-screen'),
       countdown: $('countdown-screen'),
       countdownNum: $('countdown-num'),
       pause: $('pause-screen'),
@@ -45,6 +46,8 @@ export class HUD {
     const on = (id, fn) => $(id).addEventListener('click', (e) => { e.currentTarget.blur(); fn(); });
     on('play-btn', handlers.play);
     on('daily-btn', handlers.daily);
+    on('customize-btn', handlers.customize);
+    on('custom-done-btn', handlers.customizeDone);
     on('resume-btn', handlers.resume);
     on('restart-btn', handlers.restart);
     on('pause-title-btn', handlers.title);
@@ -64,7 +67,7 @@ export class HUD {
   }
 
   showScreen(name) {
-    for (const key of ['title', 'countdown', 'pause', 'results']) {
+    for (const key of ['title', 'customize', 'countdown', 'pause', 'results']) {
       this.el[key].classList.toggle('off', key !== name);
     }
   }

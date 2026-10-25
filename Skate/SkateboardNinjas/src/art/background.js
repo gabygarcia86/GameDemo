@@ -8,7 +8,7 @@ import { hash } from '../rng.js';
 const TAU = Math.PI * 2;
 const MID_COLORS = ['#6c5ce7', '#4b7bec', '#e8566c', '#f39c4a', '#2bb3a3', '#d65db1', '#5b5fa8', '#3fa4d8'];
 const SHOP_COLORS = ['#ff7f50', '#ffd23f', '#4dd4ac', '#7b8cff', '#ff6fae', '#b57bff', '#5ad1ff'];
-const SIGNS = ['DOCKING BAY 97', 'NEKO-DO DOJO', 'PIZZA PLANET', 'SKATE SHOP', 'FLYNN\'S ARCADE', 'FLIPPER\'S ARCADE', 'CITY SUSHI', 'BLOCKBUSTER', 'AA UNIFORM', 'DANDY DONUTS', 'CULVER\'S', 'BENNIGAN\'S', 'TCBY YORGURT', 'NABGAB87 STUDIO','TATE\'S COMICS'];
+const SIGNS = ['DOCKING BAY 97', 'NEKO-DO DOJO', 'PIZZA PLANET', 'SKATE SHOP', 'FLYNN\'S ARCADE', 'FLIPPER\'S ARCADE', 'CITY SUSHI', 'BLOCKBUSTER', 'AA UNIFORM', 'DANDEE DONUTS', 'CULVER\'S', 'BENNIGAN\'S', 'TCBY YORGURT', 'NABGAB87 STUDIO', 'KID STRONG','TATE\'S COMICS'];
 const MID_VARIANTS = 10;
 const SHOP_VARIANTS = SIGNS.length; // one shopfront per sign
 const FONT = '"Arial Black", "Segoe UI Black", Impact, sans-serif';

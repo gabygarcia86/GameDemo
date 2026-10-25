@@ -6,7 +6,7 @@
 import { CONFIG } from './config.js';
 import { lerp, clamp } from './Physics.js';
 import { Background } from './art/background.js';
-import { NinjaAnimator, drawBoard } from './art/ninja.js';
+import { NinjaAnimator, drawBoard, drawShuriken } from './art/ninja.js';
 import { drawKaren, drawEvilNinja, drawWarning } from './art/karen.js';
 import { drawObstacle, drawRamp, drawRail, drawStreet, drawSidewalkDecor } from './art/props.js';
 
@@ -93,7 +93,7 @@ export class Renderer {
 
     // Karens waiting at the back of the sidewalk
     for (const k of w.karens) {
-      if (k.x < left - 40 || k.x > right + 40) continue;
+      if (k.dead || k.x < left - 40 || k.x > right + 40) continue;
       if (k.laneT > 0.001) this.drawKarenAt(ctx, k, alpha, t);
     }
 
@@ -102,7 +102,10 @@ export class Renderer {
     for (const r of w.rails) if (r.x + r.len > left && r.x < right) drawRail(ctx, r, w);
     for (const o of w.obstacles) if (o.x + o.kx > left && o.x + o.kx < right) drawObstacle(ctx, o, t);
     for (const k of w.karens) {
-      if (k.laneT <= 0.001 && k.x > left - 40 && k.x < right + 40) this.drawKarenAt(ctx, k, alpha, t);
+      if (!k.dead && k.laneT <= 0.001 && k.x > left - 40 && k.x < right + 40) this.drawKarenAt(ctx, k, alpha, t);
+    }
+    for (const s of game.stars.items) {
+      if (s.active) drawShuriken(ctx, lerp(s.prevX, s.x, alpha), -s.y, s.spin);
     }
 
     // Skater
@@ -141,6 +144,7 @@ export class Renderer {
   // Screen-space: speech bubbles and warning markers over the world.
   drawOverlays(ctx, game, alpha, t) {
     for (const k of game.world.karens) {
+      if (k.dead) continue;
       const kx = this.toScreenX(lerp(k.prevX, k.x, alpha));
       const headY = this.toScreenY(100 + k.laneT * 10 + k.hop);
       const onScreen = kx > -40 && kx < this.viewW + 40;

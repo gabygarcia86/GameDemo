@@ -38,6 +38,7 @@ export class Player {
     this.invuln = 0;
     this.landSquash = 0;
     this.popTimer = 0;
+    this.throwTimer = 0;     // arm thrust forward after throwing a star
     this.tumble = 0;
     this.grindTime = 0;
     this.events.length = 0;
@@ -65,6 +66,7 @@ export class Player {
     if (this.invuln > 0) this.invuln -= dt;
     if (this.landSquash > 0) this.landSquash = Math.max(0, this.landSquash - dt * 5);
     if (this.popTimer > 0) this.popTimer -= dt;
+    if (this.throwTimer > 0) this.throwTimer -= dt;
 
     switch (this.state) {
       case 'grounded':

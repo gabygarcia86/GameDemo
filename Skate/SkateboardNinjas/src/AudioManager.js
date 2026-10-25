@@ -166,6 +166,15 @@ export class AudioManager {
       case 'evilLaugh':
         this.evilLaugh(t);
         break;
+      case 'throw':
+        this.noise(t, 0.16, 0.3, 'bandpass', 1800, 6000);
+        this.tone(t, 'triangle', 1500, 2600, 0.08, 0.07);
+        break;
+      case 'explode':
+        this.noise(t, 0.7, 0.85, 'lowpass', 2600, 120);
+        this.tone(t, 'sine', 120, 32, 0.5, 0.8);
+        this.noise(t + 0.04, 0.3, 0.25, 'highpass', 3000);
+        break;
       case 'bank':
         [523, 659, 784, 1047].forEach((f, i) => this.tone(t + i * 0.055, 'triangle', f, f, 0.14, 0.22));
         break;

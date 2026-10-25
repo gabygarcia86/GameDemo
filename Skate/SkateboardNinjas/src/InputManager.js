@@ -1,5 +1,5 @@
 // Keyboard, mouse and multitouch input, turned into a small queue of game
-// events: { type: 'ollie' | 'flip' | 'grab' | 'pause' | 'confirm' | 'mute', dir }.
+// events: { type: 'ollie' | 'flip' | 'grab' | 'star' | 'pause' | 'confirm' | 'mute', dir }.
 //
 // Each virtual stick fires once when pushed past the activation radius, then
 // must return near the centre before it can fire again (no re-triggering every
@@ -138,20 +138,22 @@ export class InputManager {
     this.grabStick = null;
   }
 
-  attach({ canvas, ollieButton, flipStick, grabStick }) {
+  attach({ canvas, ollieButton, starButton, flipStick, grabStick }) {
     this.flipStick = new VirtualStick(flipStick, 'flip', this);
     this.grabStick = new VirtualStick(grabStick, 'grab', this);
     this.sticks = [this.flipStick, this.grabStick];
 
-    ollieButton.addEventListener('pointerdown', (e) => {
-      e.preventDefault();
-      ollieButton.classList.add('pressed');
-      this.emit('ollie');
-    });
-    const release = () => ollieButton.classList.remove('pressed');
-    ollieButton.addEventListener('pointerup', release);
-    ollieButton.addEventListener('pointercancel', release);
-    ollieButton.addEventListener('pointerleave', release);
+    for (const [button, type] of [[ollieButton, 'ollie'], [starButton, 'star']]) {
+      button.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        button.classList.add('pressed');
+        this.emit(type);
+      });
+      const release = () => button.classList.remove('pressed');
+      button.addEventListener('pointerup', release);
+      button.addEventListener('pointercancel', release);
+      button.addEventListener('pointerleave', release);
+    }
 
     // Tapping the left half of the play field also ollies (big easy target).
     canvas.addEventListener('pointerdown', (e) => {
@@ -163,7 +165,7 @@ export class InputManager {
       }
     });
 
-    for (const el of [ollieButton, flipStick, grabStick, canvas]) {
+    for (const el of [ollieButton, starButton, flipStick, grabStick, canvas]) {
       el.addEventListener('contextmenu', (e) => e.preventDefault());
     }
 
@@ -173,7 +175,7 @@ export class InputManager {
   }
 
   emit(type, dir = null) {
-    if ((type === 'ollie' || type === 'flip' || type === 'grab') && !this.gameplay) return;
+    if ((type === 'ollie' || type === 'flip' || type === 'grab' || type === 'star') && !this.gameplay) return;
     this.events.push({ type, dir });
   }
 
@@ -200,12 +202,14 @@ export class InputManager {
 
   onKeyDown(e) {
     const code = e.code;
-    const isGameKey = code === 'Space' || code in FLIP_KEYS || code in GRAB_KEYS;
+    const isGameKey = code === 'Space' || code === 'KeyE' || code in FLIP_KEYS || code in GRAB_KEYS;
     if (isGameKey && this.gameplay) e.preventDefault();
     if (e.repeat) return;
 
     if (code === 'Space') {
       if (this.gameplay) this.emit('ollie');
+    } else if (code === 'KeyE') {
+      this.emit('star');
     } else if (code in FLIP_KEYS) {
       this.queueChord('flip', FLIP_KEYS[code]);
     } else if (code in GRAB_KEYS) {

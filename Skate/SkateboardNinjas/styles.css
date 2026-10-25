@@ -265,6 +265,33 @@ button:focus-visible, summary:focus-visible, a:focus-visible { outline: 3px soli
 }
 
 .sticks { display: flex; gap: clamp(10px, 2.5vw, 26px); align-items: flex-end; }
+.stick-col { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+
+.star-btn {
+  pointer-events: auto;
+  touch-action: none;
+  width: calc(var(--stick) * 0.56);
+  height: calc(var(--stick) * 0.56);
+  padding: 0;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 46, 85, 0.9);
+  background: radial-gradient(circle at 35% 30%, #3a2a66, #160c30 70%);
+  box-shadow: 0 4px 0 #0a0518, 0 8px 16px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  opacity: 0.92;
+  transition: transform 0.05s, opacity 0.15s;
+}
+
+.star-btn .star-icon { width: 62%; height: 62%; }
+.star-btn .key-hint { font-size: 8px; }
+.star-btn.pressed { transform: translateY(3px); box-shadow: 0 1px 0 #0a0518, 0 4px 10px rgba(0, 0, 0, 0.35); }
+.star-btn.cooling { opacity: 0.5; }
+.star-btn.cooling .star-icon { animation: star-spin 0.45s linear; }
+@keyframes star-spin { to { transform: rotate(360deg); } }
 
 .stick {
   pointer-events: auto;

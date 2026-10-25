@@ -36,7 +36,7 @@ export const NINJA_QUOTES = [
   'THE SHADOWS HUNGER!',
   'YOUR BOARD IS MINE!',
   'NOWHERE TO RUN!',
-  'CHAN-LEE YOUR SOUL IS MINE!',
+  'GAMEOVER CHAN-LEE!',
   'GAMEOVER TOOSHU!',
 ];
 
@@ -58,6 +58,7 @@ export function initKaren(k, kind, x, rng, meetX) {
   k.quote = rng.pick(kind === 'ninja' ? NINJA_QUOTES : KAREN_QUOTES);
   k.leapFromX = x;
   k.hop = 0; // height above the sidewalk mid-leap
+  k.dead = false;
   k.triggered = false;
   k.hit = false;
   k.passed = false;
@@ -138,6 +139,14 @@ export function updateKaren(k, dt, player) {
 
   // A leaping ninja only becomes solid as he touches down.
   k.collidable = !k.hit && k.laneT < 0.35 && k.hop < 12;
+}
+
+// Blown up by a ninja star: gone for good, and no dodge points for passing.
+export function killKaren(k) {
+  k.dead = true;
+  k.collidable = false;
+  k.passed = true;
+  k.shout = 0;
 }
 
 export function hitKaren(k, rng) {

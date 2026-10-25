@@ -58,6 +58,26 @@ export class Particles {
     }
   }
 
+  // Cartoon explosion: a flash, fireball puffs, radial sparks, and debris in
+  // the victim's colours.
+  explode(x, y, colors) {
+    this.spawn('flash', x, y, 0, 0, 0.22, 46, '#fff6c2');
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * TAU + Math.random() * 0.4;
+      const v = 80 + Math.random() * 140;
+      const color = i % 3 === 0 ? 'rgba(90,80,100,' : 'rgba(255,140,40,';
+      this.spawn('smoke', x, y, Math.cos(a) * v, Math.sin(a) * v, 0.45 + Math.random() * 0.3, 10 + Math.random() * 8, color, -40);
+    }
+    for (let i = 0; i < 10; i++) {
+      const a = Math.random() * TAU;
+      const v = 300 + Math.random() * 300;
+      this.spawn('spark', x, y, Math.cos(a) * v, Math.sin(a) * v, 0.3 + Math.random() * 0.2, 2.5, Math.random() < 0.5 ? '#ffe066' : '#ff9f1c', 600);
+    }
+    for (let i = 0; i < 14; i++) {
+      this.spawn('confetti', x, y, (Math.random() - 0.5) * 480, 200 + Math.random() * 360, 0.9 + Math.random() * 0.5, 5 + Math.random() * 4, colors[i % colors.length], 1100);
+    }
+  }
+
   trail(x, y) {
     this.spawn('trail', x, y, -60, (Math.random() - 0.5) * 30, 0.35, 3 + Math.random() * 2, '#ff2e55', 0);
   }
@@ -122,6 +142,14 @@ export class Particles {
           ctx.fillStyle = p.color;
           ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
           ctx.restore();
+          break;
+        case 'flash':
+          ctx.globalAlpha = k;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, -p.y, p.size * (1.4 - k * 0.6), 0, TAU);
+          ctx.fill();
+          ctx.globalAlpha = 1;
           break;
         case 'trail':
           ctx.globalAlpha = k * 0.7;

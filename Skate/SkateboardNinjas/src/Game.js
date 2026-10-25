@@ -17,7 +17,8 @@ import { CollisionSystem } from './CollisionSystem.js';
 import { ScoringSystem } from './ScoringSystem.js';
 import { Particles } from './Particles.js';
 import { Renderer } from './Renderer.js';
-import { updateKaren, hitKaren } from './Karen.js';
+import { updateKaren, hitKaren, killKaren } from './Karen.js';
+import { Shurikens } from './Shurikens.js';
 
 const P = CONFIG.physics;
 const S = CONFIG.scoring;
@@ -28,6 +29,8 @@ const UNITS_PER_METER = 40;
 const DIRS = ['up', 'down', 'left', 'right'];
 const ACTIVE = new Set(['countdown', 'playing', 'ending']);
 const fmt = (n) => Math.round(n).toLocaleString('en-US');
+const KAREN_DEBRIS = ['#36c0ae', '#f4d35e', '#f7c6a3', '#a0522d'];
+const NINJA_DEBRIS = ['#d62839', '#1c0c16', '#e9edf7', '#9c1a2b'];
 
 export class Game {
   constructor({ canvas, hud, input, audio, storage }) {
@@ -45,6 +48,7 @@ export class Game {
     this.collision = new CollisionSystem(this.world);
     this.scoring = new ScoringSystem();
     this.particles = new Particles();
+    this.stars = new Shurikens();
     this.renderer = new Renderer(canvas);
     this.fx = new RNG(randomSeed()); // cosmetic randomness, separate from the level seed
 
@@ -68,6 +72,7 @@ export class Game {
 
     this.scoring.onBank = (total) => this.onBank(total);
     this.scoring.onDrop = (lost) => this.onDrop(lost);
+    this.onStarHit = this.onStarHit.bind(this);
     this.frame = this.frame.bind(this);
     this.onInput = this.onInput.bind(this);
   }
@@ -88,6 +93,7 @@ export class Game {
     this.input.attach({
       canvas: this.canvas,
       ollieButton: document.getElementById('ollie-btn'),
+      starButton: document.getElementById('star-btn'),
       flipStick: document.getElementById('flip-stick'),
       grabStick: document.getElementById('grab-stick'),
     });
@@ -146,6 +152,7 @@ export class Game {
     this.scoring.reset();
     this.scoring.enabled = !attract;
     this.particles.clear();
+    this.stars.clear();
     this.elapsed = 0;
     this.simTime = 0;
     this.endTimer = 0;
@@ -346,9 +353,12 @@ export class Game {
     }
 
     for (const k of this.world.karens) {
+      if (k.dead) continue;
       updateKaren(k, dt, p);
       if (k.justShouted && Math.abs(k.x - p.x) < this.renderer.viewW) this.audio.play(k.kind === 'ninja' ? 'evilLaugh' : 'karen');
     }
+    this.stars.update(dt, this.world.karens, this.onStarHit);
+    this.hud.setStarReady(this.stars.ready);
     this.world.update(dt);
 
     if (playing && p.state !== 'wipeout') {
@@ -414,6 +424,9 @@ export class Game {
           const def = this.tricks.request(e.type, e.dir);
           if (def) this.onTrickStarted(e.type, def);
         }
+        break;
+      case 'star':
+        if (this.state === 'playing' && this.player.state !== 'wipeout') this.throwStar();
         break;
       case 'pause':
         if (this.state === 'paused') this.resume();
@@ -589,6 +602,31 @@ export class Game {
       this.floatAtPlayer(`KAREN DODGED +${v}`, '#ff3d7f', 18);
       this.audio.play('nearMiss');
     }
+    if (this.player.grounded) {
+      c.linking = true;
+      c.linkTimer = wasLinking ? timer : S.linkWindow * 0.5;
+    }
+  }
+
+  throwStar() {
+    const p = this.player;
+    if (!this.stars.throw(p.x + 24, p.y + 62, p.speed)) return;
+    p.throwTimer = 0.22;
+    this.audio.play('throw');
+  }
+
+  // A ninja star blew up a Karen or evil ninja. Scores like a dodge.
+  onStarHit(k) {
+    const ninja = k.kind === 'ninja';
+    killKaren(k);
+    this.particles.explode(k.x, k.laneT * 22 + k.hop + k.h / 2, ninja ? NINJA_DEBRIS : KAREN_DEBRIS);
+    this.renderer.addShake(8);
+    this.audio.play('explode');
+    const c = this.scoring.combo;
+    const wasLinking = c.linking;
+    const timer = c.linkTimer;
+    const v = this.scoring.addAction('takedown', ninja ? 'Ninja Takedown' : 'Karen Takedown', S.takedown, true, false);
+    if (v > 0) this.floatAtPlayer(`${ninja ? 'NINJA' : 'KAREN'} DOWN +${v}`, '#ff9f1c', 18);
     if (this.player.grounded) {
       c.linking = true;
       c.linkTimer = wasLinking ? timer : S.linkWindow * 0.5;

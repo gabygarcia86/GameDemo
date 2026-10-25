@@ -62,6 +62,7 @@ export const CONFIG = {
     nearMiss: 100,
     karenDodge: 150,
     ninjaDodge: 200,
+    takedown: 150,         // a ninja star hits a Karen or evil ninja
     bigAir: 100,
     bigAirTime: 1.1,
     repeatFactor: 0.5,     // each repeat of the same action in one combo is worth half
@@ -88,6 +89,13 @@ export const CONFIG = {
     reaction: [0.8, 0.6, 0.45], // seconds of clear approach before each hazard, by tier
     kicker: { len: 130, h: 42, launch: 820 },
     launchRamp: { len: 200, h: 88, launch: 960 },
+  },
+
+  shuriken: {
+    speed: 900,            // on top of the skater's speed
+    range: 900,            // how far a star flies before it's gone
+    cooldown: 0.45,        // seconds between throws
+    radius: 8,
   },
 
   karen: {

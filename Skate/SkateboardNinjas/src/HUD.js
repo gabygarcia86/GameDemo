@@ -13,6 +13,7 @@ export class HUD {
     this.el = {
       hud: $('hud'),
       controls: $('controls'),
+      starBtn: $('star-btn'),
       time: $('hud-time'),
       timeBox: $('hud-time-box'),
       score: $('hud-score'),
@@ -34,7 +35,7 @@ export class HUD {
     };
     this.announceName = this.el.announce.querySelector('.announce-name');
     this.announcePts = this.el.announce.querySelector('.announce-pts');
-    this.last = { time: '', score: -1, best: -1, comboVersion: -1, state: '', hurry: false, bar: -1 };
+    this.last = { time: '', score: -1, best: -1, comboVersion: -1, state: '', hurry: false, bar: -1, starReady: true };
     this.comboFlash = 0;
     this.comboFlashState = '';
     if (window.matchMedia('(min-width: 900px) and (min-height: 600px)').matches) $('howto').open = true;
@@ -66,6 +67,13 @@ export class HUD {
     for (const key of ['title', 'countdown', 'pause', 'results']) {
       this.el[key].classList.toggle('off', key !== name);
     }
+  }
+
+  // Dims the star button (and spins its star) while a throw cools down.
+  setStarReady(ready) {
+    if (ready === this.last.starReady) return;
+    this.last.starReady = ready;
+    this.el.starBtn.classList.toggle('cooling', !ready);
   }
 
   setPlaying(on) {

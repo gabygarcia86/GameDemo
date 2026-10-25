@@ -199,6 +199,37 @@ export function drawBoard(ctx, flipTurns = 0, shoveTurns = 0) {
 }
 
 // Smoothly blends between poses (rolling, air, grab, grind...) every frame.
+// Thrown ninja star at (x, y) in canvas coords, with a short motion streak.
+export function drawShuriken(ctx, x, y, spin) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.globalAlpha = 0.35;
+  ctx.strokeStyle = C.wrap;
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(-8, 0);
+  ctx.lineTo(-30, 0);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  ctx.rotate(spin);
+  ctx.beginPath();
+  for (let i = 0; i < 4; i++) {
+    const a = (i * TAU) / 4;
+    const b = a + TAU / 8;
+    ctx.lineTo(Math.cos(a) * 11, Math.sin(a) * 11);
+    ctx.lineTo(Math.cos(b) * 3.4, Math.sin(b) * 3.4);
+  }
+  ctx.closePath();
+  ctx.fillStyle = '#cfd5e6';
+  ctx.fill();
+  ctx.lineWidth = 1.6;
+  ctx.strokeStyle = C.out;
+  ctx.stroke();
+  dot(ctx, 0, 0, 2.4, C.band);
+  ctx.restore();
+}
+
 export class NinjaAnimator {
   constructor() {
     this.reset();
@@ -269,6 +300,9 @@ export class NinjaAnimator {
       this.flipTurns = 0;
       this.shoveTurns = 0;
     }
+
+    // Star throw: front arm snaps straight forward.
+    if (player.throwTimer > 0 && player.state !== 'wipeout') { hfx = 26; hfy = -4; }
 
     const k = 1 - Math.exp(-dt * 16);
     const kg = 1 - Math.exp(-dt * 26);

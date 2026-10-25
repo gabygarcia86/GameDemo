@@ -34,6 +34,7 @@ repo is published from `main` / root.
 | Ollie (also pops off a rail) | **OLLIE** button, or tap the left half of the screen | Space |
 | Flip trick | **FLIP** stick: flick a direction | Arrow keys |
 | Grab trick | **GRAB** stick: flick, hold to keep grabbing | W A S D (hold to keep grabbing) |
+| Throw ninja star | ninja star button (above GRAB) | E |
 | Pause / resume | ❚❚ button | Esc or P |
 | Start / play again | buttons | Enter |
 | Mute all | SFX / MUSIC toggles | M |
@@ -71,6 +72,9 @@ On a keyboard, press two arrows (or two WASD keys) together for a diagonal.
   cackles, then leaps into your lane claws first.
   Moving ones adjust their speed so they arrive at a spot the level generator kept
   clear, which makes every encounter fair.
+- **Ninja stars** fly straight ahead at chest height and blow up the first Karen
+  or evil ninja they hit (+150, keeps your combo going). One throw every 0.45 s.
+  Stars fly over a foe if you throw from high in the air.
 - **Time's up:** new tricks stop. If you're in the air you get to land first.
   Your combo banks, the skater rolls to a stop, and the results screen appears.
 

@@ -255,6 +255,8 @@ export class Game {
     this.selectDifficulty(this.difficultyKey, false);
     this.ui.showScreen('menu');
     this._resetRound();
+    // Starts once the first click/tap unlocks audio.
+    this.audio.music.playMenu();
   }
 
   // UI click sounds for every button.
@@ -296,6 +298,7 @@ export class Game {
     this.ui.setPaused(false);
     this.ui.showHint(!this.hasThrown);
     this.ui.showBanner('Ready?', { duration: 0 });
+    this.audio.music.playGameplay();
   }
 
   restart() {
@@ -309,6 +312,7 @@ export class Game {
       this.pausedFrom = null;
       this.ui.showScreen(null);
       this.ui.setPaused(false);
+      this.audio.music.resume();
       if (this.state === GameState.READY) this.ui.showBanner('Ready?', { duration: 0 });
       return;
     }
@@ -319,6 +323,7 @@ export class Game {
     this.ui.hideBanner();
     this.ui.showScreen('pause');
     this.ui.setPaused(true);
+    this.audio.music.pause();
   }
 
   returnToMenu() {
@@ -332,6 +337,7 @@ export class Game {
     this.ui.hideBanner();
     this.ui.setBestScores(this.scores.all());
     this.ui.showScreen('menu');
+    this.audio.music.playMenu();
   }
 
   _endRound() {
@@ -361,6 +367,7 @@ export class Game {
       isNewBest: this.isNewBest,
     });
     this.audio.play('gameOver');
+    this.audio.music.playMenu();
     if (this.isNewBest) setTimeout(() => this.audio.play('newBest'), 700);
   }
 

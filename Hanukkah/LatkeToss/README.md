@@ -2,7 +2,7 @@
 
 A 60-second 3D Hanukkah arcade game. Toss potato latkes into a pot of hot oil and land as many as you can before the timer runs out.
 
-Built with plain HTML, CSS, JavaScript ES modules and [Three.js](https://threejs.org/) (r186). Every model, texture, particle and sound is generated in code. There are no image, model or audio files.
+Built with plain HTML, CSS, JavaScript ES modules and [Three.js](https://threejs.org/) (r186). Every model, texture, particle and sound effect is generated in code, so there are no image or model files. The only asset files are the background music tracks in `assets/music/`.
 
 ## How to play
 
@@ -74,6 +74,15 @@ All gameplay numbers live in [`js/config.js`](js/config.js).
 | Particle pools | `PARTICLES.dropletPoolSize`, `sparklePoolSize` | Upper limit on live particles. When a pool is full, the oldest particles are reused. |
 
 Pot motion is a pure function of round time: `x(t) = center.x + amplitude.x · sin(speed.x · t + phase.x)`, and the same for y and z. That makes it smooth, deterministic and independent of frame rate. Restarting resets `t` to 0.
+
+## Music
+
+Background music lives in `assets/music/` and is set up in `MUSIC` at the top of [`js/audio.js`](js/audio.js):
+
+- The title screen and the game-over screen loop `Music_Menu_01.mp3`.
+- Each round loops one track picked at random from `MUSIC.gameplay` (`Music_Gameplay_01.mp3` or `Music_Gameplay_02.mp3`).
+
+Tracks fade into each other over half a second. Music pauses with the game and follows the mute button. Because of browser autoplay rules, the menu music starts on your first click or tap. To add more round music, put the file in `assets/music/` and add its path to `MUSIC.gameplay`. `MUSIC.volume` sets the music level.
 
 ## Adding audio files
 

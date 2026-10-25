@@ -15,7 +15,128 @@ export const AUDIO_FILES = {
   newBest: null,
 };
 
+// Looping background music (paths relative to index.html). One gameplay track is picked at
+// random each round.
+export const MUSIC = {
+  menu: './assets/music/Music_Menu_01.mp3',
+  gameplay: ['./assets/music/Music_Gameplay_01.mp3', './assets/music/Music_Gameplay_02.mp3'],
+  volume: 0.4,
+  fadeSeconds: 0.5,
+};
+
 const MUTE_KEY = 'latkeToss.muted';
+
+/**
+ * Streams looping music through <audio> elements, with short fades between tracks.
+ * Browsers block audible playback until a user gesture, so a requested track is
+ * remembered and started by unlock().
+ */
+class MusicPlayer {
+  constructor(muted) {
+    this.elements = new Map();
+    this.failed = new Set();
+    this.current = null;
+    this.muted = muted;
+    this.unlocked = false;
+    this.paused = false;
+    document.addEventListener('visibilitychange', () => {
+      if (!this.current) return;
+      if (document.hidden) this.current.pause();
+      else if (!this.paused) this._start(this.current);
+    });
+  }
+
+  _element(url) {
+    let element = this.elements.get(url);
+    if (!element) {
+      element = new Audio(url);
+      element.loop = true;
+      element.preload = 'auto';
+      element.volume = 0;
+      element.muted = this.muted;
+      element.addEventListener('error', () => {
+        this.failed.add(url);
+        // A missing gameplay track falls back to another one.
+        if (this.current === element && MUSIC.gameplay.includes(url)) this.playGameplay();
+      });
+      this.elements.set(url, element);
+    }
+    return element;
+  }
+
+  _fade(element, target, onDone) {
+    clearInterval(element._fadeTimer);
+    const start = element.volume;
+    const startTime = performance.now();
+    const duration = MUSIC.fadeSeconds * 1000;
+    element._fadeTimer = setInterval(() => {
+      const t = Math.min(1, (performance.now() - startTime) / duration);
+      element.volume = start + (target - start) * t;
+      if (t >= 1) {
+        clearInterval(element._fadeTimer);
+        if (onDone) onDone();
+      }
+    }, 30);
+  }
+
+  _start(element) {
+    if (!this.unlocked || this.paused || document.hidden) return;
+    element.play().catch(() => {
+      // Playback refused (no gesture yet) or the file is unavailable; stay silent.
+    });
+    this._fade(element, MUSIC.volume);
+  }
+
+  play(url) {
+    // Asking for a track (e.g. restarting from the pause menu) also ends any pause.
+    this.paused = false;
+    const next = this._element(url);
+    if (this.current === next) {
+      if (next.paused) this._start(next);
+      return;
+    }
+    const previous = this.current;
+    if (previous) this._fade(previous, 0, () => previous.pause());
+    this.current = next;
+    next.currentTime = 0;
+    next.volume = 0;
+    this._start(next);
+  }
+
+  playMenu() {
+    this.play(MUSIC.menu);
+  }
+
+  playGameplay() {
+    const options = MUSIC.gameplay.filter((url) => !this.failed.has(url));
+    if (options.length === 0) return;
+    const url = options[Math.floor(Math.random() * options.length)];
+    // Always restart from the top, even if the same track was chosen again.
+    if (this.current && this.current === this.elements.get(url)) this.current.currentTime = 0;
+    this.play(url);
+  }
+
+  pause() {
+    this.paused = true;
+    if (this.current) this.current.pause();
+  }
+
+  resume() {
+    this.paused = false;
+    if (this.current) this._start(this.current);
+  }
+
+  unlock() {
+    if (this.unlocked) return;
+    this.unlocked = true;
+    if (this.current) this._start(this.current);
+  }
+
+  setMuted(muted) {
+    this.muted = muted;
+    for (const element of this.elements.values()) element.muted = muted;
+  }
+}
 
 function readMuted() {
   try {
@@ -40,6 +161,7 @@ export class AudioManager {
     this.noiseBuffer = null;
     this.samples = {};
     this.muted = readMuted();
+    this.music = new MusicPlayer(this.muted);
   }
 
   /**
@@ -47,6 +169,7 @@ export class AudioManager {
    * Safe to call repeatedly; it creates the context once and resumes it if suspended.
    */
   unlock() {
+    this.music.unlock();
     if (!this.context) {
       const AudioContextClass = window.AudioContext || window.webkitAudioContext;
       if (!AudioContextClass) return;
@@ -67,6 +190,7 @@ export class AudioManager {
   setMuted(muted) {
     this.muted = muted;
     writeMuted(muted);
+    this.music.setMuted(muted);
     if (this.master) {
       this.master.gain.setTargetAtTime(muted ? 0 : 0.55, this.context.currentTime, 0.02);
     }

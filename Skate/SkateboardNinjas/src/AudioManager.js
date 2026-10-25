@@ -15,6 +15,8 @@ const BPM = 100;
 // Browsers can't list a folder, so the run songs are named here. Each is ~63 s:
 // the countdown plus the 60 s run.
 const SONGS = Array.from({ length: 10 }, (_, i) => `assets/music/Song${String(i + 1).padStart(2, '0')}.mp3`);
+// Run songs sit a touch above the menu music on the shared music bus.
+const SONG_GAIN = 3.0;
 
 export class AudioManager {
   constructor(storage) {
@@ -390,7 +392,9 @@ export class AudioManager {
         if (offset >= buffer.duration) return this.songEnded(song);
         const src = this.ctx.createBufferSource();
         src.buffer = buffer;
-        src.connect(this.musicBus);
+        const gain = this.ctx.createGain();
+        gain.gain.value = SONG_GAIN;
+        src.connect(gain).connect(this.musicBus);
         src.onended = () => this.songEnded(song);
         src.start(this.ctx.currentTime + 0.02, offset);
         song.source = src;

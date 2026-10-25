@@ -1,7 +1,8 @@
-// Customize screen: pick colours for the ninja's gi, headband and belt, pick a
-// skateboard or a hoverboard, and colour its wheels (or hover pulse), sides,
-// top and bottom (one colour or a two-colour fade, plus an optional sticker). The look is saved, pushed to the art in
-// art/ninja.js, and previewed live on a small canvas.
+// Customize screen: pick colours for the ninja's gi, headband, belt, shoes and
+// hands, pick a skateboard or a hoverboard, and colour its wheels (or hover
+// pulse), sides, top and bottom (one colour or a two-colour fade, plus an
+// optional sticker). The look is saved, pushed to the art in art/ninja.js,
+// and previewed live on a small canvas.
 
 import { NinjaAnimator, drawBoard, setLook } from './art/ninja.js';
 
@@ -9,6 +10,8 @@ export const DEFAULT_LOOK = {
   gi: '#2f3a7a',
   band: '#ff2e55',
   belt: '#ff2e55',
+  shoe: '#14162b',
+  hand: '#e4e7f5',
   boardType: 'skate',
   wheel: '#ffe066',
   pulse: '#3de1ff',
@@ -31,7 +34,7 @@ export const STICKERS = [
   '🤘', '👾', '🐱', '🌮', '🎃', '👻', '🥷', '💎', '🚀', '🍉', '😂', '🤖',
 ];
 
-const COLOR_KEYS = ['gi', 'band', 'belt', 'wheel', 'pulse', 'side', 'top', 'bottom1', 'bottom2'];
+const COLOR_KEYS = ['gi', 'band', 'belt', 'shoe', 'hand', 'wheel', 'pulse', 'side', 'top', 'bottom1', 'bottom2'];
 const HEX = /^#[0-9a-f]{6}$/i;
 const VIEW_W = 300;
 const VIEW_H = 220;

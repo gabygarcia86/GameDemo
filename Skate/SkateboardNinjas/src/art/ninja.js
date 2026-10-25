@@ -18,6 +18,7 @@ const C = {
   belt: '#ff2e55',
   beltDark: '#b3123a',
   wrap: '#e4e7f5',
+  hand: '#e4e7f5',
   shoe: '#14162b',
   sole: '#f5f5f5',
   ply: '#ffb703',
@@ -53,6 +54,8 @@ export function setLook(look) {
   C.bandDark = shade(look.band, -0.3);
   C.belt = look.belt;
   C.beltDark = shade(look.belt, -0.3);
+  C.shoe = look.shoe;
+  C.hand = look.hand;
   C.wheel = look.wheel;
   C.pulse = look.pulse;
   boardType = look.boardType;
@@ -505,7 +508,7 @@ export class NinjaAnimator {
     // Back arm (behind everything)
     solveIK(shX - 2, shY, hbX, hbY, UPPER, FORE, 1, J);
     limb(ctx, shX - 2, shY, J.jx, J.jy, J.ex, J.ey, 6, C.giFar);
-    dot(ctx, J.ex, J.ey, 3.4, C.wrap);
+    dot(ctx, J.ex, J.ey, 3.4, C.hand);
 
     // Board
     ctx.save();
@@ -565,7 +568,7 @@ export class NinjaAnimator {
     // Front arm
     solveIK(shX + 2, shY, hfX, hfY, UPPER, FORE, 1, J);
     limb(ctx, shX + 2, shY, J.jx, J.jy, J.ex, J.ey, 6.5, C.gi);
-    dot(ctx, J.ex, J.ey, 3.6, C.wrap);
+    dot(ctx, J.ex, J.ey, 3.6, C.hand);
 
     ctx.restore();
   }
@@ -627,7 +630,7 @@ export class NinjaAnimator {
     const hipX = 0, hipY = 6, neckX = 0, neckY = -18;
     solveIK(-2, -14, -20, -30 + flail, UPPER, FORE, 1, J);
     limb(ctx, -2, -14, J.jx, J.jy, J.ex, J.ey, 6, C.giFar);
-    dot(ctx, J.ex, J.ey, 3.4, C.wrap);
+    dot(ctx, J.ex, J.ey, 3.4, C.hand);
     solveIK(hipX - 3, hipY, -18, 26 - flail, THIGH, SHIN, -1, J);
     limb(ctx, hipX - 3, hipY, J.jx, J.jy, J.ex, J.ey, 8, C.giFar);
     shoe(ctx, J.ex, J.ey, 0.4);
@@ -640,7 +643,7 @@ export class NinjaAnimator {
     shoe(ctx, J.ex, J.ey, -0.3);
     solveIK(2, -14, 22, -28 - flail, UPPER, FORE, 1, J);
     limb(ctx, 2, -14, J.jx, J.jy, J.ex, J.ey, 6.5, C.gi);
-    dot(ctx, J.ex, J.ey, 3.6, C.wrap);
+    dot(ctx, J.ex, J.ey, 3.6, C.hand);
     ctx.restore();
   }
 }

@@ -1,7 +1,8 @@
-// Air tricks. One flip stick and one grab stick, eight directions each.
-// A flip and a grab can be chained in the same jump (they run one after the
-// other; a request made while the other is animating is queued briefly).
-// Landing mid-flip is a bail; landing mid-grab is sketchy.
+// Air tricks. One flip stick and one grab stick, eight directions each, plus
+// a backflip button. Tricks can be chained in the same jump (they run one
+// after the other; a request made while another is animating is queued
+// briefly). Landing mid-flip or mid-backflip is a bail; landing mid-grab is
+// sketchy.
 
 import { CONFIG } from './config.js';
 
@@ -19,6 +20,9 @@ export const FLIP_TRICKS = {
   downleft: { id: 'varialheel', name: 'Varial Heelflip', score: 175, duration: 0.48, flip: -1, shove: -0.5 },
   downright: { id: 'hardflip', name: 'Hardflip', score: 175, duration: 0.5, flip: 1, shove: -0.5 },
 };
+
+// The whole skater rotates one full turn backward.
+export const BACKFLIP = { id: 'backflip', name: 'Backflip', score: 250, duration: 0.55 };
 
 // hand: which hand grabs (F = front, B = back); point: x along the deck;
 // tilt: board pitch while grabbed (negative = nose up); shift: board x offset;
@@ -38,6 +42,7 @@ export class TrickSystem {
   constructor() {
     this.flip = { def: null, t: 0 };
     this.grab = { def: null, phase: 'none', t: 0, hold: 0 };
+    this.spin = { def: null, t: 0 }; // backflip
     this.queued = { kind: null, dir: null, ttl: 0 };
     this.resetAir();
   }
@@ -49,6 +54,8 @@ export class TrickSystem {
     this.grab.phase = 'none';
     this.grab.t = 0;
     this.grab.hold = 0;
+    this.spin.def = null;
+    this.spin.t = 0;
     this.queued.kind = null;
     this.airFlip = null;
     this.airGrab = null;
@@ -59,21 +66,24 @@ export class TrickSystem {
     return this.flip.def ? Math.min(1, this.flip.t / this.flip.def.duration) : 0;
   }
 
+  get spinProgress() {
+    return this.spin.def ? Math.min(1, this.spin.t / this.spin.def.duration) : 0;
+  }
+
   get grabbing() {
     return this.grab.phase === 'reach' || this.grab.phase === 'hold';
   }
 
-  canStart(kind) {
-    return kind === 'flip'
-      ? !this.flip.def && this.grab.phase === 'none'
-      : this.grab.phase === 'none' && !this.flip.def;
+  // One trick animates at a time (a grab's release still blocks the next one).
+  canStart() {
+    return !this.flip.def && this.grab.phase === 'none' && !this.spin.def;
   }
 
   // Returns the trick definition if it starts now, otherwise null (it may be queued).
-  request(kind, dir) {
-    const def = kind === 'flip' ? FLIP_TRICKS[dir] : GRAB_TRICKS[dir];
+  request(kind, dir = null) {
+    const def = trickDef(kind, dir);
     if (!def) return null;
-    if (!this.canStart(kind)) {
+    if (!this.canStart()) {
       this.queued.kind = kind;
       this.queued.dir = dir;
       this.queued.ttl = T.queueTime;
@@ -87,6 +97,9 @@ export class TrickSystem {
       this.flip.def = def;
       this.flip.t = 0;
       this.airFlip = def;
+    } else if (kind === 'backflip') {
+      this.spin.def = def;
+      this.spin.t = 0;
     } else {
       this.grab.def = def;
       this.grab.phase = 'reach';
@@ -112,6 +125,10 @@ export class TrickSystem {
       this.flip.t += dt;
       if (this.flip.t >= this.flip.def.duration) this.flip.def = null;
     }
+    if (this.spin.def) {
+      this.spin.t += dt;
+      if (this.spin.t >= this.spin.def.duration) this.spin.def = null;
+    }
 
     const g = this.grab;
     if (g.phase === 'reach') {
@@ -130,11 +147,10 @@ export class TrickSystem {
     if (q.kind) {
       q.ttl -= dt;
       if (q.ttl <= 0) q.kind = null;
-      else if (this.canStart(q.kind)) {
+      else if (this.canStart()) {
         const kind = q.kind;
         q.kind = null;
-        const def = this.start(kind, kind === 'flip' ? FLIP_TRICKS[q.dir] : GRAB_TRICKS[q.dir]);
-        return kind === 'flip' ? STARTED_FLIP.set(def) : STARTED_GRAB.set(def);
+        return STARTED.set(kind, this.start(kind, trickDef(kind, q.dir)));
       }
     }
     return null;
@@ -142,15 +158,20 @@ export class TrickSystem {
 
   // 'clean' | 'sketchy' | 'bail'
   landingQuality() {
+    if (this.spin.def) return this.spinProgress < T.backflipBailBelow ? 'bail' : 'sketchy';
     if (this.flip.def) return this.flipProgress < T.bailBelow ? 'bail' : 'sketchy';
     if (this.grabbing) return 'sketchy';
     return 'clean';
   }
 }
 
-// Reused result objects for queued starts (avoids per-frame allocations).
-const STARTED_FLIP = { kind: 'flip', def: null, set(d) { this.def = d; return this; } };
-const STARTED_GRAB = { kind: 'grab', def: null, set(d) { this.def = d; return this; } };
+function trickDef(kind, dir) {
+  if (kind === 'backflip') return BACKFLIP;
+  return kind === 'flip' ? FLIP_TRICKS[dir] : GRAB_TRICKS[dir];
+}
+
+// Reused result object for queued starts (avoids per-frame allocations).
+const STARTED = { kind: null, def: null, set(k, d) { this.kind = k; this.def = d; return this; } };
 
 export function comboTrickName(flip, grab) {
   return `${flip.name} ${grab.short}`;

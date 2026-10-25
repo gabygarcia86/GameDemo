@@ -93,6 +93,7 @@ export class Game {
     this.input.attach({
       canvas: this.canvas,
       ollieButton: document.getElementById('ollie-btn'),
+      backflipButton: document.getElementById('backflip-btn'),
       starButton: document.getElementById('star-btn'),
       flipStick: document.getElementById('flip-stick'),
       grabStick: document.getElementById('grab-stick'),
@@ -420,6 +421,7 @@ export class Game {
         break;
       case 'flip':
       case 'grab':
+      case 'backflip':
         if (this.state === 'playing' && this.player.airborne) {
           const def = this.tricks.request(e.type, e.dir);
           if (def) this.onTrickStarted(e.type, def);
@@ -534,7 +536,7 @@ export class Game {
 
   onTrickStarted(kind, def) {
     const v = this.scoring.addAction(def.id, def.name, def.score, true, true);
-    this.audio.play(kind === 'flip' ? 'flip' : 'grab');
+    this.audio.play(kind);
     this.audio.play('action', this.scoring.combo.distinct);
     this.hud.announce(def.name.toUpperCase(), `+${v}`);
     if (this.tricks.takeComboBonus()) {

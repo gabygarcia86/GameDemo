@@ -52,10 +52,21 @@
 
     <!-- Touch / mouse controls -->
     <div id="controls" class="controls off">
-      <button id="ollie-btn" class="ollie-btn" type="button" aria-label="Ollie">
-        <span class="ollie-word">OLLIE</span>
-        <span class="key-hint">SPACE</span>
-      </button>
+      <div class="left-buttons">
+        <button id="ollie-btn" class="ollie-btn" type="button" aria-label="Ollie">
+          <span class="ollie-word">OLLIE</span>
+          <span class="key-hint">SPACE</span>
+        </button>
+        <button id="backflip-btn" class="mini-btn backflip-btn" type="button" aria-label="Backflip">
+          <svg class="mini-icon" viewBox="-50 -50 100 100" aria-hidden="true">
+            <path d="M28-24A36 36 0 1 0 36 6" fill="none" stroke="#0c0d1f" stroke-width="17" stroke-linecap="round"/>
+            <path d="M28-24A36 36 0 1 0 36 6" fill="none" stroke="#3de1ff" stroke-width="9" stroke-linecap="round"/>
+            <path d="M14-40 44-34 32-8Z" fill="#3de1ff" stroke="#0c0d1f" stroke-width="5" stroke-linejoin="round"/>
+          </svg>
+          <span class="mini-word">BACKFLIP</span>
+          <span class="key-hint">Q</span>
+        </button>
+      </div>
 
       <div class="sticks">
         <div class="stick" id="flip-stick" data-kind="flip" aria-label="Flip trick joystick">
@@ -69,8 +80,8 @@
           <span class="key-hint">ARROWS</span>
         </div>
         <div class="stick-col">
-        <button id="star-btn" class="star-btn" type="button" aria-label="Throw ninja star">
-          <svg class="star-icon" viewBox="-50 -50 100 100" aria-hidden="true">
+        <button id="star-btn" class="mini-btn star-btn" type="button" aria-label="Throw ninja star">
+          <svg class="mini-icon star-icon" viewBox="-50 -50 100 100" aria-hidden="true">
             <path d="M0-46 12-12 46 0 12 12 0 46-12 12-46 0-12-12ZM0-8A8 8 0 1 0 0 8 8 8 0 1 0 0-8Z" fill-rule="evenodd" fill="url(#star-steel)" stroke="#0c0d1f" stroke-width="5" stroke-linejoin="round"/>
             <circle r="12" fill="none" stroke="#ff2e55" stroke-width="4"/>
             <defs>
@@ -128,6 +139,7 @@
                 <li><b>OLLIE</b> button (or tap the left half of the screen)</li>
                 <li><b>FLIP</b> stick: flick a direction in the air</li>
                 <li><b>GRAB</b> stick: flick and hold to keep grabbing</li>
+                <li><b>BACKFLIP</b> button: flip your whole body in the air (start it early!)</li>
                 <li><b>Ninja star</b> button: throw a star that blows up Karens and evil ninjas</li>
               </ul>
             </div>
@@ -137,7 +149,7 @@
                 <li><b>Space</b>: Ollie (also pops off rails)</li>
                 <li><b>Arrows</b>: Flip tricks</li>
                 <li><b>W A S D</b>: Grab tricks (hold to keep grabbing)</li>
-                <li><b>E</b>: Throw a ninja star</li>
+                <li><b>Q</b>: Backflip &nbsp; <b>E</b>: Throw a ninja star</li>
                 <li><b>Esc / P</b>: Pause &nbsp; <b>M</b>: Mute</li>
               </ul>
             </div>

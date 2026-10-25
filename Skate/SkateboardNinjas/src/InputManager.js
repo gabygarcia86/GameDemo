@@ -1,5 +1,5 @@
 // Keyboard, mouse and multitouch input, turned into a small queue of game
-// events: { type: 'ollie' | 'flip' | 'grab' | 'star' | 'pause' | 'confirm' | 'mute', dir }.
+// events: { type: 'ollie' | 'flip' | 'grab' | 'backflip' | 'star' | 'pause' | 'confirm' | 'mute', dir }.
 //
 // Each virtual stick fires once when pushed past the activation radius, then
 // must return near the centre before it can fire again (no re-triggering every
@@ -13,6 +13,7 @@ const BITS = { up: 1, down: 2, left: 4, right: 8 };
 
 const FLIP_KEYS = { ArrowUp: BITS.up, ArrowDown: BITS.down, ArrowLeft: BITS.left, ArrowRight: BITS.right };
 const GRAB_KEYS = { KeyW: BITS.up, KeyS: BITS.down, KeyA: BITS.left, KeyD: BITS.right };
+const GAMEPLAY_EVENTS = new Set(['ollie', 'flip', 'grab', 'backflip', 'star']);
 
 // 8-way direction from a vector (y up). Cardinals get wider sectors (60°)
 // than diagonals (30°) so the four basic tricks are easy to hit.
@@ -138,12 +139,12 @@ export class InputManager {
     this.grabStick = null;
   }
 
-  attach({ canvas, ollieButton, starButton, flipStick, grabStick }) {
+  attach({ canvas, ollieButton, backflipButton, starButton, flipStick, grabStick }) {
     this.flipStick = new VirtualStick(flipStick, 'flip', this);
     this.grabStick = new VirtualStick(grabStick, 'grab', this);
     this.sticks = [this.flipStick, this.grabStick];
 
-    for (const [button, type] of [[ollieButton, 'ollie'], [starButton, 'star']]) {
+    for (const [button, type] of [[ollieButton, 'ollie'], [backflipButton, 'backflip'], [starButton, 'star']]) {
       button.addEventListener('pointerdown', (e) => {
         e.preventDefault();
         button.classList.add('pressed');
@@ -165,7 +166,7 @@ export class InputManager {
       }
     });
 
-    for (const el of [ollieButton, starButton, flipStick, grabStick, canvas]) {
+    for (const el of [ollieButton, backflipButton, starButton, flipStick, grabStick, canvas]) {
       el.addEventListener('contextmenu', (e) => e.preventDefault());
     }
 
@@ -175,7 +176,7 @@ export class InputManager {
   }
 
   emit(type, dir = null) {
-    if ((type === 'ollie' || type === 'flip' || type === 'grab' || type === 'star') && !this.gameplay) return;
+    if (GAMEPLAY_EVENTS.has(type) && !this.gameplay) return;
     this.events.push({ type, dir });
   }
 
@@ -202,12 +203,14 @@ export class InputManager {
 
   onKeyDown(e) {
     const code = e.code;
-    const isGameKey = code === 'Space' || code === 'KeyE' || code in FLIP_KEYS || code in GRAB_KEYS;
+    const isGameKey = code === 'Space' || code === 'KeyQ' || code === 'KeyE' || code in FLIP_KEYS || code in GRAB_KEYS;
     if (isGameKey && this.gameplay) e.preventDefault();
     if (e.repeat) return;
 
     if (code === 'Space') {
       if (this.gameplay) this.emit('ollie');
+    } else if (code === 'KeyQ') {
+      this.emit('backflip');
     } else if (code === 'KeyE') {
       this.emit('star');
     } else if (code in FLIP_KEYS) {

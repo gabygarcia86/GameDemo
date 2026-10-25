@@ -267,7 +267,9 @@ button:focus-visible, summary:focus-visible, a:focus-visible { outline: 3px soli
 .sticks { display: flex; gap: clamp(10px, 2.5vw, 26px); align-items: flex-end; }
 .stick-col { display: flex; flex-direction: column; align-items: center; gap: 8px; }
 
-.star-btn {
+.left-buttons { display: flex; align-items: flex-end; gap: clamp(10px, 2.5vw, 22px); }
+
+.mini-btn {
   pointer-events: auto;
   touch-action: none;
   width: calc(var(--stick) * 0.56);
@@ -286,9 +288,12 @@ button:focus-visible, summary:focus-visible, a:focus-visible { outline: 3px soli
   transition: transform 0.05s, opacity 0.15s;
 }
 
-.star-btn .star-icon { width: 62%; height: 62%; }
-.star-btn .key-hint { font-size: 8px; }
-.star-btn.pressed { transform: translateY(3px); box-shadow: 0 1px 0 #0a0518, 0 4px 10px rgba(0, 0, 0, 0.35); }
+.mini-btn .mini-icon { width: 62%; height: 62%; }
+.mini-btn .key-hint { font-size: 8px; }
+.mini-btn.pressed { transform: translateY(3px); box-shadow: 0 1px 0 #0a0518, 0 4px 10px rgba(0, 0, 0, 0.35); }
+.backflip-btn { border-color: rgba(61, 225, 255, 0.9); }
+.backflip-btn .mini-icon { width: 46%; height: 46%; }
+.mini-word { font: 900 calc(var(--stick) * 0.065)/1 var(--font-display); color: var(--white); letter-spacing: 0.02em; }
 .star-btn.cooling { opacity: 0.5; }
 .star-btn.cooling .star-icon { animation: star-spin 0.45s linear; }
 @keyframes star-spin { to { transform: rotate(360deg); } }

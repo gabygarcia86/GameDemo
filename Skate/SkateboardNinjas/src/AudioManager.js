@@ -166,6 +166,10 @@ export class AudioManager {
       case 'evilLaugh':
         this.evilLaugh(t);
         break;
+      case 'backflip':
+        this.noise(t, 0.45, 0.3, 'bandpass', 380, 2600);
+        this.tone(t + 0.05, 'triangle', 300, 900, 0.3, 0.08);
+        break;
       case 'throw':
         this.noise(t, 0.16, 0.3, 'bandpass', 1800, 6000);
         this.tone(t, 'triangle', 1500, 2600, 0.08, 0.07);

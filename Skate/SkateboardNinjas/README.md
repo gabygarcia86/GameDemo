@@ -34,6 +34,7 @@ repo is published from `main` / root.
 | Ollie (also pops off a rail) | **OLLIE** button, or tap the left half of the screen | Space |
 | Flip trick | **FLIP** stick: flick a direction | Arrow keys |
 | Grab trick | **GRAB** stick: flick, hold to keep grabbing | W A S D (hold to keep grabbing) |
+| Backflip | **BACKFLIP** button (right of OLLIE) | Q |
 | Throw ninja star | ninja star button (above GRAB) | E |
 | Pause / resume | ❚❚ button | Esc or P |
 | Start / play again | buttons | Enter |
@@ -63,6 +64,8 @@ On a keyboard, press two arrows (or two WASD keys) together for a diagonal.
   jump. If you ask for one while the other is still animating, it waits its turn.
 - **Landing:** land with a flip under 65% complete and you **bail**. Land
   mid-flip after that, or mid-grab, and the landing is **sketchy**. Otherwise it's **clean**.
+- **Backflip** (+250) turns the whole skater one full rotation in 0.55 s, so start
+  it early in the jump (or off a ramp). Land under 80% of the way round and you bail.
 - **Crashing** into a cone, trash can, hydrant, barrier, Karen, or evil ninja, or falling
   into a gap, is a wipeout. You lose the unbanked combo and
   some speed, then blink (invulnerable) for 1.2 s.

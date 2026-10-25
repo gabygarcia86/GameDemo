@@ -249,6 +249,7 @@ export class NinjaAnimator {
     this.grabPoint = 0;
     this.flipTurns = 0;
     this.shoveTurns = 0;
+    this.spinTurns = 0;
   }
 
   update(dt, player, tricks, time) {
@@ -291,6 +292,13 @@ export class NinjaAnimator {
         this.grabPoint = g.def.point;
         if (g.def.hand === 'F') { hbx = -22; hby = -10; } else { hfx = 20; hfy = -12; }
       }
+      // Backflip: tuck tight while the whole body turns.
+      if (tricks.spin.def) {
+        hipH = 18; lean = 0.55;
+        hfx = 12; hfy = 12; hbx = -2; hby = 14;
+      }
+      const sp = tricks.spinProgress;
+      this.spinTurns = tricks.spin.def ? sp * sp * (3 - 2 * sp) : 0;
       const fd = tricks.flip.def;
       const p = tricks.flipProgress;
       const eased = p * p * (3 - 2 * p);
@@ -299,6 +307,7 @@ export class NinjaAnimator {
     } else {
       this.flipTurns = 0;
       this.shoveTurns = 0;
+      this.spinTurns = 0;
     }
 
     // Star throw: front arm snaps straight forward.
@@ -327,6 +336,12 @@ export class NinjaAnimator {
       return;
     }
     ctx.rotate(-player.angle);
+    // Backflip: the whole skater turns backward around their middle.
+    if (this.spinTurns) {
+      ctx.translate(0, -40);
+      ctx.rotate(-this.spinTurns * TAU);
+      ctx.translate(0, 40);
+    }
     if (player.invuln > 0 && Math.floor(time * 12) % 2 === 0) ctx.globalAlpha = 0.45;
 
     const cosT = Math.cos(this.tilt);

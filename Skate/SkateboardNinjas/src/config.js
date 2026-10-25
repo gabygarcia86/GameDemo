@@ -44,6 +44,7 @@ export const CONFIG = {
 
   tricks: {
     bailBelow: 0.65,       // landing before a flip is this complete = bail
+    backflipBailBelow: 0.8, // same for a backflip (it has to come nearly all the way round)
     grabReach: 0.1,
     grabMinHold: 0.2,
     grabMaxHold: 1.6,

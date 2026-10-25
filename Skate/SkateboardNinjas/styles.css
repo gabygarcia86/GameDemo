@@ -371,7 +371,9 @@ button:focus-visible, summary:focus-visible, a:focus-visible { outline: 3px soli
   -webkit-overflow-scrolling: touch;
 }
 
-#title-screen { flex-direction: column; background: linear-gradient(180deg, rgba(20, 10, 44, 0.15), rgba(20, 10, 44, 0.65)); }
+/* flex-start, not center: centering a column taller than the screen pushes its
+   top out of scroll reach. The panel's auto margins still center it when it fits. */
+#title-screen { flex-direction: column; justify-content: flex-start; background: linear-gradient(180deg, rgba(20, 10, 44, 0.15), rgba(20, 10, 44, 0.65)); }
 
 .panel {
   position: relative;

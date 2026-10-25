@@ -1,0 +1,5 @@
+{
+  "NSYNC - Bye Bye Bye.mp3": { "bpm": 172, "density": 0.9 },
+  "Elvis Presley - Can't Help Falling In Love.mp3": { "beatsPerBar": 3, "sensitivity": 1.3 },
+  "No Doubt - Don't Speak.mp3": { "bpm": 76, "offsetMs": 0, "seed": 2, "title": "Don't Speak" }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "touch-the-beat",
+  "version": "1.0.0",
+  "description": "Mobile-first neon four-lane rhythm game with an automatic song-to-chart compiler.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "start": "node tools/serve.js",
+    "compile": "node tools/compile-songs.js",
+    "compile:force": "node tools/compile-songs.js --force",
+    "test": "node tools/selftest.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

@@ -35,7 +35,8 @@ export const SEGMENTS = [
   { id: 'karenBlocker', difficulty: 1, weights: [1.3, 1.0, 0.8], hazard: true, karen: true, build: buildKarenBlocker },
   { id: 'karenStepper', difficulty: 2, weights: [0.4, 1.2, 1.2], hazard: true, karen: true, build: buildKarenStepper },
   { id: 'karenCharger', difficulty: 3, weights: [0, 1.0, 1.4], hazard: true, karen: true, build: buildKarenCharger },
-  { id: 'evilNinja', difficulty: 2, weights: [0.3, 1.0, 1.3], hazard: true, karen: true, build: buildEvilNinja },
+  // Same total weight as the three Karens combined, so the two are equally likely.
+  { id: 'evilNinja', difficulty: 2, weights: [1.7, 3.2, 3.4], hazard: true, karen: true, build: buildEvilNinja },
 ];
 
 const ATTRACT_IDS = new Set(['flat', 'kicker', 'rail', 'bench', 'ledge', 'highRail', 'railTransfer', 'launchCombo']);
@@ -55,6 +56,8 @@ export class LevelGenerator {
     this.cursor = startX + L.startClear;
     this.lastId = null;
     this.sinceKaren = 99;
+    this.karens = 0; // foes spawned this run, kept level between Karens and evil ninjas
+    this.ninjas = 0;
     this.count = 0;
     this.hazards.length = 0;
   }
@@ -88,6 +91,8 @@ export class LevelGenerator {
     this.cursor = Math.max(end, ctx.x + 40);
     this.lastId = seg.id;
     this.sinceKaren = seg.karen ? 0 : this.sinceKaren + 1;
+    if (seg.id === 'evilNinja') this.ninjas++;
+    else if (seg.karen) this.karens++;
     this.count++;
     if (CONFIG.debug) this.validate();
   }
@@ -118,6 +123,9 @@ export class LevelGenerator {
     if (this.attract) return ATTRACT_IDS.has(seg.id);
     if (seg.id === this.lastId && seg.id !== 'obstacle' && seg.id !== 'flat') return false;
     if (seg.karen && this.sinceKaren < KAREN_COOLDOWN[tier]) return false;
+    // Whichever of Karens / evil ninjas is ahead sits out until the other catches up.
+    if (seg.id === 'evilNinja' && this.ninjas > this.karens) return false;
+    if (seg.karen && seg.id !== 'evilNinja' && this.karens > this.ninjas) return false;
     return true;
   }
 

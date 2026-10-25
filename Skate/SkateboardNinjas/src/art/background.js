@@ -1,21 +1,22 @@
 // Parallax city: sunset sky, synthwave sun, clouds, a far skyline, mid-rise
 // buildings and street-level shopfronts. Buildings are pre-rendered into a
-// small set of cached offscreen canvases and chosen per slot by hash, so the
-// scenery is endless but cheap to draw.
+// small set of cached offscreen canvases and laid out in shuffled blocks, so
+// the scenery is endless but cheap to draw and never repeats side by side.
 
 import { hash } from '../rng.js';
 
 const TAU = Math.PI * 2;
 const MID_COLORS = ['#6c5ce7', '#4b7bec', '#e8566c', '#f39c4a', '#2bb3a3', '#d65db1', '#5b5fa8', '#3fa4d8'];
 const SHOP_COLORS = ['#ff7f50', '#ffd23f', '#4dd4ac', '#7b8cff', '#ff6fae', '#b57bff', '#5ad1ff'];
-const SIGNS = ['DOCKING BAY 97', 'DOJO', 'PIZZA PLANET', 'SKATE SHOP', 'FLYNN\'S ARCADE', 'FLIPPER\'S ARCADE', 'CITY SUSHI', 'BLOCKBUSTER', 'AA UNIFORM', 'DANDY DONUTS', 'CULVER\'S', 'BENNIGAN\'S', 'TCBY YORGURT', 'TATE\'S COMICS'];
+const SIGNS = ['DOCKING BAY 97', 'NEKO-DO DOJO', 'PIZZA PLANET', 'SKATE SHOP', 'FLYNN\'S ARCADE', 'FLIPPER\'S ARCADE', 'CITY SUSHI', 'BLOCKBUSTER', 'AA UNIFORM', 'DANDY DONUTS', 'CULVER\'S', 'BENNIGAN\'S', 'TCBY YORGURT', 'NABGAB87 STUDIO','TATE\'S COMICS'];
 const MID_VARIANTS = 10;
-const SHOP_VARIANTS = 8;
+const SHOP_VARIANTS = SIGNS.length; // one shopfront per sign
 const FONT = '"Arial Black", "Segoe UI Black", Impact, sans-serif';
 
 export class Background {
   constructor() {
     this.cache = new Map();
+    this.orders = new Map(); // shuffled slot blocks, see slotVariant()
     this.px = 1;
     this.sky = null;
     this.skyKey = '';
@@ -119,12 +120,29 @@ export class Background {
   }
 
   drawLayer(ctx, layer, off, viewW, base, slot, variants) {
-    const salt = layer === 'mid' ? 21 : 37;
     for (let i = Math.floor(off / slot) - 1; i <= Math.floor((off + viewW) / slot) + 1; i++) {
-      const v = this.variant(layer, Math.floor(hash(i, salt) * variants));
+      const v = this.variant(layer, this.slotVariant(layer, i, variants));
       const x = i * slot - off + (slot - v.w) * 0.5;
       ctx.drawImage(v.canvas, x, base - v.h, v.w, v.h);
     }
+  }
+
+  // Slots come in blocks of `variants`, each holding every variant once in a
+  // shuffled order. If a block would start with the previous block's last
+  // variant, its first two swap, so neighbours always differ.
+  slotVariant(layer, i, variants) {
+    const block = Math.floor(i / variants);
+    const key = layer + block;
+    let order = this.orders.get(key);
+    if (!order) {
+      const salt = layer === 'mid' ? 21 : 37;
+      order = shuffledOrder(variants, block, salt);
+      const prevLast = shuffledOrder(variants, block - 1, salt)[variants - 1];
+      if (order[0] === prevLast) [order[0], order[1]] = [order[1], order[0]];
+      if (this.orders.size > 16) this.orders.clear();
+      this.orders.set(key, order);
+    }
+    return order[i - block * variants];
   }
 
   variant(layer, idx) {
@@ -139,7 +157,7 @@ export class Background {
     canvas.height = Math.max(1, Math.ceil(h * this.px));
     const g = canvas.getContext('2d');
     g.scale(this.px, this.px);
-    if (layer === 'mid') paintTower(g, w, h, r);
+    if (layer === 'mid') paintTower(g, w, h, r, idx);
     else paintShop(g, w, h, r, idx);
     v = { canvas, w, h };
     this.cache.set(key, v);
@@ -147,7 +165,17 @@ export class Background {
   }
 }
 
-function paintTower(g, w, h, r) {
+// Fisher-Yates shuffle of 0..n-1, deterministic per block.
+function shuffledOrder(n, block, salt) {
+  const order = Array.from({ length: n }, (_, k) => k);
+  for (let k = n - 1; k > 0; k--) {
+    const j = Math.floor(hash(block * 97 + k, salt) * (k + 1));
+    [order[k], order[j]] = [order[j], order[k]];
+  }
+  return order;
+}
+
+function paintTower(g, w, h, r, idx) {
   const color = MID_COLORS[Math.floor(r(3) * MID_COLORS.length)];
   const roof = 18;
   g.fillStyle = color;
@@ -177,7 +205,7 @@ function paintTower(g, w, h, r) {
   }
   // vertical neon sign on some towers
   if (r(6) > 0.6) {
-    const word = SIGNS[Math.floor(r(7) * SIGNS.length)].slice(0, 4);
+    const word = SIGNS[idx % SIGNS.length].slice(0, 4); // distinct per tower variant
     g.fillStyle = '#1a1033';
     g.fillRect(w - 26, roof + 20, 20, word.length * 18 + 10);
     g.font = `900 14px ${FONT}`;
@@ -199,7 +227,7 @@ function paintShop(g, w, h, r, idx) {
   g.fillRect(0, 0, w, 5);
 
   // sign board
-  const word = SIGNS[(idx * 5 + Math.floor(r(4) * SIGNS.length)) % SIGNS.length];
+  const word = SIGNS[idx];
   g.fillStyle = '#1a1033';
   g.fillRect(16, 10, w - 32, 28);
   g.strokeStyle = accent;

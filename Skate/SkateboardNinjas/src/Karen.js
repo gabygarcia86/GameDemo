@@ -6,7 +6,6 @@
 //   blocker  stands in the lane wagging a finger
 //   stepper  waits on the back of the sidewalk, then steps into the lane
 //   charger  storms toward the skater
-//   cart     shoves a shopping cart into the lane (the cart is the hazard)
 
 import { CONFIG } from './config.js';
 import { clamp } from './Physics.js';
@@ -35,7 +34,7 @@ export function initKaren(k, kind, x, rng, meetX) {
   k.meetX = meetX;
   k.w = K.width;
   k.h = K.height;
-  k.laneT = kind === 'stepper' || kind === 'cart' ? 1 : 0; // 1 = back of the sidewalk
+  k.laneT = kind === 'stepper' ? 1 : 0; // 1 = back of the sidewalk
   k.state = 'wait';
   k.timer = 0;
   k.vx = 0;
@@ -47,14 +46,6 @@ export function initKaren(k, kind, x, rng, meetX) {
   k.passed = false;
   k.minClear = Infinity;
   k.collidable = kind === 'blocker' || kind === 'charger';
-  if (kind === 'cart') {
-    k.cart = k.cart || {};
-    const c = k.cart;
-    c.x = x - 14; c.prevX = c.x; c.vx = 0; c.laneT = 1; c.w = 58; c.h = 46;
-    c.hit = false; c.passed = false; c.minClear = Infinity; c.collidable = false; c.spin = 0;
-  } else {
-    k.cart = null;
-  }
 }
 
 function shout(k, quote) {
@@ -76,8 +67,6 @@ export function updateKaren(k, dt, player) {
   k.justShouted = false;
   if (k.shout > 0) k.shout -= dt;
   const px = player.x;
-  const c = k.cart;
-  if (c) c.prevX = c.x;
 
   if (k.hit) {
     k.vx *= 0.9;
@@ -109,36 +98,14 @@ export function updateKaren(k, dt, player) {
           k.x -= k.vx * dt;
         }
         break;
-
-      case 'cart':
-        if (k.state === 'wait' && px > k.meetX - K.chargeTrigger) { k.state = 'push'; shout(k); }
-        if (k.state === 'push' && !c.hit) {
-          c.vx = interceptSpeed(c.x, k.meetX, px, player.speed, c.vx);
-          c.x -= c.vx * dt;
-          c.laneT = Math.max(0, c.laneT - dt / K.cartMergeTime);
-          c.spin += (c.vx * dt) / 5;
-        }
-        break;
     }
   }
 
-  if (c && c.hit) {
-    c.vx *= 0.92;
-    c.x -= c.vx * dt;
-  }
-
   k.collidable = !k.hit && k.laneT < 0.35;
-  if (c) c.collidable = !c.hit && c.laneT < 0.35;
 }
 
 export function hitKaren(k, rng) {
   k.hit = true;
   k.vx = -60; // stumbles backward (to the right)
-  shout(k, rng.pick(KAREN_HIT_QUOTES));
-}
-
-export function hitCart(k, rng) {
-  k.cart.hit = true;
-  k.cart.vx = -160;
   shout(k, rng.pick(KAREN_HIT_QUOTES));
 }

@@ -17,7 +17,7 @@ import { CollisionSystem } from './CollisionSystem.js';
 import { ScoringSystem } from './ScoringSystem.js';
 import { Particles } from './Particles.js';
 import { Renderer } from './Renderer.js';
-import { updateKaren, hitKaren, hitCart } from './Karen.js';
+import { updateKaren, hitKaren } from './Karen.js';
 
 const P = CONFIG.physics;
 const S = CONFIG.scoring;
@@ -594,8 +594,7 @@ export class Game {
     const p = this.player;
     p.wipeout(hit.kind === 'karen' ? 380 : 300);
     if (hit.kind === 'obstacle') this.world.knock(hit.target, p.speed);
-    else if (hit.kind === 'karen') hitKaren(hit.karen, this.fx);
-    else hitCart(hit.karen, this.fx);
+    else hitKaren(hit.karen, this.fx);
     this.crash(hit.kind);
   }
 
@@ -606,7 +605,7 @@ export class Game {
     this.scoring.drop();
     this.scoring.stats.wipeouts++;
     this.audio.play('crash');
-    if (kind === 'karen' || kind === 'cart') this.audio.play('karen');
+    if (kind === 'karen') this.audio.play('karen');
     this.renderer.addShake(kind === 'fell' ? 6 : 10);
     this.particles.dust(p.x, p.y, 12, 1.4);
     const label = kind === 'fell' ? 'SPLASH!' : kind === 'bail' ? 'BAILED!' : kind === 'obstacle' ? 'WIPEOUT!' : 'KAREN\'D!';

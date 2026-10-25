@@ -97,7 +97,6 @@ export const CONFIG = {
     chargeTrigger: 900,
     minRunSpeed: 60,
     maxRunSpeed: 320,
-    cartMergeTime: 0.5,
     width: 30,
     height: 84,
   },

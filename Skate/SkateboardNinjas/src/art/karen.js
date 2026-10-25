@@ -1,4 +1,4 @@
-// Angry pedestrian and shopping cart art. Origin at the feet, y down,
+// Angry pedestrian art. Origin at the feet, y down,
 // facing left (toward the oncoming skater).
 
 const TAU = Math.PI * 2;
@@ -181,67 +181,6 @@ export function drawKaren(ctx, k, time) {
     }
     ctx.globalAlpha = 1;
   }
-  ctx.restore();
-}
-
-export function drawCart(ctx, c) {
-  ctx.save();
-  ctx.lineJoin = 'round';
-  // wheels
-  for (const wx of [-20, 18]) {
-    ctx.save();
-    ctx.translate(wx, -5);
-    ctx.rotate(-c.spin);
-    ctx.beginPath();
-    ctx.arc(0, 0, 5, 0, TAU);
-    ctx.fillStyle = '#2b2b38';
-    ctx.fill();
-    ctx.fillStyle = '#9aa0b8';
-    ctx.fillRect(-1, -4, 2, 8);
-    ctx.restore();
-  }
-  // frame
-  ctx.strokeStyle = OUT;
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.moveTo(-20, -5); ctx.lineTo(-22, -16); ctx.moveTo(18, -5); ctx.lineTo(22, -16);
-  ctx.moveTo(28, -46); ctx.lineTo(37, -55);
-  ctx.stroke();
-  // basket
-  ctx.beginPath();
-  ctx.moveTo(-29, -46);
-  ctx.lineTo(29, -46);
-  ctx.lineTo(23, -16);
-  ctx.lineTo(-23, -16);
-  ctx.closePath();
-  ctx.fillStyle = 'rgba(190, 200, 225, 0.35)';
-  ctx.fill();
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = '#c6cde3';
-  ctx.stroke();
-  ctx.lineWidth = 1.2;
-  ctx.beginPath();
-  for (let i = 1; i < 6; i++) {
-    const x = -29 + (58 * i) / 6;
-    ctx.moveTo(x, -46);
-    ctx.lineTo(x * 0.8, -16);
-  }
-  ctx.moveTo(-27, -36); ctx.lineTo(27, -36);
-  ctx.moveTo(-25, -26); ctx.lineTo(25, -26);
-  ctx.stroke();
-  // handle
-  ctx.lineWidth = 4;
-  ctx.strokeStyle = '#ff3d7f';
-  ctx.beginPath();
-  ctx.moveTo(34, -52); ctx.lineTo(40, -58);
-  ctx.stroke();
-  // groceries poking out
-  ctx.fillStyle = '#ffd23f';
-  ctx.fillRect(-14, -54, 8, 10);
-  ctx.fillStyle = '#4dff9a';
-  ctx.beginPath(); ctx.arc(4, -48, 6, Math.PI, TAU); ctx.fill();
-  ctx.fillStyle = '#ff6b6b';
-  ctx.fillRect(12, -52, 6, 8);
   ctx.restore();
 }
 

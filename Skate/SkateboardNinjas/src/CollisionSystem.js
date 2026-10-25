@@ -42,11 +42,6 @@ export class CollisionSystem {
     for (const k of this.world.karens) {
       const r = this.testBox(k, k.x, pl, pr, pb, pt, canHit, 'karenDodge');
       if (r) return this.report('karen', k, k);
-      if (k.cart) {
-        const c = k.cart;
-        const rc = this.testBox(c, c.x, pl, pr, pb, pt, canHit, 'karenDodge');
-        if (rc) return this.report('cart', c, k);
-      }
     }
     return null;
   }

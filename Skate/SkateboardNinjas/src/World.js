@@ -125,7 +125,7 @@ export class World {
     this.compact('gaps', (g) => g.x + g.w < minX);
     this.compact('rails', (r) => r.x + r.len < minX);
     this.compact('obstacles', (o) => o.x + o.w + (o.knocked ? o.kx : 0) < minX - 200);
-    this.compact('karens', (k) => k.x + 80 < minX && (!k.cart || k.cart.x + 80 < minX));
+    this.compact('karens', (k) => k.x + 80 < minX);
   }
 
   compact(key, isDead) {

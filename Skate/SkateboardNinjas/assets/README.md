@@ -46,7 +46,6 @@ Collision sizes (width × height, in units) must match `OBSTACLE_TYPES` in `src/
 | hydrant | 22 × 38 |
 | trash can | 32 × 50 |
 | barrier | 58 × 50 |
-| shopping cart | 58 × 46 |
 
 Also: kicker ramp (130 × 42), launch ramp (200 × 88), rail and post pieces
 (they tile horizontally), bench (36 high), and planter ledge (48 high).
@@ -54,7 +53,7 @@ Also: kicker ramp (130 × 42), launch ramp (200 × 88), rail and post pieces
 ## Karens (`karens/`)
 
 Hitbox is 30 × 84 units. Animations: idle finger-wag (loop), yell, step-in,
-run (loop), shove cart, hit or furious. Readable, comedic, and clearly
+run (loop), hit or furious. Readable, comedic, and clearly
 telegraphed: the warning pose has to be visible before she becomes dangerous.
 
 ## Environment (`environment/`)

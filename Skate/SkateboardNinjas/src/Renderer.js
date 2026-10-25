@@ -7,7 +7,7 @@ import { CONFIG } from './config.js';
 import { lerp, clamp } from './Physics.js';
 import { Background } from './art/background.js';
 import { NinjaAnimator, drawBoard } from './art/ninja.js';
-import { drawKaren, drawCart, drawWarning } from './art/karen.js';
+import { drawKaren, drawWarning } from './art/karen.js';
 import { drawObstacle, drawRamp, drawRail, drawStreet, drawSidewalkDecor } from './art/props.js';
 
 const FONT = '"Arial Black", "Segoe UI Black", Impact, system-ui, sans-serif';
@@ -102,7 +102,6 @@ export class Renderer {
     for (const r of w.rails) if (r.x + r.len > left && r.x < right) drawRail(ctx, r, w);
     for (const o of w.obstacles) if (o.x + o.kx > left && o.x + o.kx < right) drawObstacle(ctx, o, t);
     for (const k of w.karens) {
-      if (k.cart && k.cart.x > left && k.cart.x < right) this.drawCartAt(ctx, k.cart, alpha);
       if (k.laneT <= 0.001 && k.x > left - 40 && k.x < right + 40) this.drawKarenAt(ctx, k, alpha, t);
     }
 
@@ -138,16 +137,6 @@ export class Renderer {
     ctx.restore();
   }
 
-  drawCartAt(ctx, c, alpha) {
-    const x = lerp(c.prevX, c.x, alpha);
-    ctx.save();
-    ctx.translate(x, -c.laneT * 22);
-    const s = 1 - 0.14 * c.laneT;
-    ctx.scale(s, s);
-    drawCart(ctx, c);
-    ctx.restore();
-  }
-
   // Screen-space: speech bubbles and warning markers over the world.
   drawOverlays(ctx, game, alpha, t) {
     for (const k of game.world.karens) {
@@ -157,13 +146,12 @@ export class Renderer {
 
       const dangerSoon = !k.hit && (
         (k.kind === 'stepper' && (k.state === 'warn' || k.state === 'step')) ||
-        (k.kind === 'charger' && k.state === 'run') ||
-        (k.kind === 'cart' && k.state === 'push' && k.cart.laneT > 0)
+        (k.kind === 'charger' && k.state === 'run')
       );
       if (dangerSoon && onScreen) drawWarning(ctx, kx, headY - 30, Math.sin(t * 18) * 0.5 + 0.5);
 
-      // Off-screen charger / cart: pulse an arrow at the right edge.
-      if (!k.hit && (k.state === 'run' || k.state === 'push') && kx > this.viewW - 10) {
+      // Off-screen charger: pulse an arrow at the right edge.
+      if (!k.hit && k.state === 'run' && kx > this.viewW - 10) {
         const ey = this.toScreenY(50);
         ctx.save();
         ctx.globalAlpha = 0.6 + Math.sin(t * 18) * 0.4;
@@ -220,7 +208,6 @@ export class Renderer {
     for (const o of game.world.obstacles) if (!o.knocked) ctx.strokeRect(o.x - o.w / 2, -o.h, o.w, o.h);
     for (const k of game.world.karens) {
       if (k.collidable) ctx.strokeRect(k.x - k.w / 2, -k.h, k.w, k.h);
-      if (k.cart && k.cart.collidable) ctx.strokeRect(k.cart.x - k.cart.w / 2, -k.cart.h, k.cart.w, k.cart.h);
       ctx.beginPath();
       ctx.moveTo(k.meetX, 0);
       ctx.lineTo(k.meetX, 20);

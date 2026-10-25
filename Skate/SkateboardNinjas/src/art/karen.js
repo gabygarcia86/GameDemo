@@ -1,4 +1,4 @@
-// Angry pedestrian art. Origin at the feet, y down,
+// Angry pedestrian and evil ninja art. Origin at the feet, y down,
 // facing left (toward the oncoming skater).
 
 const TAU = Math.PI * 2;
@@ -181,6 +181,221 @@ export function drawKaren(ctx, k, time) {
     }
     ctx.globalAlpha = 1;
   }
+  ctx.restore();
+}
+
+const RED = {
+  gi: '#d62839',
+  giDark: '#9c1a2b',
+  giLight: '#ff6170',
+  hood: '#1c0c16',
+  slit: '#3a1420',
+  eye: '#ffe14d',
+  blade: '#e9edf7',
+  steel: '#8e97ad',
+};
+
+function ninjaLeg(ctx, hx, hy, kx, ky, fx, fy, color) {
+  ctx.beginPath();
+  ctx.moveTo(hx, hy);
+  ctx.lineTo(kx, ky);
+  ctx.lineTo(fx, fy);
+  stroke2(ctx, 7, color);
+  ctx.fillStyle = RED.hood;
+  ctx.beginPath();
+  ctx.ellipse(fx - 2, fy + 0.5, 6, 3, 0, 0, TAU);
+  ctx.fill();
+}
+
+// Evil ninja: red gi, black hood, glowing eyes, three claws on the front hand.
+// Crouched and flexing his claws while he waits, head thrown back while he
+// laughs, claws thrust forward mid-leap.
+export function drawEvilNinja(ctx, k, time) {
+  const t = k.anim;
+  const leaping = k.state === 'leap' && !k.hit;
+  const laughing = (k.shout > 0 || k.hit) && !leaping;
+  const flap = Math.sin(time * 9 + t) * 3;
+
+  ctx.save();
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  if (leaping) ctx.rotate(-0.3 * Math.sin(Math.PI * k.timer));
+
+  // Legs: low wide stance, or tucked mid-leap
+  if (leaping) {
+    ninjaLeg(ctx, 4, -36, 12, -26, 4, -16, RED.giDark);
+    ninjaLeg(ctx, -4, -36, -14, -32, -16, -18, RED.gi);
+  } else {
+    ninjaLeg(ctx, 4, -34, 13, -18, 15, -2, RED.giDark);
+    ninjaLeg(ctx, -4, -34, -12, -19, -15, -2, RED.gi);
+  }
+
+  // Upper body shakes with laughter
+  const bounce = laughing ? -Math.abs(Math.sin(t * 22)) * 2.5 : Math.sin(t * 3) * 0.8;
+  ctx.translate(0, bounce);
+
+  // Back arm: fist on the hip
+  ctx.beginPath();
+  ctx.moveTo(7, -58);
+  ctx.lineTo(14, -48);
+  ctx.lineTo(8, -40);
+  stroke2(ctx, 5.5, RED.giDark);
+
+  // Sash tails trailing behind
+  ctx.beginPath();
+  ctx.moveTo(8, -37);
+  ctx.quadraticCurveTo(16, -36 + flap, 24, -30 + flap);
+  stroke2(ctx, 3, RED.hood);
+
+  // Torso
+  ctx.beginPath();
+  ctx.moveTo(-12, -62);
+  ctx.lineTo(11, -62);
+  ctx.lineTo(10, -34);
+  ctx.lineTo(-10, -34);
+  ctx.closePath();
+  ctx.fillStyle = RED.gi;
+  ctx.fill();
+  ctx.lineWidth = 2.4;
+  ctx.strokeStyle = OUT;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-9, -61);
+  ctx.lineTo(3, -42);
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = RED.giDark;
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-11, -58);
+  ctx.lineTo(-10, -44);
+  ctx.strokeStyle = RED.giLight;
+  ctx.stroke();
+  ctx.fillStyle = RED.hood;
+  ctx.fillRect(-10.5, -40, 21, 5);
+
+  // Head (thrown back while laughing)
+  ctx.save();
+  ctx.translate(-1, -73);
+  if (laughing) ctx.rotate(0.25 + Math.sin(t * 22) * 0.05);
+  // Hood tails
+  ctx.beginPath();
+  ctx.moveTo(8, -4);
+  ctx.quadraticCurveTo(16, -6 + flap, 22, -2 + flap);
+  stroke2(ctx, 3, RED.gi);
+  ctx.beginPath();
+  ctx.moveTo(8, -3);
+  ctx.quadraticCurveTo(15, 1 + flap * 0.6, 20, 5 + flap * 0.6);
+  stroke2(ctx, 3, RED.gi);
+  // Hood
+  ctx.beginPath();
+  ctx.arc(0, 0, 10.5, 0, TAU);
+  ctx.fillStyle = RED.hood;
+  ctx.fill();
+  ctx.lineWidth = 2.2;
+  ctx.strokeStyle = OUT;
+  ctx.stroke();
+  // Red headband
+  ctx.beginPath();
+  ctx.moveTo(-9.5, -5.5);
+  ctx.lineTo(9, -6.5);
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = RED.gi;
+  ctx.stroke();
+  // Eye slit and glowing eyes (squeezed into evil arcs while laughing)
+  ctx.fillStyle = RED.slit;
+  ctx.fillRect(-11, -2.5, 12, 5);
+  ctx.save();
+  ctx.shadowColor = RED.eye;
+  ctx.shadowBlur = 6;
+  if (laughing) {
+    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = RED.eye;
+    ctx.beginPath();
+    ctx.moveTo(-10, 1); ctx.lineTo(-8, -1); ctx.lineTo(-6, 1);
+    ctx.moveTo(-5, 0.5); ctx.lineTo(-3, -1.5); ctx.lineTo(-1, 0.5);
+    ctx.stroke();
+  } else {
+    ctx.fillStyle = RED.eye;
+    ctx.beginPath();
+    ctx.ellipse(-7.5, 0.3, 2.6, 1.3, 0.35, 0, TAU);
+    ctx.ellipse(-2.8, -0.2, 2.2, 1.2, -0.3, 0, TAU);
+    ctx.fill();
+  }
+  ctx.restore();
+  // Brow ridge, angled down toward the nose
+  ctx.beginPath();
+  ctx.moveTo(-11, -4.5);
+  ctx.lineTo(-5, -2.5);
+  ctx.lineTo(1, -4);
+  ctx.lineWidth = 1.6;
+  ctx.strokeStyle = OUT;
+  ctx.stroke();
+  // Cackling mouth
+  if (laughing) {
+    const open = 1.5 + Math.abs(Math.sin(t * 22)) * 2.5;
+    ctx.beginPath();
+    ctx.ellipse(-6.5, 6, 3.4, open, 0, 0, TAU);
+    ctx.fillStyle = '#b8163a';
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(-9.5, 6 - open, 6, 1.4);
+  }
+  ctx.restore();
+
+  // Front arm with the three-claw gauntlet
+  let ex, ey, hx, hy, aim;
+  if (leaping) {
+    ex = -19; ey = -57; hx = -30; hy = -58; aim = Math.PI + 0.15;
+  } else if (laughing) {
+    ex = -19; ey = -66; hx = -21; hy = -81; aim = -Math.PI / 2 - 0.5;
+  } else {
+    const flex = Math.sin(t * 4) * 1.5;
+    ex = -17; ey = -54; hx = -24; hy = -66 + flex; aim = Math.PI + 0.6;
+  }
+  ctx.beginPath();
+  ctx.moveTo(-8, -59);
+  ctx.lineTo(ex, ey);
+  ctx.lineTo(hx, hy);
+  stroke2(ctx, 5.5, RED.gi);
+  ctx.save();
+  ctx.translate(hx, hy);
+  ctx.rotate(aim);
+  for (let i = -1; i <= 1; i++) {
+    ctx.save();
+    ctx.translate(0, i * 2.6);
+    ctx.rotate(i * 0.16);
+    ctx.beginPath();
+    ctx.moveTo(2, -1.4);
+    ctx.quadraticCurveTo(12, -2.4, 19, 1);
+    ctx.lineTo(2, 1.4);
+    ctx.closePath();
+    ctx.fillStyle = RED.blade;
+    ctx.fill();
+    ctx.lineWidth = 1.4;
+    ctx.strokeStyle = OUT;
+    ctx.stroke();
+    ctx.restore();
+  }
+  // Gauntlet bar and fist
+  ctx.fillStyle = RED.steel;
+  ctx.fillRect(0.5, -5, 3, 10);
+  ctx.beginPath();
+  ctx.arc(-1, 0, 3.8, 0, TAU);
+  ctx.fillStyle = RED.hood;
+  ctx.fill();
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = OUT;
+  ctx.stroke();
+  // Glint along the middle claw now and then
+  if ((time * 1.3 + t) % 2 < 0.18) {
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.moveTo(19, -3); ctx.lineTo(20, 0); ctx.lineTo(23, 1); ctx.lineTo(20, 2);
+    ctx.lineTo(19, 5); ctx.lineTo(18, 2); ctx.lineTo(15, 1); ctx.lineTo(18, 0);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
   ctx.restore();
 }
 

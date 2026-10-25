@@ -7,7 +7,7 @@ import { CONFIG } from './config.js';
 import { lerp, clamp } from './Physics.js';
 import { Background } from './art/background.js';
 import { NinjaAnimator, drawBoard } from './art/ninja.js';
-import { drawKaren, drawWarning } from './art/karen.js';
+import { drawKaren, drawEvilNinja, drawWarning } from './art/karen.js';
 import { drawObstacle, drawRamp, drawRail, drawStreet, drawSidewalkDecor } from './art/props.js';
 
 const FONT = '"Arial Black", "Segoe UI Black", Impact, system-ui, sans-serif';
@@ -130,10 +130,11 @@ export class Renderer {
     const x = lerp(k.prevX, k.x, alpha);
     const lane = k.laneT;
     ctx.save();
-    ctx.translate(x, -lane * 22);
+    ctx.translate(x, -lane * 22 - k.hop);
     const s = 1 - 0.14 * lane;
     ctx.scale(s, s);
-    drawKaren(ctx, k, t);
+    if (k.kind === 'ninja') drawEvilNinja(ctx, k, t);
+    else drawKaren(ctx, k, t);
     ctx.restore();
   }
 
@@ -141,12 +142,13 @@ export class Renderer {
   drawOverlays(ctx, game, alpha, t) {
     for (const k of game.world.karens) {
       const kx = this.toScreenX(lerp(k.prevX, k.x, alpha));
-      const headY = this.toScreenY(100 + k.laneT * 10);
+      const headY = this.toScreenY(100 + k.laneT * 10 + k.hop);
       const onScreen = kx > -40 && kx < this.viewW + 40;
 
       const dangerSoon = !k.hit && (
         (k.kind === 'stepper' && (k.state === 'warn' || k.state === 'step')) ||
-        (k.kind === 'charger' && k.state === 'run')
+        (k.kind === 'charger' && k.state === 'run') ||
+        (k.kind === 'ninja' && (k.state === 'warn' || k.state === 'leap'))
       );
       if (dangerSoon && onScreen) drawWarning(ctx, kx, headY - 30, Math.sin(t * 18) * 0.5 + 0.5);
 

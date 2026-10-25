@@ -35,6 +35,7 @@ export const SEGMENTS = [
   { id: 'karenBlocker', difficulty: 1, weights: [1.3, 1.0, 0.8], hazard: true, karen: true, build: buildKarenBlocker },
   { id: 'karenStepper', difficulty: 2, weights: [0.4, 1.2, 1.2], hazard: true, karen: true, build: buildKarenStepper },
   { id: 'karenCharger', difficulty: 3, weights: [0, 1.0, 1.4], hazard: true, karen: true, build: buildKarenCharger },
+  { id: 'evilNinja', difficulty: 2, weights: [0.3, 1.0, 1.3], hazard: true, karen: true, build: buildEvilNinja },
 ];
 
 const ATTRACT_IDS = new Set(['flat', 'kicker', 'rail', 'bench', 'ledge', 'highRail', 'railTransfer', 'launchCombo']);
@@ -322,4 +323,11 @@ function buildKarenCharger(g, c) {
   g.world.addKaren('charger', meetX + c.rng.range(260, 340), c.rng, meetX);
   g.logHazard(meetX - 20, meetX + 20);
   return meetX + g.ollieLanding(c.speed) + 40;
+}
+
+function buildEvilNinja(g, c) {
+  const meetX = c.x;
+  const k = g.world.addKaren('ninja', meetX + CONFIG.karen.ninjaLeapDistance, c.rng, meetX);
+  g.logHazard(meetX - k.w / 2, meetX + k.w / 2);
+  return meetX + k.w / 2 + g.ollieLanding(c.speed);
 }

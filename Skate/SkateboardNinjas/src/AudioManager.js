@@ -163,6 +163,9 @@ export class AudioManager {
       case 'karen':
         this.karenVoice(t);
         break;
+      case 'evilLaugh':
+        this.evilLaugh(t);
+        break;
       case 'bank':
         [523, 659, 784, 1047].forEach((f, i) => this.tone(t + i * 0.055, 'triangle', f, f, 0.14, 0.22));
         break;
@@ -262,6 +265,58 @@ export class AudioManager {
     o.connect(f).connect(g).connect(this.sfx);
     o.start(t);
     o.stop(t + 0.45);
+  }
+
+  // A deep, villainous "MWAH-ha-ha-ha-haaa": buzzy voice through an "ah"
+  // formant, with a sub-octave growl and breathy "h" onsets.
+  evilLaugh(t) {
+    const ctx = this.ctx;
+    const voice = ctx.createOscillator();
+    voice.type = 'sawtooth';
+    const growl = ctx.createOscillator();
+    growl.type = 'square';
+    const vib = ctx.createOscillator();
+    vib.frequency.value = 6;
+    const vibDepth = ctx.createGain();
+    vibDepth.gain.value = 5;
+    vib.connect(vibDepth).connect(voice.frequency);
+
+    const formant = ctx.createBiquadFilter();
+    formant.type = 'bandpass';
+    formant.frequency.value = 760;
+    formant.Q.value = 1.6;
+    const body = ctx.createBiquadFilter();
+    body.type = 'lowpass';
+    body.frequency.value = 1300;
+    const growlGain = ctx.createGain();
+    growlGain.gain.value = 0.25;
+    const g = ctx.createGain();
+    voice.connect(formant).connect(g);
+    voice.connect(body).connect(g);
+    growl.connect(growlGain).connect(body);
+    g.connect(this.sfx);
+
+    const base = 118 + Math.random() * 14;
+    // [start, length, pitch]: a long "MWAH", quick "ha"s, then a drawn-out last one.
+    const syllables = [[0, 0.26, 1.2], [0.32, 0.12, 1.28], [0.48, 0.12, 1.16], [0.64, 0.12, 1.05], [0.8, 0.34, 0.92]];
+    g.gain.setValueAtTime(0.0001, t);
+    syllables.forEach(([s, d, m], i) => {
+      const st = t + s;
+      const f = base * m;
+      voice.frequency.setValueAtTime(f * 1.08, st);
+      voice.frequency.exponentialRampToValueAtTime(f * 0.86, st + d);
+      growl.frequency.setValueAtTime(f / 2, st);
+      growl.frequency.exponentialRampToValueAtTime((f * 0.86) / 2, st + d);
+      g.gain.setValueAtTime(0.0001, st);
+      g.gain.exponentialRampToValueAtTime(0.32, st + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, st + d);
+      if (i > 0) this.noise(st - 0.015, 0.06, 0.1, 'bandpass', 1500);
+    });
+    const end = t + 1.2;
+    for (const o of [voice, growl, vib]) {
+      o.start(t);
+      o.stop(end);
+    }
   }
 
   // ------------------------------------------------------------ music

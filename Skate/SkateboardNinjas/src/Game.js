@@ -347,7 +347,7 @@ export class Game {
 
     for (const k of this.world.karens) {
       updateKaren(k, dt, p);
-      if (k.justShouted && Math.abs(k.x - p.x) < this.renderer.viewW) this.audio.play('karen');
+      if (k.justShouted && Math.abs(k.x - p.x) < this.renderer.viewW) this.audio.play(k.kind === 'ninja' ? 'evilLaugh' : 'karen');
     }
     this.world.update(dt);
 
@@ -578,6 +578,11 @@ export class Game {
       this.scoring.stats.nearMisses++;
       this.floatAtPlayer(`NEAR MISS +${v}`, '#ffd23f', 17);
       this.audio.play('nearMiss');
+    } else if (e.target.kind === 'ninja') {
+      v = this.scoring.addAction('ninja', 'Ninja Dodge', S.ninjaDodge, true, false);
+      this.scoring.stats.karensDodged++;
+      this.floatAtPlayer(`NINJA DODGED +${v}`, '#ff4d4d', 18);
+      this.audio.play('nearMiss');
     } else {
       v = this.scoring.addAction('karen', 'Karen Dodge', S.karenDodge, true, false);
       this.scoring.stats.karensDodged++;
@@ -595,7 +600,7 @@ export class Game {
     p.wipeout(hit.kind === 'karen' ? 380 : 300);
     if (hit.kind === 'obstacle') this.world.knock(hit.target, p.speed);
     else hitKaren(hit.karen, this.fx);
-    this.crash(hit.kind);
+    this.crash(hit.kind === 'karen' && hit.karen.kind === 'ninja' ? 'ninja' : hit.kind);
   }
 
   // Consequences of a wipeout that has just started.
@@ -606,9 +611,10 @@ export class Game {
     this.scoring.stats.wipeouts++;
     this.audio.play('crash');
     if (kind === 'karen') this.audio.play('karen');
+    if (kind === 'ninja') this.audio.play('evilLaugh');
     this.renderer.addShake(kind === 'fell' ? 6 : 10);
     this.particles.dust(p.x, p.y, 12, 1.4);
-    const label = kind === 'fell' ? 'SPLASH!' : kind === 'bail' ? 'BAILED!' : kind === 'obstacle' ? 'WIPEOUT!' : 'KAREN\'D!';
+    const label = kind === 'fell' ? 'SPLASH!' : kind === 'bail' ? 'BAILED!' : kind === 'obstacle' ? 'WIPEOUT!' : kind === 'ninja' ? 'SLASHED!' : 'KAREN\'D!';
     this.hud.announce(label, '', 'bad');
   }
 

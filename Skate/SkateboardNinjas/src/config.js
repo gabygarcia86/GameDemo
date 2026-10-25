@@ -61,6 +61,7 @@ export const CONFIG = {
     grindExit: 150,
     nearMiss: 100,
     karenDodge: 150,
+    ninjaDodge: 200,
     bigAir: 100,
     bigAirTime: 1.1,
     repeatFactor: 0.5,     // each repeat of the same action in one combo is worth half
@@ -97,6 +98,11 @@ export const CONFIG = {
     chargeTrigger: 900,
     minRunSpeed: 60,
     maxRunSpeed: 320,
+    ninjaTrigger: 620,     // distance from his landing spot when the ninja starts laughing
+    ninjaWarnTime: 0.35,   // laugh before the leap
+    ninjaLeapTime: 0.45,
+    ninjaLeapHeight: 50,
+    ninjaLeapDistance: 110, // he starts this far past his landing spot
     width: 30,
     height: 84,
   },

@@ -62,12 +62,13 @@ On a keyboard, press two arrows (or two WASD keys) together for a diagonal.
   jump. If you ask for one while the other is still animating, it waits its turn.
 - **Landing:** land with a flip under 65% complete and you **bail**. Land
   mid-flip after that, or mid-grab, and the landing is **sketchy**. Otherwise it's **clean**.
-- **Crashing** into a cone, trash can, hydrant, barrier, or Karen, or falling
+- **Crashing** into a cone, trash can, hydrant, barrier, Karen, or evil ninja, or falling
   into a gap, is a wipeout. You lose the unbanked combo and
   some speed, then blink (invulnerable) for 1.2 s.
 - **Karens** always warn you first. The *blocker* stands and wags her finger. The *stepper*
   waits at the back of the sidewalk, shows a "!", then steps in. The *charger*
-  storms toward you.
+  storms toward you. The red *evil ninja* crouches at the back of the sidewalk,
+  cackles, then leaps into your lane claws first.
   Moving ones adjust their speed so they arrive at a spot the level generator kept
   clear, which makes every encounter fair.
 - **Time's up:** new tricks stop. If you're in the air you get to land first.

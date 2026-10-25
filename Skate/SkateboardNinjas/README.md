@@ -138,7 +138,7 @@ and Karen behavior. Trick lists are in [`src/TrickSystem.js`](src/TrickSystem.js
 
 URL parameters:
 
-- `?seed=12345`: replay a specific street. The results screen shows each run's seed.
+- `?seed=12345`: replay a specific street.
 - `?debug=1`: draws hitboxes, rail lines, Karen meeting points, and the generator's hazard spans, and warns in the console if spacing ever gets tight.
 
 The game object is exposed as `window.skateboardNinjas` for console tinkering.

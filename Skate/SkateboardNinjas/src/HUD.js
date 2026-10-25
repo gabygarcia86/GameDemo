@@ -202,7 +202,6 @@ export class HUD {
     $('res-karens').textContent = fmt(r.karensDodged);
     $('res-near').textContent = fmt(r.nearMisses);
     $('res-wipeouts').textContent = fmt(r.wipeouts);
-    $('res-seed').textContent = r.mode === 'daily' ? `Daily challenge ${r.dayKey} • seed ${r.seed}` : `Seed ${r.seed} (replay with ?seed=${r.seed})`;
     this.el.newBest.hidden = !r.newBest;
   }
 }

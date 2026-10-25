@@ -512,7 +512,6 @@ button:focus-visible, summary:focus-visible, a:focus-visible { outline: 3px soli
 .stats div { background: rgba(255, 255, 255, 0.07); border-radius: 10px; padding: 6px 4px; }
 .stats dt { font: 800 10px/1.2 var(--font-display); letter-spacing: 0.04em; color: var(--muted); text-transform: uppercase; }
 .stats dd { margin: 2px 0 0; font: 900 16px/1.2 var(--font-display); color: var(--yellow); }
-.seed-line { margin: 0; font-size: 11px; color: var(--muted); }
 
 .noscript { position: absolute; inset: 0; display: grid; place-items: center; }
 

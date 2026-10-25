@@ -192,3 +192,9 @@ SkateboardNinjas/
 - Portrait phones work, but the view is cramped. The title screen suggests rotating to landscape.
 - Fullscreen is offered where the browser supports it (not iPhone Safari).
 - There's no online leaderboard. The daily challenge compares against your own best only.
+
+# TODO
+
+- Character selection screen. Ninja Colors, skateboard colors and skateboard wheel colors
+- For last 3 to 5 seconds have a count down beep noise to let the player know time is running out
+- Check controls with trick joy sticks getting stuck in a position.

@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1a4a">
+  <meta name="description" content="Latke Toss: a 60-second 3D Hanukkah arcade game. Toss potato latkes into a pot of hot oil.">
+  <title>Latke Toss</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%23122a7a'/%3E%3Cellipse cx='32' cy='34' rx='20' ry='14' fill='%23c98a2e'/%3E%3Cellipse cx='32' cy='31' rx='16' ry='9' fill='%23e8b552'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./css/style.css">
+
+  <!-- Three.js is loaded from a pinned CDN build. The game needs internet access for this import. -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"
+    }
+  }
+  </script>
+  <script>
+    // If the module graph (including the Three.js CDN import) fails to load, say so instead of
+    // leaving a blank screen.
+    window.showBootError = function (message) {
+      var screen = document.getElementById('screen-error');
+      if (!screen) return;
+      document.getElementById('screen-menu').classList.add('hidden');
+      if (message) document.getElementById('error-message').textContent = message;
+      screen.classList.remove('hidden');
+    };
+  </script>
+  <script type="module" src="./js/main.js"
+    onerror="showBootError('The game scripts could not be loaded. Latke Toss loads Three.js from cdn.jsdelivr.net, so it needs an internet connection, and it must be served over http(s) rather than opened as a file.')"></script>
+</head>
+<body>
+  <div id="page-nav">
+    <a href="../index.html" class="nav-link">&larr; Hanukkah Games</a>
+  </div>
+
+  <main id="game-shell">
+    <div id="canvas-host" aria-label="Latke Toss game view"></div>
+
+    <!-- In-round HUD -->
+    <header id="hud" class="hud hidden">
+      <div class="hud-box hud-score" id="hud-score-box">
+        <span class="hud-label">Score</span>
+        <span class="hud-value" id="hud-score">0</span>
+      </div>
+      <div class="hud-box hud-time" id="hud-time-box">
+        <span class="hud-label">Time</span>
+        <span class="hud-value" id="hud-time">60</span>
+      </div>
+      <div class="hud-box hud-best">
+        <span class="hud-label">Best <span id="hud-difficulty" class="hud-diff">Easy</span></span>
+        <span class="hud-value" id="hud-best">0</span>
+      </div>
+    </header>
+
+    <div id="hud-controls" class="hud-controls hidden">
+      <button type="button" class="icon-btn" id="btn-pause" aria-label="Pause">&#10074;&#10074;</button>
+      <button type="button" class="icon-btn" id="btn-restart" aria-label="Restart round">&#8635;</button>
+      <button type="button" class="icon-btn mute-toggle" id="btn-mute-hud" aria-label="Mute sound">&#128266;</button>
+    </div>
+
+    <p id="hint" class="hint hidden">Drag up from the latke to aim &middot; release to toss</p>
+
+    <div id="popup-layer" aria-hidden="true"></div>
+    <div id="banner" class="banner hidden" aria-live="polite"></div>
+
+    <!-- Title / menu screen -->
+    <section id="screen-menu" class="overlay">
+      <div class="panel">
+        <div class="title-stars" aria-hidden="true">&#10022; &#10022; &#10022;</div>
+        <h1 class="title">LATKE<br>TOSS</h1>
+        <p class="subtitle">A Hanukkah arcade challenge</p>
+
+        <div class="difficulty" role="radiogroup" aria-label="Difficulty">
+          <button type="button" class="diff-btn" data-difficulty="easy" role="radio" aria-checked="true">
+            <span class="diff-name">Easy</span>
+            <span class="diff-tag">Stationary pot</span>
+            <span class="diff-best">Best <b data-best="easy">0</b></span>
+          </button>
+          <button type="button" class="diff-btn" data-difficulty="medium" role="radio" aria-checked="false">
+            <span class="diff-name">Medium</span>
+            <span class="diff-tag">Slides side to side</span>
+            <span class="diff-best">Best <b data-best="medium">0</b></span>
+          </button>
+          <button type="button" class="diff-btn" data-difficulty="hard" role="radio" aria-checked="false">
+            <span class="diff-name">Hard</span>
+            <span class="diff-tag">Floats in full 3D</span>
+            <span class="diff-best">Best <b data-best="hard">0</b></span>
+          </button>
+        </div>
+
+        <p class="selected-line">Selected: <b id="selected-difficulty">Easy</b></p>
+
+        <button type="button" class="big-btn" id="btn-start">Start Game</button>
+
+        <p class="instructions">
+          Press the latke, <b>drag upward</b> toward the pot to aim,
+          and <b>release</b> to toss. Longer drags throw farther.
+          Land as many latkes in the oil as you can in 60 seconds!
+        </p>
+
+        <button type="button" class="text-btn mute-toggle" id="btn-mute-menu">Sound: On</button>
+      </div>
+    </section>
+
+    <!-- Pause screen -->
+    <section id="screen-pause" class="overlay hidden">
+      <div class="panel panel-small">
+        <h2>Paused</h2>
+        <button type="button" class="big-btn" id="btn-resume">Resume</button>
+        <button type="button" class="mid-btn" id="btn-pause-restart">Restart</button>
+        <button type="button" class="mid-btn ghost" id="btn-pause-menu">Return to Menu</button>
+      </div>
+    </section>
+
+    <!-- Game-over screen -->
+    <section id="screen-over" class="overlay hidden">
+      <div class="panel panel-small">
+        <h2>Time's Up!</h2>
+        <p class="final-label">Final score</p>
+        <p class="final-score" id="final-score">0</p>
+        <p class="final-meta">Difficulty: <b id="final-difficulty">Easy</b></p>
+        <p class="final-meta">Best: <b id="final-best">0</b></p>
+        <p class="new-best hidden" id="final-new-best">&#10022; New best score! &#10022;</p>
+        <button type="button" class="big-btn" id="btn-play-again">Play Again</button>
+        <button type="button" class="mid-btn ghost" id="btn-over-menu">Return to Menu</button>
+      </div>
+    </section>
+
+    <!-- Shown only if WebGL cannot start -->
+    <section id="screen-error" class="overlay hidden">
+      <div class="panel panel-small">
+        <h2>Can't start 3D</h2>
+        <p id="error-message">Your browser or device could not create a WebGL context, which Latke Toss needs to draw the game.</p>
+        <p class="instructions">Try a current version of Chrome, Edge, Firefox, or Safari, and make sure hardware acceleration is turned on.</p>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

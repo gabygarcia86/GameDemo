@@ -24,11 +24,14 @@ const C = {
   grip: '#25252f',
   truck: '#a3abc4',
   wheel: '#ffe066',
+  pulse: '#3de1ff',
 };
 
 // Bottom of the deck: one colour or a two-colour fade, plus an optional
 // sticker ('none', 'shuriken', or an emoji).
 const BOTTOM = { mode: 'gradient', c1: '#00c2d1', c2: '#ff2e7e', sticker: 'shuriken' };
+// 'skate' rolls on trucks and wheels; 'hover' floats on pulses of light.
+let boardType = 'skate';
 const EMOJI_FONT = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
 
 // Mixes a #rrggbb colour toward white (amt > 0) or black (amt < 0).
@@ -51,6 +54,8 @@ export function setLook(look) {
   C.belt = look.belt;
   C.beltDark = shade(look.belt, -0.3);
   C.wheel = look.wheel;
+  C.pulse = look.pulse;
+  boardType = look.boardType;
   C.ply = look.side;
   C.grip = look.top;
   BOTTOM.mode = look.bottomMode;
@@ -157,10 +162,59 @@ function sticker(ctx, glyph, size) {
   ctx.fillText(glyph, 0, size * 0.06);
 }
 
+// Hoverboard underside: emitter pods where the trucks would be, a soft glow,
+// and rings of light pulsing away from the bottom face. c is the kickflip
+// cosine: 1 upright (rings go down), -1 upside down, ~0 seen face-on.
+function hoverPulse(ctx, c, time) {
+  const ac = Math.abs(c);
+  const face = 1 - ac; // face-on, the rings ring the deck instead of covering it
+  ctx.save();
+
+  ctx.save();
+  ctx.translate(0, c * 8);
+  ctx.scale(1, 0.3 + face * 0.5);
+  const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, 34);
+  glow.addColorStop(0, C.pulse);
+  glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+  ctx.globalAlpha = (0.5 + Math.sin(time * 9) * 0.12) * (0.25 + ac * 0.75);
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(0, 0, 34, 0, TAU);
+  ctx.fill();
+  ctx.restore();
+
+  ctx.strokeStyle = C.pulse;
+  for (let i = 0; i < 3; i++) {
+    const p = (time * 1.8 + i / 3) % 1;
+    ctx.globalAlpha = (1 - p) * 0.9;
+    ctx.lineWidth = 1.2 + (1 - p) * 2;
+    ctx.beginPath();
+    ctx.ellipse(0, c * (3 + p * 9), 14 + p * 20 + face * 12, 1.5 + p * 3 + face * (7 + p * 4), 0, 0, TAU);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  const podY = c * 3.4;
+  const podH = 1.4 + ac * 1.4;
+  for (const x of [-20, 20]) {
+    ctx.beginPath();
+    ctx.ellipse(x, podY, 6.5, podH + 0.6, 0, 0, TAU);
+    ctx.fillStyle = C.out;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(x, podY, 4.6, podH * 0.6, 0, 0, TAU);
+    ctx.globalAlpha = 0.75 + Math.sin(time * 18 + x) * 0.25;
+    ctx.fillStyle = C.pulse;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+}
+
 // Board in its own frame: centre of the deck, x toward the nose, y down.
 // flipTurns rotates around the long axis (kickflip), shoveTurns around the
-// vertical axis (shove-it); both are faked with scaling in 2D.
-export function drawBoard(ctx, flipTurns = 0, shoveTurns = 0) {
+// vertical axis (shove-it); both are faked with scaling in 2D. time drives
+// the hoverboard's pulse.
+export function drawBoard(ctx, flipTurns = 0, shoveTurns = 0, time = 0) {
   const fa = flipTurns * TAU;
   let sx = Math.cos(shoveTurns * TAU);
   if (Math.abs(sx) < 0.08) sx = sx < 0 ? -0.08 : 0.08;
@@ -174,6 +228,10 @@ export function drawBoard(ctx, flipTurns = 0, shoveTurns = 0) {
   ctx.scale(sx, 1);
 
   const wheels = () => {
+    if (boardType === 'hover') {
+      hoverPulse(ctx, c, time);
+      return;
+    }
     ctx.fillStyle = C.truck;
     const top = Math.min(0, wheelY);
     const h = Math.abs(wheelY);
@@ -185,7 +243,31 @@ export function drawBoard(ctx, flipTurns = 0, shoveTurns = 0) {
 
   if (!bottomShown) wheels();
 
-  if (!faceShown) {
+  if (!faceShown && boardType === 'hover') {
+    // Edge-on hoverboard: a flat slab with a light strip down its side.
+    ctx.save();
+    if (c < 0) ctx.scale(1, -1);
+    roundedBar(ctx, -34, 34, 2.6);
+    ctx.fillStyle = C.ply;
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = C.out;
+    ctx.stroke();
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-31, -2.3);
+    ctx.lineTo(31, -2.3);
+    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = C.grip;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-25, 0.4);
+    ctx.lineTo(25, 0.4);
+    ctx.lineWidth = 1.1;
+    ctx.strokeStyle = C.pulse;
+    ctx.stroke();
+    ctx.restore();
+  } else if (!faceShown) {
     // Edge-on profile with kicked nose and tail (mirrored when upside down).
     ctx.save();
     if (c < 0) ctx.scale(1, -1);
@@ -429,7 +511,7 @@ export class NinjaAnimator {
     ctx.save();
     ctx.translate(bx, by);
     ctx.rotate(this.tilt);
-    drawBoard(ctx, this.flipTurns, this.shoveTurns);
+    drawBoard(ctx, this.flipTurns, this.shoveTurns, time);
     ctx.restore();
 
     // Back leg

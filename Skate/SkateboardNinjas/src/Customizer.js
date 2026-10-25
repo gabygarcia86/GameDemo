@@ -1,6 +1,6 @@
-// Customize screen: pick colours for the ninja's gi, headband and belt, and
-// for the board's wheels, sides, top and bottom (one colour or a two-colour
-// fade, plus an optional sticker). The look is saved, pushed to the art in
+// Customize screen: pick colours for the ninja's gi, headband and belt, pick a
+// skateboard or a hoverboard, and colour its wheels (or hover pulse), sides,
+// top and bottom (one colour or a two-colour fade, plus an optional sticker). The look is saved, pushed to the art in
 // art/ninja.js, and previewed live on a small canvas.
 
 import { NinjaAnimator, drawBoard, setLook } from './art/ninja.js';
@@ -9,7 +9,9 @@ export const DEFAULT_LOOK = {
   gi: '#2f3a7a',
   band: '#ff2e55',
   belt: '#ff2e55',
+  boardType: 'skate',
   wheel: '#ffe066',
+  pulse: '#3de1ff',
   side: '#ffb703',
   top: '#25252f',
   bottomMode: 'gradient',
@@ -20,7 +22,7 @@ export const DEFAULT_LOOK = {
 
 const PALETTE = [
   '#2f3a7a', '#14162b', '#25252f', '#e4e7f5', '#ff2e55', '#ff2e7e', '#ff8c1a',
-  '#ffb703', '#ffe066', '#2bb673', '#00c2d1', '#3d7bff', '#7b2ff7', '#8b5a2b',
+  '#ffb703', '#ffe066', '#2bb673', '#00c2d1', '#3de1ff', '#3d7bff', '#7b2ff7', '#8b5a2b',
 ];
 
 export const STICKERS = [
@@ -29,7 +31,7 @@ export const STICKERS = [
   '🤘', '👾', '🐱', '🌮', '🎃', '👻', '🥷', '💎', '🚀', '🍉', '😂', '🤖',
 ];
 
-const COLOR_KEYS = ['gi', 'band', 'belt', 'wheel', 'side', 'top', 'bottom1', 'bottom2'];
+const COLOR_KEYS = ['gi', 'band', 'belt', 'wheel', 'pulse', 'side', 'top', 'bottom1', 'bottom2'];
 const HEX = /^#[0-9a-f]{6}$/i;
 const VIEW_W = 300;
 const VIEW_H = 220;
@@ -45,6 +47,7 @@ function loadLook(storage) {
   const saved = storage.get('look', null);
   if (saved && typeof saved === 'object') {
     for (const k of COLOR_KEYS) if (HEX.test(saved[k])) look[k] = saved[k].toLowerCase();
+    if (saved.boardType === 'skate' || saved.boardType === 'hover') look.boardType = saved.boardType;
     if (saved.bottomMode === 'solid' || saved.bottomMode === 'gradient') look.bottomMode = saved.bottomMode;
     if (STICKERS.includes(saved.sticker)) look.sticker = saved.sticker;
   }
@@ -129,6 +132,8 @@ export class Customizer {
 
     this.modeButtons = [...document.querySelectorAll('#customize-screen [data-mode]')];
     for (const b of this.modeButtons) b.addEventListener('click', () => this.set('bottomMode', b.dataset.mode));
+    this.typeButtons = [...document.querySelectorAll('#customize-screen [data-board]')];
+    for (const b of this.typeButtons) b.addEventListener('click', () => this.set('boardType', b.dataset.board));
 
     this.tabs = [...document.querySelectorAll('#customize-screen [role="tab"]')];
     for (const tab of this.tabs) tab.addEventListener('click', () => this.showTab(tab));
@@ -181,6 +186,13 @@ export class Customizer {
       b.setAttribute('aria-pressed', String(on));
       b.classList.toggle('on', on);
     }
+    for (const b of this.typeButtons) {
+      const on = b.dataset.board === L.boardType;
+      b.setAttribute('aria-pressed', String(on));
+      b.classList.toggle('on', on);
+    }
+    this.rows.wheel.row.hidden = L.boardType !== 'skate';
+    this.rows.pulse.row.hidden = L.boardType !== 'hover';
     this.rows.bottom1.label.textContent = gradient ? 'Color 1' : 'Color';
     this.rows.bottom2.row.hidden = !gradient;
     this.stickerButtons.forEach((b, i) => b.setAttribute('aria-checked', String(STICKERS[i] === L.sticker)));
@@ -244,7 +256,7 @@ export class Customizer {
       ctx.save();
       ctx.translate(228, y);
       ctx.scale(1.9, 1.9);
-      drawBoard(ctx, turns, 0);
+      drawBoard(ctx, turns, 0, t);
       ctx.restore();
     }
   }

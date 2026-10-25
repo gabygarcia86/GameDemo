@@ -186,7 +186,7 @@
           <div class="custom-options">
             <div class="custom-tabs" role="tablist">
               <button id="tab-ninja" class="chip cz-chip on" type="button" role="tab" aria-selected="true" aria-controls="custom-ninja">NINJA</button>
-              <button id="tab-board" class="chip cz-chip" type="button" role="tab" aria-selected="false" aria-controls="custom-board">SKATEBOARD</button>
+              <button id="tab-board" class="chip cz-chip" type="button" role="tab" aria-selected="false" aria-controls="custom-board">BOARD</button>
             </div>
             <div id="custom-ninja" class="custom-group" role="tabpanel" aria-labelledby="tab-ninja">
               <div class="cz-row" data-key="gi" data-label="Clothes"></div>
@@ -194,7 +194,15 @@
               <div class="cz-row" data-key="belt" data-label="Belt"></div>
             </div>
             <div id="custom-board" class="custom-group" role="tabpanel" aria-labelledby="tab-board" hidden>
+              <div class="cz-row">
+                <span class="cz-label">Type</span>
+                <div class="cz-options">
+                  <button class="chip cz-chip" type="button" data-board="skate" aria-pressed="false">SKATEBOARD</button>
+                  <button class="chip cz-chip" type="button" data-board="hover" aria-pressed="false">HOVERBOARD</button>
+                </div>
+              </div>
               <div class="cz-row" data-key="wheel" data-label="Wheels"></div>
+              <div class="cz-row" data-key="pulse" data-label="Pulse"></div>
               <div class="cz-row" data-key="side" data-label="Side"></div>
               <div class="cz-row" data-key="top" data-label="Top"></div>
               <h3 class="cz-heading">Bottom</h3>

@@ -117,7 +117,7 @@ export class Renderer {
       ctx.save();
       ctx.translate(b.x, -b.y - 13);
       ctx.rotate(-b.rot);
-      drawBoard(ctx, 0, 0);
+      drawBoard(ctx, 0, 0, t);
       ctx.restore();
     }
     this.ninja.update(dt, p, game.tricks, t);

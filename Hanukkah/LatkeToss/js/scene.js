@@ -251,6 +251,14 @@ function createDreidel(bodyColor, letterColor) {
   return group;
 }
 
+// Candle indices (left to right as you face the menorah, shamash in the middle) in the
+// order they get lit: the shamash first, then the candles from right to left, the way
+// Hanukkah candles are added night by night.
+const CANDLE_LIGHT_ORDER = [4, 8, 7, 6, 5, 3, 2, 1, 0];
+const MENORAH_POSITION = new THREE.Vector3(-2.9, 0, -6.0);
+// Smaller than life so the candles stay below the HUD now that it sits nearer the center.
+const MENORAH_SCALE = 0.8;
+
 function createMenorah() {
   const group = new THREE.Group();
   const gold = new THREE.MeshStandardMaterial({ color: 0xe8b84a, roughness: 0.28, metalness: 0.9 });
@@ -260,6 +268,17 @@ function createMenorah() {
     color: 0xff9a2e, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false,
   });
   const flameInnerMaterial = new THREE.MeshBasicMaterial({ color: 0xfff1b8 });
+  // Soft halo so a lit candle reads clearly from across the table.
+  const { canvas: haloCanvas, ctx: haloCtx } = makeCanvas(64, 64);
+  const haloGradient = haloCtx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  haloGradient.addColorStop(0, 'rgba(255,220,140,0.9)');
+  haloGradient.addColorStop(0.4, 'rgba(255,160,60,0.35)');
+  haloGradient.addColorStop(1, 'rgba(255,140,40,0)');
+  haloCtx.fillStyle = haloGradient;
+  haloCtx.fillRect(0, 0, 64, 64);
+  const haloMaterial = new THREE.SpriteMaterial({
+    map: canvasTexture(haloCanvas), blending: THREE.AdditiveBlending, depthWrite: false,
+  });
 
   const base = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.6, 0.18, 32), gold);
   base.position.y = 0.09;
@@ -310,7 +329,14 @@ function createMenorah() {
     const core = new THREE.Mesh(flameCoreGeometry, flameInnerMaterial);
     core.position.y = 0.05;
     flame.add(core);
+    const halo = new THREE.Sprite(haloMaterial);
+    halo.position.y = 0.12;
+    halo.scale.setScalar(0.55);
+    flame.add(halo);
     flame.userData.phase = Math.random() * 10;
+    flame.userData.lit = false;
+    flame.userData.ignite = 0; // grows 0..1 when the candle is lit
+    flame.visible = false;
     group.add(flame);
     flames.push(flame);
   }
@@ -486,12 +512,16 @@ export class GameScene {
 
   _buildDecorations() {
     const menorah = createMenorah();
-    menorah.group.position.set(-4.6, 0, -7.6);
+    menorah.group.position.copy(MENORAH_POSITION);
+    menorah.group.scale.setScalar(MENORAH_SCALE);
     this.scene.add(menorah.group);
     this.flames = menorah.flames;
+    this.candlesLit = 0;
+    this.miracle = false;
 
-    this.flameLight = new THREE.PointLight(0xffb45a, 6, 9, 1.6);
-    this.flameLight.position.set(-4.6, 2.7, -7.1);
+    // Warm glow that brightens as more candles are lit.
+    this.flameLight = new THREE.PointLight(0xffb45a, 0, 9, 1.6);
+    this.flameLight.position.set(MENORAH_POSITION.x, 2.7 * MENORAH_SCALE, MENORAH_POSITION.z + 0.5);
     this.scene.add(this.flameLight);
 
     // Every dreidel is a target: hitting one with a latke makes gelt rain down.
@@ -568,13 +598,21 @@ export class GameScene {
 
   // Decorative animation only; runs even while the game is paused.
   update(dt, elapsed) {
+    // Once every candle is lit (the bonus is active), the flames burn taller.
+    const boost = this.miracle ? 1.3 + 0.08 * Math.sin(elapsed * 4) : 1;
     for (const flame of this.flames) {
-      const phase = flame.userData.phase;
+      const data = flame.userData;
+      if (!data.lit) continue;
+      data.ignite = Math.min(1, data.ignite + dt * 2.5);
+      // Quick overshoot "pop" as the wick catches, then a steady flicker.
+      const grow = data.ignite < 1 ? Math.sin(data.ignite * Math.PI * 0.75) / Math.sin(Math.PI * 0.75) : 1;
+      const phase = data.phase;
       const flicker = 0.85 + 0.12 * Math.sin(elapsed * 13 + phase) + 0.06 * Math.sin(elapsed * 23 + phase * 2);
-      flame.scale.set(1, flicker, 1);
+      flame.scale.set(grow * boost, grow * flicker * boost, grow * boost);
       flame.rotation.z = 0.08 * Math.sin(elapsed * 7 + phase);
     }
-    this.flameLight.intensity = 5.5 + 0.8 * Math.sin(elapsed * 11) + 0.4 * Math.sin(elapsed * 27);
+    const glow = this.candlesLit * (0.7 + 0.1 * Math.sin(elapsed * 11) + 0.05 * Math.sin(elapsed * 27));
+    this.flameLight.intensity = glow * (this.miracle ? 1.4 : 1);
 
     for (const dreidel of this.dreidels) {
       const data = dreidel.userData;
@@ -589,6 +627,36 @@ export class GameScene {
       data.knock = Math.max(0, knock - dt * 0.6);
     }
     this.sparkles.material.uniforms.uTime.value = elapsed;
+  }
+
+  /**
+   * Lights the next menorah candle. Writes the new flame's world position into `out` and
+   * returns the number of candles now lit, or 0 if every candle was already lit.
+   */
+  lightNextCandle(out) {
+    if (this.candlesLit >= CANDLE_LIGHT_ORDER.length) return 0;
+    const flame = this.flames[CANDLE_LIGHT_ORDER[this.candlesLit]];
+    flame.userData.lit = true;
+    flame.userData.ignite = 0;
+    flame.scale.setScalar(0.001);
+    flame.visible = true;
+    this.candlesLit++;
+    flame.getWorldPosition(out);
+    return this.candlesLit;
+  }
+
+  setMiracle(active) {
+    this.miracle = active;
+  }
+
+  resetCandles() {
+    for (const flame of this.flames) {
+      flame.userData.lit = false;
+      flame.userData.ignite = 0;
+      flame.visible = false;
+    }
+    this.candlesLit = 0;
+    this.miracle = false;
   }
 
   knockDreidel(dreidel) {

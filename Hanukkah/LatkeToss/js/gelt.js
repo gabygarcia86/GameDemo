@@ -4,7 +4,7 @@ import { GELT, PHYSICS, POT } from './config.js';
 const STEP = 1 / 120;
 const PLATE = { x: 0, z: 3.2, radius: 0.6, height: 0.06 };
 const TABLE = { minX: -8, maxX: 8, minZ: -10.5, maxZ: 5 };
-const MENORAH = { x: -4.6, z: -7.6, radius: 1 };
+const MENORAH = { x: -2.9, z: -6.0, radius: 0.9 };
 
 let shared = null;
 

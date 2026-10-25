@@ -26,6 +26,7 @@ export class UI {
     this.banner = $('banner');
     this.popupLayer = $('popup-layer');
     this.pauseButton = $('btn-pause');
+    this.multiplierBadge = $('hud-mult');
     this.difficultyButtons = Array.from(document.querySelectorAll('.diff-btn'));
     this.muteButtons = Array.from(document.querySelectorAll('.mute-toggle'));
     this._lastTime = null;
@@ -87,6 +88,11 @@ export class UI {
       void this.scoreBox.offsetWidth;
       this.scoreBox.classList.add('bump');
     }
+  }
+
+  setMultiplier(multiplier) {
+    this.multiplierBadge.textContent = `${multiplier}\u00d7`;
+    this.multiplierBadge.classList.toggle('hidden', multiplier <= 1);
   }
 
   setBest(best) {

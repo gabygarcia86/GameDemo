@@ -152,8 +152,25 @@ body.can-grab #canvas-host canvas {
 }
 
 .hud-score {
+  position: relative;
   border-color: var(--panel-border);
   min-width: 110px;
+}
+
+/* "2x" badge shown on the score box while the menorah bonus is active. */
+.hud-mult {
+  position: absolute;
+  top: -9px;
+  right: -12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffe08a, var(--gold) 55%, var(--gold-deep));
+  color: var(--navy-800);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 16px;
+  box-shadow: 0 0 14px rgba(255, 200, 80, 0.9);
+  animation: pulse 0.7s ease-in-out infinite alternate;
 }
 
 .hud-score .hud-value {
@@ -270,6 +287,11 @@ body.can-grab #canvas-host canvas {
   text-shadow: 0 2px 0 var(--gold-deep), 0 0 16px rgba(255, 210, 90, 0.9);
 }
 
+.popup.double {
+  font-size: 42px;
+  color: #fff1b0;
+}
+
 .popup.miss {
   color: var(--silver);
   font-size: 22px;
@@ -291,6 +313,7 @@ body.can-grab #canvas-host canvas {
   font-weight: 900;
   font-size: clamp(40px, 9vw, 84px);
   letter-spacing: 0.04em;
+  white-space: nowrap;
   color: var(--white);
   text-shadow: 0 4px 0 var(--royal), 0 0 30px rgba(79, 125, 255, 0.9);
   pointer-events: none;

@@ -122,6 +122,13 @@ export const PARTICLES = {
   rippleSeconds: 0.7,
 };
 
+// Menorah bonus: every latke landed in the pot lights one candle. Once all nine are lit,
+// each further latke is worth `multiplier` points for the rest of the round.
+export const MENORAH = {
+  candles: 9,
+  multiplier: 2,
+};
+
 // Chocolate-coin shower triggered by hitting a dreidel with a latke.
 export const GELT = {
   coinsPerHit: 10,

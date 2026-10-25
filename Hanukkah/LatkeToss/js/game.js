@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { ROUND, PHYSICS, LAUNCH, LATKE, POT, DIFFICULTIES } from './config.js';
+import { ROUND, PHYSICS, LAUNCH, LATKE, POT, DIFFICULTIES, MENORAH } from './config.js';
 import { Pot } from './pot.js';
 import { LatkePool } from './latke.js';
 import { SplashEffects } from './particles.js';
@@ -187,6 +187,7 @@ const _launchRight = new THREE.Vector3();
 const _up = new THREE.Vector3(0, 1, 0);
 const _localHit = new THREE.Vector3();
 const _worldHit = new THREE.Vector3();
+const _candlePosition = new THREE.Vector3();
 const _screen = new THREE.Vector3();
 const _yawQuaternion = new THREE.Quaternion();
 const _tiltQuaternion = new THREE.Quaternion();
@@ -215,6 +216,7 @@ export class Game {
     this.pausedFrom = null;
     this.difficultyKey = loadDifficulty();
     this.score = 0;
+    this.multiplier = 1; // becomes MENORAH.multiplier once every candle is lit
     this.simTime = 0; // drives pot motion; advances in fixed steps
     this.roundElapsed = 0; // drives the countdown; only advances while PLAYING
     this.accumulator = 0;
@@ -385,6 +387,9 @@ export class Game {
     this.effects.clear();
     this.gelt.clear();
     this.gameScene.resetDreidels();
+    this.gameScene.resetCandles();
+    this.multiplier = 1;
+    this.ui.setMultiplier(1);
     this.pot.reset();
     this.aimVisuals.hide();
     this.score = 0;
@@ -515,7 +520,8 @@ export class Game {
     thrown.scored = true;
     this._resolve(thrown, LatkeState.SUCCESS);
     this._startFrying(thrown, localHit);
-    this.score += 1;
+    const points = this.multiplier;
+    this.score += points;
     this.ui.setScore(this.score, true);
 
     _worldHit.set(localHit.x, POT.oilHeight, localHit.z).add(this.potCurrent);
@@ -525,7 +531,23 @@ export class Game {
 
     const clean = !thrown.body.touchedPot;
     _worldHit.y += 0.6;
-    this._popupAt(_worldHit, clean ? '+1<small>Swish!</small>' : '+1');
+    this._popupAt(_worldHit, `+${points}${clean ? '<small>Swish!</small>' : ''}`, points > 1 ? 'double' : '');
+    this._lightCandle();
+  }
+
+  // Each landed latke lights one menorah candle; lighting the last one starts the bonus.
+  _lightCandle() {
+    const lit = this.gameScene.lightNextCandle(_candlePosition);
+    if (lit === 0) return;
+    this.effects.sparkleBurst(_candlePosition);
+    this.audio.play('candle', lit);
+    if (lit >= MENORAH.candles && this.multiplier === 1) {
+      this.multiplier = MENORAH.multiplier;
+      this.gameScene.setMiracle(true);
+      this.ui.setMultiplier(this.multiplier);
+      this.ui.showBanner(`${this.multiplier}\u00d7 Points!`, { gold: true, duration: 1800 });
+      setTimeout(() => this.audio.play('miracle'), 250);
+    }
   }
 
   _startFrying(thrown, localHit) {

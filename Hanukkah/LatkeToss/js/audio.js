@@ -15,6 +15,8 @@ export const AUDIO_FILES = {
   newBest: null,
   dreidel: null,
   coin: null,
+  candle: null,
+  miracle: null,
 };
 
 // Looping background music (paths relative to index.html). One gameplay track is picked at
@@ -230,7 +232,8 @@ export class AudioManager {
     return !!this.context && this.context.state !== 'closed' && !this.muted;
   }
 
-  play(name) {
+  /** Plays a named effect. `detail` is passed to the synth (e.g. which candle was lit). */
+  play(name, detail) {
     if (!this.ready) return;
     const sample = this.samples[name];
     if (sample) {
@@ -241,7 +244,7 @@ export class AudioManager {
       return;
     }
     const synth = this[`_${name}`];
-    if (synth) synth.call(this, this.context.currentTime);
+    if (synth) synth.call(this, this.context.currentTime, detail);
   }
 
   // ---- Synth building blocks ----
@@ -327,6 +330,28 @@ export class AudioManager {
     const base = 2200 + Math.random() * 900;
     this._tone(t, { type: 'triangle', from: base, duration: 0.09, peak: 0.08 });
     this._tone(t, { type: 'sine', from: base * 1.5, duration: 0.07, peak: 0.05 });
+  }
+
+  // Soft whoosh of a match plus a bell note that climbs with each candle lit (1..9).
+  _candle(t, count = 1) {
+    const scale = [587.3, 659.3, 698.5, 784, 880, 987.8, 1046.5, 1174.7, 1318.5];
+    const frequency = scale[Math.min(scale.length, Math.max(1, count)) - 1];
+    this._noise(t, { duration: 0.18, peak: 0.12, filter: 'lowpass', from: 1500, to: 400, q: 0.7, attack: 0.02 });
+    this._tone(t + 0.05, { type: 'sine', from: frequency, duration: 0.45, peak: 0.16 });
+    this._tone(t + 0.05, { type: 'triangle', from: frequency * 2, duration: 0.25, peak: 0.05 });
+  }
+
+  // Fanfare when the ninth candle is lit and double points begin.
+  _miracle(t) {
+    [587.3, 740, 880, 1174.7, 1480, 1760].forEach((frequency, i) => {
+      this._tone(t + i * 0.08, { type: 'triangle', from: frequency, duration: 0.4, peak: 0.14 });
+    });
+    this._tone(t + 0.5, { type: 'sine', from: 587.3, duration: 1.1, peak: 0.14 });
+    this._tone(t + 0.5, { type: 'sine', from: 880, duration: 1.1, peak: 0.1 });
+    this._tone(t + 0.5, { type: 'sine', from: 1174.7, duration: 1.1, peak: 0.08 });
+    for (let i = 0; i < 8; i++) {
+      this._tone(t + 0.5 + i * 0.07, { type: 'sine', from: 2000 + Math.random() * 1500, duration: 0.12, peak: 0.04 });
+    }
   }
 
   _tick(t) {

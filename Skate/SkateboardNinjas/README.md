@@ -6,7 +6,8 @@ dodge angry Karens to score as much as you can before time runs out.
 
 Plain HTML, CSS, and JavaScript (ES modules) on Canvas 2D. No build step, no
 dependencies, no external services. All art is drawn with code, and all sound
-is synthesized with the Web Audio API.
+is synthesized with the Web Audio API, except the run songs: each run plays a
+random track from `assets/music/` (the menu keeps its synthesized loop).
 
 ## Running it
 
@@ -160,7 +161,7 @@ SkateboardNinjas/
     ├── Karen.js          Karen behaviors
     ├── Particles.js      pooled particles + floating score text
     ├── HUD.js            DOM HUD and screens
-    ├── AudioManager.js   synthesized SFX + music loop
+    ├── AudioManager.js   synthesized SFX + menu loop, run songs
     ├── Renderer.js       camera, layering, overlays, debug view
     ├── rng.js, storage.js
     └── art/              ninja (IK-posed puppet), Karen, props, parallax city

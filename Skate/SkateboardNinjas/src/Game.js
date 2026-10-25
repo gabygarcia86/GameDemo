@@ -96,6 +96,16 @@ export class Game {
     const el = document.documentElement;
     if (!el.requestFullscreen && !el.webkitRequestFullscreen) document.getElementById('fullscreen-btn').hidden = true;
 
+    // Audio can only start after a user gesture; unlock on the first one so the
+    // menu music plays on the title screen without waiting for PLAY.
+    const unlock = () => {
+      this.audio.unlock();
+      window.removeEventListener('pointerdown', unlock, true);
+      window.removeEventListener('keydown', unlock, true);
+    };
+    window.addEventListener('pointerdown', unlock, true);
+    window.addEventListener('keydown', unlock, true);
+
     let pending = false;
     const onResize = () => {
       if (pending) return;
@@ -151,6 +161,7 @@ export class Game {
     this.input.clear();
     this.audio.quiet = true;
     this.audio.setLoops(0, false);
+    this.audio.stopSong();
     this.audio.resume();
     this.hud.setPlaying(false);
     this.hud.showScreen('title');
@@ -161,7 +172,7 @@ export class Game {
   newRun(mode) {
     this.audio.unlock();
     this.audio.quiet = false;
-    if (!this.audio.music.playing) this.audio.startMusic();
+    this.audio.playSong();
     this.mode = mode;
     const seed = mode === 'daily' ? dailySeed() : this.urlSeed !== null ? this.urlSeed : randomSeed();
     this.setupWorld(seed, false);
@@ -267,6 +278,9 @@ export class Game {
       if (steps >= P.maxStepsPerFrame) this.accumulator = 0; // device too slow: drop time rather than spiral
     }
 
+    // Menu music on the title and results screens, once any run song has finished.
+    const menu = this.state === 'title' || this.state === 'results';
+    if (menu && !this.audio.songActive && !this.audio.music.playing) this.audio.startMusic();
     this.audio.update();
     this.renderer.render(this, running ? this.accumulator / STEP : 1, running ? dt : 0);
     if (this.state !== 'title') this.hud.update(this, dt);
@@ -415,7 +429,6 @@ export class Game {
         const on = !(this.audio.sfxOn || this.audio.musicOn);
         this.audio.setSfx(on);
         this.audio.setMusic(on);
-        if (on && !this.audio.music.playing && this.state !== 'title') this.audio.startMusic();
         this.hud.setToggles(this.audio.sfxOn, this.audio.musicOn);
         break;
       }
@@ -432,7 +445,6 @@ export class Game {
   toggleMusic() {
     this.audio.unlock();
     this.audio.setMusic(!this.audio.musicOn);
-    if (this.audio.musicOn && !this.audio.music.playing) this.audio.startMusic();
     this.hud.setToggles(this.audio.sfxOn, this.audio.musicOn);
   }
 

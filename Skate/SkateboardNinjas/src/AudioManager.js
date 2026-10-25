@@ -1,6 +1,8 @@
-// All sound is synthesized with the Web Audio API: no audio files to load or
-// license. The context is created on the first user gesture (browser autoplay
-// rules), and SFX and music can be toggled separately.
+// SFX and the menu music are synthesized with the Web Audio API. During a run
+// a random song from assets/music plays instead (decoded into a buffer so it
+// shares the music bus, mute toggle and pause with everything else). The
+// context is created on the first user gesture (browser autoplay rules), and
+// SFX and music can be toggled separately.
 
 const midi = (n) => 440 * Math.pow(2, (n - 69) / 12);
 
@@ -10,6 +12,10 @@ const BASS_STEPS = [0, null, null, 0, null, null, 7, null, 12, null, null, 0, nu
 const KICK = new Set([0, 7, 10]);
 const BPM = 100;
 
+// Browsers can't list a folder, so the run songs are named here. Each is ~63 s:
+// the countdown plus the 60 s run.
+const SONGS = Array.from({ length: 10 }, (_, i) => `assets/music/Song${String(i + 1).padStart(2, '0')}.mp3`);
+
 export class AudioManager {
   constructor(storage) {
     this.storage = storage;
@@ -18,6 +24,11 @@ export class AudioManager {
     this.musicOn = storage.get('music', true);
     this.quiet = false; // silences SFX during the title-screen demo
     this.music = { playing: false, next: 0, step: 0 };
+    this.song = null; // { token, source } while a run song is loading or playing
+    this.songToken = 0;
+    this.songBuffers = new Map(); // index -> Promise<AudioBuffer>, current and next only
+    this.lastSong = -1;
+    this.nextSong = -1;
   }
 
   unlock() {
@@ -80,6 +91,8 @@ export class AudioManager {
     hum.connect(humGain).connect(this.grindGain);
     hum.start();
     this.grindGain.connect(this.sfx);
+
+    this.queueNextSong();
   }
 
   loopNoise(dest) {
@@ -262,6 +275,77 @@ export class AudioManager {
 
   stopMusic() {
     this.music.playing = false;
+  }
+
+  get songActive() {
+    return this.song !== null;
+  }
+
+  // Pick the next run song (never the one just played) and start decoding it
+  // so it's ready when PLAY is pressed.
+  queueNextSong() {
+    let i;
+    do i = Math.floor(Math.random() * SONGS.length);
+    while (SONGS.length > 1 && i === this.lastSong);
+    this.nextSong = i;
+    this.loadSong(i);
+  }
+
+  loadSong(i) {
+    if (!this.songBuffers.has(i)) {
+      const p = fetch(SONGS[i])
+        .then((r) => (r.ok ? r.arrayBuffer() : Promise.reject(new Error(`${r.status} ${SONGS[i]}`))))
+        .then((data) => this.ctx.decodeAudioData(data));
+      p.catch(() => this.songBuffers.delete(i)); // let a later run retry
+      this.songBuffers.set(i, p);
+    }
+    return this.songBuffers.get(i);
+  }
+
+  // Replace the menu music with a random song for one run. It plays once; when
+  // it ends songActive goes false and the game brings the menu music back.
+  playSong() {
+    if (!this.ctx) return;
+    this.stopSong();
+    this.stopMusic();
+    const i = this.nextSong >= 0 ? this.nextSong : Math.floor(Math.random() * SONGS.length);
+    this.lastSong = i;
+    for (const k of this.songBuffers.keys()) if (k !== i) this.songBuffers.delete(k);
+    const song = { token: ++this.songToken, source: null };
+    this.song = song;
+    const requested = this.ctx.currentTime;
+    this.loadSong(i).then(
+      (buffer) => {
+        if (this.song !== song) return;
+        // If decoding took a moment, skip ahead so the song still ends with the run.
+        const offset = this.ctx.currentTime - requested;
+        if (offset >= buffer.duration) return this.songEnded(song);
+        const src = this.ctx.createBufferSource();
+        src.buffer = buffer;
+        src.connect(this.musicBus);
+        src.onended = () => this.songEnded(song);
+        src.start(this.ctx.currentTime + 0.02, offset);
+        song.source = src;
+      },
+      () => this.songEnded(song) // missing file: fall back to the menu music
+    );
+    this.queueNextSong();
+  }
+
+  songEnded(song) {
+    if (this.song === song) this.song = null;
+  }
+
+  stopSong() {
+    const song = this.song;
+    if (!song) return;
+    this.song = null;
+    if (song.source) {
+      song.source.onended = null;
+      try {
+        song.source.stop();
+      } catch {}
+    }
   }
 
   // Look-ahead scheduler; call every frame.

@@ -121,3 +121,27 @@ export const PARTICLES = {
   // Expanding ripple ring duration, seconds.
   rippleSeconds: 0.7,
 };
+
+// Chocolate-coin shower triggered by hitting a dreidel with a latke.
+export const GELT = {
+  coinsPerHit: 10,
+  // Coins on screen at once; older coins are recycled when a new shower needs room.
+  poolSize: 40,
+  radius: 0.15,
+  thickness: 0.035,
+  // Height coins start falling from (above the top of the view).
+  spawnHeight: 8,
+  // Coins in one shower are released over this many seconds.
+  spreadSeconds: 0.7,
+  // How long a landed coin stays on the table before shrinking away.
+  lingerSeconds: 8,
+  restitution: 0.38,
+};
+
+// Dreidel hit volume, as an upright cylinder from the table to the top of the handle,
+// before each dreidel's own scale is applied.
+export const DREIDEL = {
+  radius: 0.36,
+  height: 1.05,
+  restitution: 0.4,
+};

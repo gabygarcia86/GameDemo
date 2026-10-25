@@ -264,6 +264,12 @@ body.can-grab #canvas-host canvas {
   text-align: center;
 }
 
+.popup.gelt {
+  color: #fff1b0;
+  font-size: 28px;
+  text-shadow: 0 2px 0 var(--gold-deep), 0 0 16px rgba(255, 210, 90, 0.9);
+}
+
 .popup.miss {
   color: var(--silver);
   font-size: 22px;

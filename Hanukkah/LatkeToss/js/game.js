@@ -3,9 +3,11 @@ import { ROUND, PHYSICS, LAUNCH, LATKE, POT, DIFFICULTIES } from './config.js';
 import { Pot } from './pot.js';
 import { LatkePool } from './latke.js';
 import { SplashEffects } from './particles.js';
+import { GeltShower } from './gelt.js';
 import { AimController } from './controls.js';
 import {
   LatkeBody, LatkeState, CollisionResult, stepBody, simulateTrajectory, collideWithPot, collideWithTable,
+  collideWithDreidel,
 } from './physics.js';
 
 export const GameState = Object.freeze({
@@ -176,6 +178,7 @@ class ThrownLatke {
     this.active = false;
     this.scored = false;
     this.lastClank = -1;
+    this.hitDreidels = new Set(); // each dreidel rains gelt once per latke
   }
 }
 
@@ -200,6 +203,7 @@ export class Game {
     this.pot = new Pot(this.scene);
     this.pool = new LatkePool(this.scene);
     this.effects = new SplashEffects(this.scene);
+    this.gelt = new GeltShower(this.scene, this.audio, gameScene.dreidels);
     this.aimVisuals = new AimVisuals(this.scene);
     this.scores = new ScoreStore();
 
@@ -379,6 +383,8 @@ export class Game {
     this.current = null;
     this.inFlight = null;
     this.effects.clear();
+    this.gelt.clear();
+    this.gameScene.resetDreidels();
     this.pot.reset();
     this.aimVisuals.hide();
     this.score = 0;
@@ -424,6 +430,7 @@ export class Game {
     thrown.fade = 0;
     thrown.scored = false;
     thrown.lastClank = -1;
+    thrown.hitDreidels.clear();
     // Random resting yaw shows a different side of the irregular outline each time.
     thrown.restQuaternion.setFromAxisAngle(_up, Math.random() * Math.PI * 2);
     thrown.body.reset(REST_POSITION, thrown.restQuaternion);
@@ -537,6 +544,17 @@ export class Game {
     }
   }
 
+  _registerDreidelHit(dreidel) {
+    this.gameScene.knockDreidel(dreidel);
+    this.gelt.rain();
+    _worldHit.copy(dreidel.position);
+    _worldHit.y += dreidel.userData.hitHeight;
+    this.effects.sparkleBurst(_worldHit);
+    this.audio.play('dreidel');
+    _worldHit.y += 0.4;
+    this._popupAt(_worldHit, 'Gelt!', 'gelt');
+  }
+
   _popupAt(world, html, className) {
     _screen.copy(world).project(this.camera);
     if (_screen.z > 1) return;
@@ -598,6 +616,13 @@ export class Game {
       if (thrown.lastClank < 0 || this.simTime - thrown.lastClank > 0.25) {
         this.audio.play('rim');
         thrown.lastClank = this.simTime;
+      }
+    }
+
+    for (const dreidel of this.gameScene.dreidels) {
+      if (collideWithDreidel(body, dreidel) && !thrown.hitDreidels.has(dreidel)) {
+        thrown.hitDreidels.add(dreidel);
+        this._registerDreidelHit(dreidel);
       }
     }
 
@@ -728,6 +753,7 @@ export class Game {
     this.pot.setTime(this.simTime - h * (1 - alpha));
     this.pot.update(dt);
     this.effects.update(dt);
+    this.gelt.update(dt, this.pot.group.position);
     this._renderLatkes(alpha, dt);
   }
 

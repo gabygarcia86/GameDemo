@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { createGeltMesh } from './gelt.js';
+import { DREIDEL } from './config.js';
 
 // Camera framing. The camera sits behind the player's plate, looking slightly down the
 // table so the pot opening, the latke, and the space between them all stay in view.
@@ -321,13 +323,6 @@ function createMenorah() {
   return { group, flames };
 }
 
-function createGelt(material) {
-  const coin = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.035, 24), material);
-  coin.castShadow = true;
-  coin.receiveShadow = true;
-  return coin;
-}
-
 // Twinkling background sparkles drawn as a single Points object.
 function createSparkles(count) {
   const positions = new Float32Array(count * 3);
@@ -499,25 +494,32 @@ export class GameScene {
     this.flameLight.position.set(-4.6, 2.7, -7.1);
     this.scene.add(this.flameLight);
 
+    // Every dreidel is a target: hitting one with a latke makes gelt rain down.
+    // The two larger ones sit in front of and behind the pot, within throwing range.
     this.dreidels = [];
     const dreidelSpecs = [
-      { color: '#2f62e6', letter: '#ffffff', position: [4.4, 0, -6.4], spin: 2.6 },
-      { color: '#e9eef9', letter: '#16307f', position: [5.6, 0, -1.6], spin: -1.8 },
-      { color: '#f2c14e', letter: '#16307f', position: [-5.4, 0, 0.6], spin: 2.1 },
+      { color: '#2f62e6', letter: '#ffffff', position: [4.4, 0, -6.4], spin: 2.6, scale: 1 },
+      { color: '#e9eef9', letter: '#16307f', position: [5.6, 0, -1.6], spin: -1.8, scale: 1 },
+      { color: '#f2c14e', letter: '#16307f', position: [-5.4, 0, 0.6], spin: 2.1, scale: 1 },
+      { color: '#e9eef9', letter: '#2f62e6', position: [1.7, 0, -6.6], spin: -2.3, scale: 1.25 },
+      { color: '#2f62e6', letter: '#f2c14e', position: [-1.3, 0, 0.3], spin: 1.9, scale: 1.25 },
     ];
     for (const spec of dreidelSpecs) {
       const dreidel = createDreidel(spec.color, spec.letter);
       dreidel.position.set(...spec.position);
+      dreidel.scale.setScalar(spec.scale);
       dreidel.userData.spin = spec.spin;
       dreidel.userData.phase = Math.random() * 6;
+      dreidel.userData.hitRadius = DREIDEL.radius * spec.scale;
+      dreidel.userData.hitHeight = DREIDEL.height * spec.scale;
+      dreidel.userData.knock = 0; // 1 right after a hit, decaying to 0
       this.scene.add(dreidel);
       this.dreidels.push(dreidel);
     }
 
-    const geltMaterial = new THREE.MeshStandardMaterial({ color: 0xf2c14e, roughness: 0.25, metalness: 0.95 });
     const geltSpots = [[3.2, 1.2, 0.3], [3.55, 1.0, 1.4], [3.0, 1.7, 2.2], [-3.4, 1.9, 0.9], [-3.8, 2.6, 2.4]];
     for (const [x, z, angle] of geltSpots) {
-      const coin = createGelt(geltMaterial);
+      const coin = createGeltMesh();
       coin.position.set(x, 0.02, z);
       coin.rotation.set(0.05, angle, 0.04);
       this.scene.add(coin);
@@ -575,12 +577,29 @@ export class GameScene {
     this.flameLight.intensity = 5.5 + 0.8 * Math.sin(elapsed * 11) + 0.4 * Math.sin(elapsed * 27);
 
     for (const dreidel of this.dreidels) {
-      dreidel.rotation.y += dreidel.userData.spin * dt;
-      const wobble = 0.06 + 0.03 * Math.sin(elapsed * 0.7 + dreidel.userData.phase);
-      dreidel.rotation.x = wobble * Math.sin(elapsed * 3 + dreidel.userData.phase);
-      dreidel.rotation.z = wobble * Math.cos(elapsed * 3 + dreidel.userData.phase);
+      const data = dreidel.userData;
+      // A knocked dreidel spins faster, wobbles hard and hops, then settles back down.
+      const knock = data.knock;
+      dreidel.rotation.y += data.spin * (1 + knock * 5) * dt;
+      const wobble = 0.06 + 0.03 * Math.sin(elapsed * 0.7 + data.phase) + knock * 0.35;
+      const wobbleRate = 3 + knock * 6;
+      dreidel.rotation.x = wobble * Math.sin(elapsed * wobbleRate + data.phase);
+      dreidel.rotation.z = wobble * Math.cos(elapsed * wobbleRate + data.phase);
+      dreidel.position.y = Math.max(0, Math.sin(Math.min(1, (1 - knock) * 3) * Math.PI)) * 0.25 * (knock > 0 ? 1 : 0);
+      data.knock = Math.max(0, knock - dt * 0.6);
     }
     this.sparkles.material.uniforms.uTime.value = elapsed;
+  }
+
+  knockDreidel(dreidel) {
+    dreidel.userData.knock = 1;
+  }
+
+  resetDreidels() {
+    for (const dreidel of this.dreidels) {
+      dreidel.userData.knock = 0;
+      dreidel.position.y = 0;
+    }
   }
 
   render() {

@@ -15,8 +15,9 @@ Built with plain HTML, CSS, JavaScript ES modules and [Three.js](https://threejs
    - The drag direction sets where the latke heads. The drag length sets how far it flies.
    - A dotted arc previews the throw. Medium and Hard show only part of the arc.
    - A tiny drag, or a drag pointing back toward you, cancels the throw.
-4. A latke scores only if it drops **through the pot opening**. Hitting the rim or the outside wall does not count. A clean entry without touching the rim shows "Swish!".
-5. **Pause** with the ⏸ button, `Esc` or `P`. ↻ restarts the round and 🔊 toggles sound.
+4. Hit any **dreidel** with a latke to knock it spinning and make about 10 gold coins (gelt) rain down onto the table. One dreidel sits in front of the pot and one behind it. Gelt is just for fun and doesn't change your score.
+5. A latke scores only if it drops **through the pot opening**. Hitting the rim or the outside wall does not count. A clean entry without touching the rim shows "Swish!".
+6. **Pause** with the ⏸ button, `Esc` or `P`. ↻ restarts the round and 🔊 toggles sound.
 
 Best scores are saved separately for each difficulty in `localStorage`. If storage is blocked, they last for the current session only.
 
@@ -72,6 +73,8 @@ All gameplay numbers live in [`js/config.js`](js/config.js).
 | Splash size | `PARTICLES.splashDroplets`, `splashSparkles` | Droplets and sparkles per hit. |
 | Splash duration | `PARTICLES.dropletLifeMin`, `dropletLifeMax`, `rippleSeconds` | Seconds. |
 | Particle pools | `PARTICLES.dropletPoolSize`, `sparklePoolSize` | Upper limit on live particles. When a pool is full, the oldest particles are reused. |
+| Gelt shower | `GELT.coinsPerHit`, `spreadSeconds`, `lingerSeconds`, `poolSize` | Coins per dreidel hit, how spread out the shower is, how long coins stay on the table, and the most coins on screen at once. |
+| Dreidel hit size | `DREIDEL.radius`, `DREIDEL.height` | Collision cylinder before each dreidel's scale. Dreidel positions and sizes are in `dreidelSpecs` in `js/scene.js`. |
 
 Pot motion is a pure function of round time: `x(t) = center.x + amplitude.x · sin(speed.x · t + phase.x)`, and the same for y and z. That makes it smooth, deterministic and independent of frame rate. Restarting resets `t` to 0.
 
@@ -91,7 +94,7 @@ Sounds are synthesized with the Web Audio API, so no files are needed. To use yo
 1. Create an `audio/` folder next to `index.html` and add your files (`.mp3`, `.ogg` or `.wav`).
 2. In [`js/audio.js`](js/audio.js), fill in the paths in `AUDIO_FILES`, for example `splash: './audio/sizzle.mp3'`.
 
-Files load after the first click or tap, because browsers only allow audio after a user gesture. Any sound whose file is missing or fails to decode falls back to its synthesized version. The available hooks are `launch`, `splash`, `miss`, `rim`, `click`, `tick`, `go`, `gameOver` and `newBest`.
+Files load after the first click or tap, because browsers only allow audio after a user gesture. Any sound whose file is missing or fails to decode falls back to its synthesized version. The available hooks are `launch`, `splash`, `miss`, `rim`, `click`, `tick`, `go`, `gameOver`, `newBest`, `dreidel` and `coin`.
 
 ## Project structure
 
@@ -107,6 +110,7 @@ LatkeToss/
 │   ├── pot.js        Cast-iron pot, oil shader, bubbles, ripples, motion paths, depth cues
 │   ├── physics.js    Latke rigid-body state, integrator, trajectory prediction, collisions
 │   ├── particles.js  Pooled point-particle systems for oil splashes and sparkles
+│   ├── gelt.js       Gelt coin model and the pooled coin shower from dreidel hits
 │   ├── controls.js   Pointer Events drag-to-aim and perspective-correct launch mapping
 │   ├── game.js       State machine (MENU/READY/PLAYING/PAUSED/GAME_OVER), scoring, round flow
 │   ├── ui.js         DOM overlay helpers

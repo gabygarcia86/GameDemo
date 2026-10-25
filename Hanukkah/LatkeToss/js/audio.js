@@ -13,6 +13,8 @@ export const AUDIO_FILES = {
   go: null,
   gameOver: null,
   newBest: null,
+  dreidel: null,
+  coin: null,
 };
 
 // Looping background music (paths relative to index.html). One gameplay track is picked at
@@ -310,6 +312,21 @@ export class AudioManager {
     this._tone(t, { type: 'triangle', from: 520, duration: 0.3, peak: 0.2 });
     this._tone(t, { type: 'triangle', from: 793, duration: 0.25, peak: 0.12 });
     this._noise(t, { duration: 0.05, peak: 0.15, filter: 'highpass', from: 3000 });
+  }
+
+  _dreidel(t) {
+    // Wooden knock followed by a bright rising sparkle.
+    this._tone(t, { type: 'sine', from: 420, to: 260, duration: 0.09, peak: 0.35 });
+    this._noise(t, { duration: 0.05, peak: 0.2, filter: 'bandpass', from: 1800, q: 3 });
+    [1318.5, 1568, 1975.5, 2637].forEach((frequency, i) => {
+      this._tone(t + 0.06 + i * 0.06, { type: 'triangle', from: frequency, duration: 0.22, peak: 0.1 });
+    });
+  }
+
+  _coin(t) {
+    const base = 2200 + Math.random() * 900;
+    this._tone(t, { type: 'triangle', from: base, duration: 0.09, peak: 0.08 });
+    this._tone(t, { type: 'sine', from: base * 1.5, duration: 0.07, peak: 0.05 });
   }
 
   _tick(t) {

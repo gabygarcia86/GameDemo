@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { PHYSICS, POT, LATKE } from './config.js';
+import { PHYSICS, POT, LATKE, DREIDEL } from './config.js';
 
 export const LatkeState = Object.freeze({
   INACTIVE: 'inactive',
@@ -199,6 +199,35 @@ export function collideWithPot(body, potPrevious, potCurrent, allowScoring, outL
     }
   }
   return CollisionResult.NONE;
+}
+
+/**
+ * Latke vs. dreidel, treating the dreidel as an upright cylinder (hitRadius, hitHeight in
+ * its userData). On contact the latke is pushed out and bounced off. Returns true on hit.
+ */
+export function collideWithDreidel(body, dreidel) {
+  const p = body.position;
+  const data = dreidel.userData;
+  if (p.y > data.hitHeight + LATKE.thickness || p.y < -LATKE.thickness) return false;
+  const dx = p.x - dreidel.position.x;
+  const dz = p.z - dreidel.position.z;
+  const reach = data.hitRadius + LATKE.radius * 0.6;
+  const distance = Math.hypot(dx, dz);
+  if (distance >= reach) return false;
+
+  const nx = distance > 1e-5 ? dx / distance : 0;
+  const nz = distance > 1e-5 ? dz / distance : 1;
+  p.x = dreidel.position.x + nx * reach;
+  p.z = dreidel.position.z + nz * reach;
+  const radialVelocity = body.velocity.x * nx + body.velocity.z * nz;
+  if (radialVelocity < 0) {
+    body.velocity.x -= (1 + DREIDEL.restitution) * radialVelocity * nx;
+    body.velocity.z -= (1 + DREIDEL.restitution) * radialVelocity * nz;
+  }
+  body.velocity.x *= 0.8;
+  body.velocity.z *= 0.8;
+  body.angularVelocity.multiplyScalar(0.7);
+  return true;
 }
 
 /**

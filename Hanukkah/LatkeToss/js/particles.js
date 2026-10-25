@@ -211,6 +211,20 @@ export class SplashEffects {
     }
   }
 
+  /** Burst of gold and white sparkles, used when a dreidel is hit. */
+  sparkleBurst(position) {
+    for (let i = 0; i < 24; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const horizontal = 0.6 + Math.random() * 1.6;
+      this.sparkles.emit(
+        position.x, position.y, position.z,
+        Math.cos(angle) * horizontal, 0.8 + Math.random() * 2.4, Math.sin(angle) * horizontal,
+        0.18 + Math.random() * 0.18, 0.5 + Math.random() * 0.4,
+        SPARKLE_COLORS[Math.floor(Math.random() * SPARKLE_COLORS.length)], 2,
+      );
+    }
+  }
+
   /** Small dusty puff of crumbs when a latke slaps the table. */
   thud(position) {
     for (let i = 0; i < 6; i++) {

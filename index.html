@@ -12,43 +12,89 @@
             href="icon/icon-256.png">
         <link rel="apple-touch-icon" sizes="256x256" href="icon/icon-256.png">
         <title>Gaby's Game Demos</title>
+        <style>
+            [hidden] {
+                display: none !important;
+            }
+
+            #pin-gate {
+                margin: 4rem auto;
+                max-width: 20rem;
+                padding: 1.5rem;
+                text-align: center;
+            }
+        </style>
     </head>
     <body>
-        <center><h1>Gaby's Game Demos</h1></center>
-        <h2>Halloween Game Demos</h2>
-        <form action="./Halloween/index.html">
-            <button type="submit">Halloween Games</button>
-        </form>
-        <p>Various Halloween-themed games and activities.</p>
-        <br>
-        <br>
-        <h2>Skate Game Demos</h2>
-        <form action="./Skate/index.html">
-            <button type="submit">Skate Games</button>
-        </form>
-        <p>Various skate-themed games and activities.</p>
-        <br>
-        <br>
-        <h2>Hanukkah Game Demos</h2>
-        <form action="./Hanukkah/index.html">
-            <button type="submit">Hanukkah Games</button>
-        </form>
-        <p>Various hanukkah-themed games and activities.</p>
-        <br>
-        <br>
-        <h2>Easter Game Demos</h2>
-        <form action="./Easter/index.html">
-            <button type="submit">Easter Games</button>
-        </form>
-        <p>Various easter-themed games and activities.</p>
-        <br>
-        <br>
-        <h2>Random Game Demos</h2>
-        <form action="./Random/index.html">
-            <button type="submit">Random Games</button>
-        </form>
-        <p>Various random games and activities.</p>
-        <br>
-        <br>
+        <main id="pin-gate">
+            <h1>Enter PIN to continue</h1>
+            <form id="pin-form">
+                <label for="pin">PIN code</label>
+                <input id="pin" name="pin" type="password" inputmode="numeric"
+                    pattern="[0-9]{4}" maxlength="4" autocomplete="off"
+                    required autofocus>
+                <button type="submit">Continue</button>
+                <p id="pin-error" role="alert" hidden>Incorrect PIN. Please try again.</p>
+            </form>
+        </main>
+        <main id="page-content" hidden>
+            <center><h1 tabindex="-1">Gaby's Game Demos</h1></center>
+            <h2>Halloween Game Demos</h2>
+            <form action="./Halloween/index.html">
+                <button type="submit">Halloween Games</button>
+            </form>
+            <p>Various Halloween-themed games and activities.</p>
+            <br>
+            <br>
+            <h2>Skate Game Demos</h2>
+            <form action="./Skate/index.html">
+                <button type="submit">Skate Games</button>
+            </form>
+            <p>Various skate-themed games and activities.</p>
+            <br>
+            <br>
+            <h2>Hanukkah Game Demos</h2>
+            <form action="./Hanukkah/index.html">
+                <button type="submit">Hanukkah Games</button>
+            </form>
+            <p>Various hanukkah-themed games and activities.</p>
+            <br>
+            <br>
+            <h2>Easter Game Demos</h2>
+            <form action="./Easter/index.html">
+                <button type="submit">Easter Games</button>
+            </form>
+            <p>Various easter-themed games and activities.</p>
+            <br>
+            <br>
+            <h2>Random Game Demos</h2>
+            <form action="./Random/index.html">
+                <button type="submit">Random Games</button>
+            </form>
+            <p>Various random games and activities.</p>
+            <br>
+            <br>
+        </main>
+        <script>
+            const pinForm = document.getElementById("pin-form");
+            const pinInput = document.getElementById("pin");
+            const pinError = document.getElementById("pin-error");
+            const pinGate = document.getElementById("pin-gate");
+            const pageContent = document.getElementById("page-content");
+
+            pinForm.addEventListener("submit", (event) => {
+                event.preventDefault();
+
+                if (pinInput.value === "1644") {
+                    pinGate.hidden = true;
+                    pageContent.hidden = false;
+                    pageContent.querySelector("h1").focus();
+                    return;
+                }
+
+                pinError.hidden = false;
+                pinInput.select();
+            });
+        </script>
     </body>
 </html>

@@ -108,7 +108,7 @@ button:focus-visible, summary:focus-visible, a:focus-visible { outline: 3px soli
 .hud-time.hurry { border-color: var(--red); animation: pulse 0.5s ease-in-out infinite alternate; }
 .hud-time.hurry .hud-value { color: var(--red); }
 
-.hud-right { display: flex; gap: 8px; align-items: flex-start; }
+.hud-right { display: flex; gap: 8px; align-items: flex-start; margin-left: auto; }
 .hud-best .hud-value { color: var(--cyan); font-size: clamp(14px, 2.4vw, 20px); }
 
 .pause-btn {
@@ -545,4 +545,19 @@ button:focus-visible, summary:focus-visible, a:focus-visible { outline: 3px soli
 
 @media (orientation: portrait) and (max-width: 760px) {
   .rotate-hint { display: block; }
+}
+
+/* Portrait: time on the left and score + pause pinned top right, with the
+   combo meter on its own row underneath and trick names below that. */
+@media (orientation: portrait) {
+  .hud { flex-wrap: wrap; row-gap: 10px; }
+  .combo { order: 3; flex: 1 0 100%; max-width: none; }
+  .combo-chain { font-size: 13px; }
+  .announce { top: clamp(190px, 30%, 280px); }
+  .hud-best { display: flex; } /* the combo has its own row, so BEST fits */
+}
+
+@media (orientation: portrait) and (max-width: 400px) {
+  .hud-right { gap: 6px; }
+  .hud-box { min-width: 60px; padding: 3px 8px 4px; }
 }

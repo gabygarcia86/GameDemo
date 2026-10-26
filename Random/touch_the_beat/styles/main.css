@@ -606,10 +606,26 @@ body.reduced-motion .logo-eq i {
   max-height: 62%;
 }
 
-.song-wave {
-  width: 100%;
-  height: 34px;
-  display: block;
+.detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.detail-head > div {
+  min-width: 0;
+}
+
+.detail-length {
+  flex: none;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+  font-family: var(--display);
+  font-size: 0.82rem;
+  font-weight: 700;
 }
 
 .detail-head h3 {
@@ -625,115 +641,67 @@ body.reduced-motion .logo-eq i {
   color: var(--muted);
 }
 
-.detail-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-  margin: 0;
-}
-
-.detail-stats div {
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 10px;
-  padding: 5px 8px;
-}
-
-.detail-stats dt {
-  font-size: 0.65rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.detail-stats dd {
-  margin: 0;
-  font-family: var(--display);
-  font-size: 0.82rem;
-  font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.confidence-head {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.82rem;
-  color: var(--muted);
-}
-
-.confidence-head strong {
-  color: var(--text);
-  font-family: var(--display);
-  font-size: 0.78rem;
-}
-
-.meter {
-  height: 6px;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.08);
-  overflow: hidden;
-  margin-top: 4px;
-}
-
-.meter i {
-  display: block;
-  height: 100%;
-  width: 0;
-  background: var(--lime);
-  box-shadow: 0 0 8px currentColor;
-  border-radius: 3px;
-  transition: width 0.4s ease;
-}
-
-.confidence-parts {
-  margin: 4px 0 0;
-  font-size: 0.72rem;
-  color: var(--muted);
-}
-
 .difficulty-tabs {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
+  gap: 8px;
 }
 
+/* each difficulty keeps its colour so the choice reads at a glance */
 .difficulty-tabs button {
-  border: 1.5px solid var(--line);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.03);
-  padding: 7px 4px;
-  min-height: 52px;
+  --diff: var(--cyan);
+  --diff-rgb: 0, 240, 255;
+  border: 2px solid rgba(var(--diff-rgb), 0.35);
+  border-radius: 14px;
+  background: rgba(var(--diff-rgb), 0.06);
+  color: var(--diff);
+  padding: 10px 4px;
+  min-height: 64px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  justify-content: center;
+  gap: 3px;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+}
+
+.difficulty-tabs button[data-diff='easy'] {
+  --diff: var(--lime);
+  --diff-rgb: 182, 255, 26;
+}
+
+.difficulty-tabs button[data-diff='hard'] {
+  --diff: var(--magenta);
+  --diff-rgb: 255, 43, 214;
 }
 
 .difficulty-tabs button span {
   font-family: var(--display);
-  font-size: 0.75rem;
+  font-size: 1rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .difficulty-tabs button small {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   color: var(--muted);
 }
 
-.difficulty-tabs button[aria-checked='true'][data-diff='easy'] {
-  border-color: var(--lime);
-  box-shadow: 0 0 14px rgba(182, 255, 26, 0.35);
+.difficulty-tabs button[aria-checked='true'] {
+  border-color: var(--diff);
+  background: rgba(var(--diff-rgb), 0.2);
+  box-shadow: 0 0 18px rgba(var(--diff-rgb), 0.45), inset 0 0 12px rgba(var(--diff-rgb), 0.2);
+  transform: translateY(-1px);
 }
-.difficulty-tabs button[aria-checked='true'][data-diff='normal'] {
-  border-color: var(--cyan);
-  box-shadow: 0 0 14px rgba(0, 240, 255, 0.35);
+
+.difficulty-tabs button[aria-checked='true'] span {
+  color: #fff;
+  text-shadow: 0 0 10px var(--diff);
 }
-.difficulty-tabs button[aria-checked='true'][data-diff='hard'] {
-  border-color: var(--magenta);
-  box-shadow: 0 0 14px rgba(255, 43, 214, 0.4);
+
+.difficulty-tabs button[aria-checked='true'] small {
+  color: var(--text);
 }
 
 .detail-best {
@@ -782,12 +750,6 @@ body.reduced-motion .logo-eq i {
   .song-detail {
     gap: 5px;
     padding: 8px 10px;
-  }
-  .song-wave {
-    display: none;
-  }
-  .confidence-parts {
-    display: none;
   }
 }
 

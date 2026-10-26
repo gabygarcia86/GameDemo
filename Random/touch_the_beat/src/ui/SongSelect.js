@@ -7,14 +7,6 @@ import { compareText, formatDuration } from '../library/songMeta.js';
 import { bestScore } from '../util/Settings.js';
 import { $, $$, closeModal, downloadJson, el, messageBox, openModal, toast } from '../util/dom.js';
 
-const SOURCE_LABEL = { builtin: 'Built-in', imported: 'This device', procedural: 'Procedural' };
-
-function confidenceLabel(v) {
-  if (v >= 0.7) return 'High';
-  if (v >= 0.45) return 'Medium';
-  return 'Low';
-}
-
 export class SongSelect {
   constructor(app) {
     this.app = app;
@@ -59,7 +51,6 @@ export class SongSelect {
     });
     this.bindCompileDialog();
     document.addEventListener('keydown', (e) => this.onKey(e));
-    window.addEventListener('resize', () => this.app.ui.current === 'songs' && this.drawWave());
   }
 
   get song() {
@@ -176,15 +167,7 @@ export class SongSelect {
     $('#detail-title').textContent = s.title;
     $('#detail-artist').textContent = s.artist;
     $('#detail-duration').textContent = formatDuration(s.duration);
-    $('#detail-bpm').textContent = s.bpm ? s.bpm.toFixed(1) : '—';
-    $('#detail-meter').textContent = `${s.beatsPerBar || 4}/4`;
-    $('#detail-source').textContent = SOURCE_LABEL[s.source] || s.source;
     const c = s.confidence || { overall: 0 };
-    $('#detail-confidence').textContent = `${confidenceLabel(c.overall)} · ${Math.round(c.overall * 100)}%`;
-    $('#detail-confidence-bar').style.width = `${Math.round(c.overall * 100)}%`;
-    $('#detail-confidence-bar').style.background = c.overall >= 0.7 ? 'var(--lime)' : c.overall >= 0.45 ? '#ffd23f' : 'var(--danger)';
-    $('#detail-confidence-parts').textContent =
-      c.tempo !== undefined ? `tempo ${Math.round(c.tempo * 100)}% · beats ${Math.round(c.beat * 100)}% · grid ${Math.round(c.grid * 100)}% · downbeat ${Math.round(c.downbeat * 100)}%` : '';
 
     for (const b of $$('#difficulty-tabs button')) {
       const d = b.dataset.diff;
@@ -206,37 +189,6 @@ export class SongSelect {
     $('#btn-delete').hidden = s.source !== 'imported';
     $('#btn-compile').textContent = s.recompiled ? 'Recompile… (custom)' : 'Recompile…';
     this.updatePreviewButton();
-    this.drawWave();
-  }
-
-  drawWave() {
-    const s = this.song;
-    const c = $('#song-wave');
-    if (!s || !c.offsetWidth) return;
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    c.width = c.offsetWidth * dpr;
-    c.height = c.offsetHeight * dpr;
-    const g = c.getContext('2d');
-    g.scale(dpr, dpr);
-    const w = c.offsetWidth;
-    const h = c.offsetHeight;
-    const wave = s.waveform || [];
-    const grad = g.createLinearGradient(0, 0, w, 0);
-    grad.addColorStop(0, LANES[0].color);
-    grad.addColorStop(0.5, LANES[1].color);
-    grad.addColorStop(1, LANES[3].color);
-    g.fillStyle = grad;
-    const n = wave.length || 1;
-    const bw = w / n;
-    for (let i = 0; i < wave.length; i++) {
-      const v = Math.max(0.04, wave[i]) * h * 0.48;
-      g.fillRect(i * bw, h / 2 - v, Math.max(1, bw - 1), v * 2);
-    }
-    const p = this.previewProgress();
-    if (p >= 0) {
-      g.fillStyle = 'rgba(255,255,255,0.9)';
-      g.fillRect(p * w, 0, 2, h);
-    }
   }
 
   play() {
@@ -295,7 +247,6 @@ export class SongSelect {
         this.preview = { el: audio, url: url.startsWith('blob:') ? url : null, song: s, source: null };
       }
       this.updatePreviewButton();
-      this.tickPreview();
     } catch (err) {
       this.stopPreview();
       toast(err.message || 'Preview failed', { kind: 'error' });
@@ -333,18 +284,6 @@ export class SongSelect {
     if (p.el) return p.el.currentTime;
     if (p.source) return this.app.audio.ctx.currentTime - p.startedAt + p.offset;
     return -1;
-  }
-
-  previewProgress() {
-    const t = this.previewTime();
-    const s = this.preview.song;
-    return t >= 0 && s ? Math.min(1, t / s.duration) : -1;
-  }
-
-  tickPreview() {
-    if (!this.preview.song) return;
-    this.drawWave();
-    setTimeout(() => this.tickPreview(), 250);
   }
 
   /** Data for the menu background visuals. */

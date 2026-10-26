@@ -409,9 +409,21 @@ body.reduced-motion .logo-eq i {
 .menu-foot {
   margin-top: 18px;
   display: flex;
-  gap: 18px;
+  flex-direction: column;
+  gap: 10px;
   align-items: center;
   font-size: 0.9rem;
+}
+
+.menu-foot p {
+  margin: 0;
+  text-align: center;
+}
+
+.menu-foot-actions {
+  display: flex;
+  gap: 18px;
+  align-items: center;
 }
 
 .menu-foot a {

@@ -18,7 +18,7 @@ import { validateChart } from './ChartValidator.js';
 import { ANALYZER_VERSION, loudnessBetween, loudnessVariation } from '../audio/AudioAnalyzer.js';
 
 export const GENERATOR_NAME = 'touch-the-beat-chartgen';
-export const GENERATOR_VERSION = '1.0.0';
+export const GENERATOR_VERSION = '1.1.0';
 
 const SILENCE = 0.1;
 const clamp = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
@@ -242,7 +242,6 @@ export function generateChart(analysis, song, difficulty, profile, settings) {
       if (used >= C.ratio * (i + 1) + 1) continue;
       if (hashFloat(`${seedKey}|chord`, i) > 0.8) continue;
       e.size = 2;
-      if (C.maxSize >= 3 && e.score >= C.tripleStrength && e.level === 0 && hashFloat(`${seedKey}|triple`, i) < 0.4) e.size = 3;
       used++;
     }
   }

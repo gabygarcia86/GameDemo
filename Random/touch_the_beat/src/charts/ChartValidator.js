@@ -8,7 +8,7 @@ export const VALIDATION_RULES = Object.freeze({
   minTime: 0.25, // first playable moment (s)
   endMargin: 0.15, // notes must end this long before the audio ends
   minLaneGap: 0.08, // gap required between notes in the same lane (s)
-  maxSimultaneous: 3, // physical limit for phone play
+  maxSimultaneous: 2, // two thumbs: chord notes plus lanes still being held
   maxHoldDuration: 8,
 });
 
@@ -31,6 +31,7 @@ export function validateNotes(notes, duration, rules = VALIDATION_RULES) {
     while (j < sorted.length && sorted[j].time - sorted[i].time < 0.0015) j++;
     const group = [];
     const usedLanes = new Set();
+    const held = laneFree.filter((end) => end > sorted[i].time).length;
     for (let k = i; k < j; k++) {
       const n = sorted[k];
       if (n.time < rules.minTime || n.time > duration - rules.endMargin) { removed++; continue; }
@@ -41,11 +42,10 @@ export function validateNotes(notes, duration, rules = VALIDATION_RULES) {
         n.duration = r3(end - n.time);
         if (n.duration < 0.2) { n.type = 'tap'; n.duration = 0; }
       }
-      if (group.length >= rules.maxSimultaneous) { removed++; continue; }
+      if (held + group.length >= rules.maxSimultaneous) { removed++; continue; }
       group.push(n);
       usedLanes.add(n.lane);
     }
-    // no other lane may still be holding when a chord of 3 lands
     for (const n of group) {
       laneFree[n.lane] = n.time + n.duration;
       out.push(n);

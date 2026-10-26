@@ -47,7 +47,7 @@ export const DIFFICULTY_PROFILES = Object.freeze({
     maxGap: 1.25,
     maxFillLevel: 3,
     levelWeights: [1.4, 1.25, 1.1, 0.9, 0.75, 0.5],
-    chord: { maxSize: 3, minStrength: 0.65, maxLevel: 2, ratio: 0.16, minGap: 0.24, tripleStrength: 0.95 },
+    chord: { maxSize: 2, minStrength: 0.65, maxLevel: 2, ratio: 0.16, minGap: 0.24 },
     holds: { minGap: 0.8, minDur: 0.45, maxDur: 3.0, release: 0.24, ratio: 0.08 },
     jackMinGap: 0.2,
     noise: 0.4,

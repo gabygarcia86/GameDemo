@@ -3,9 +3,9 @@
  "generator": {
   "name": "touch-the-beat-compiler",
   "analyzer": "1.0.0",
-  "chartgen": "1.0.0"
+  "chartgen": "1.1.0"
  },
- "generatedAt": "2026-10-25T23:59:26.044Z",
+ "generatedAt": "2026-10-26T22:29:08.708Z",
  "songs": [
   {
    "id": "neon-drive",
@@ -165,8 +165,8 @@
      "chords": 16
     },
     "hard": {
-     "notes": 322,
-     "nps": 4.65,
+     "notes": 320,
+     "nps": 4.62,
      "holds": 10,
      "chords": 44
     }
@@ -333,8 +333,8 @@
      "chords": 37
     },
     "hard": {
-     "notes": 788,
-     "nps": 4.31,
+     "notes": 786,
+     "nps": 4.3,
      "holds": 6,
      "chords": 106
     }
@@ -350,7 +350,7 @@
     "holds": true,
     "chords": true
    },
-   "sourceHash": "d376d0d43bd18938"
+   "sourceHash": "e03b73bd8707b0d7"
   },
   {
    "id": "backstreet-boys-i-want-it-that-way",
@@ -513,8 +513,8 @@
      "chords": 23
     },
     "hard": {
-     "notes": 821,
-     "nps": 4.01,
+     "notes": 817,
+     "nps": 3.99,
      "holds": 7,
      "chords": 109
     }
@@ -530,7 +530,7 @@
     "holds": true,
     "chords": true
    },
-   "sourceHash": "d5fcde78ba463aa6"
+   "sourceHash": "030b424f58689fe4"
   },
   {
    "id": "barbra-streisand-dont-rain-on-my-parade",
@@ -693,8 +693,8 @@
      "chords": 29
     },
     "hard": {
-     "notes": 649,
-     "nps": 4.05,
+     "notes": 646,
+     "nps": 4.03,
      "holds": 6,
      "chords": 65
     }
@@ -710,7 +710,7 @@
     "holds": true,
     "chords": true
    },
-   "sourceHash": "b9452251ef8e6b34"
+   "sourceHash": "532ccd3dffa0b341"
   },
   {
    "id": "beastie-boys-intergalactic",
@@ -873,8 +873,8 @@
      "chords": 45
     },
     "hard": {
-     "notes": 934,
-     "nps": 4.1,
+     "notes": 924,
+     "nps": 4.06,
      "holds": 5,
      "chords": 122
     }
@@ -890,7 +890,7 @@
     "holds": true,
     "chords": true
    },
-   "sourceHash": "80750b7b70eb17e9"
+   "sourceHash": "1daf78437ddfec7c"
   },
   {
    "id": "crush-beautiful",
@@ -1070,7 +1070,7 @@
     "holds": true,
     "chords": true
    },
-   "sourceHash": "912e2745c0c31df0"
+   "sourceHash": "c0962d86882b9996"
   },
   {
    "id": "elvis-presley-cant-help-falling-in-love",
@@ -1233,8 +1233,8 @@
      "chords": 26
     },
     "hard": {
-     "notes": 706,
-     "nps": 4.03,
+     "notes": 700,
+     "nps": 4,
      "holds": 10,
      "chords": 92
     }
@@ -1250,7 +1250,7 @@
     "holds": true,
     "chords": true
    },
-   "sourceHash": "854fdd990d841fd5"
+   "sourceHash": "e3cd5330f079eb43"
   },
   {
    "id": "kate-bush-running-up-that-hill",
@@ -1413,8 +1413,8 @@
      "chords": 55
     },
     "hard": {
-     "notes": 1170,
-     "nps": 4.2,
+     "notes": 1162,
+     "nps": 4.17,
      "holds": 0,
      "chords": 161
     }
@@ -1430,7 +1430,7 @@
     "holds": true,
     "chords": true
    },
-   "sourceHash": "0a32c120c5ac6e81"
+   "sourceHash": "233fd424bceeb0cf"
   },
   {
    "id": "lady-gaga-hair",
@@ -1593,8 +1593,8 @@
      "chords": 9
     },
     "hard": {
-     "notes": 1252,
-     "nps": 4.14,
+     "notes": 1248,
+     "nps": 4.13,
      "holds": 0,
      "chords": 39
     }
@@ -1610,7 +1610,7 @@
     "holds": true,
     "chords": true
    },
-   "sourceHash": "f097f1e34d6202c4"
+   "sourceHash": "e1a5fc81cb7a4336"
   },
   {
    "id": "madonna-like-a-prayer",
@@ -1773,8 +1773,8 @@
      "chords": 17
     },
     "hard": {
-     "notes": 984,
-     "nps": 4.18,
+     "notes": 983,
+     "nps": 4.17,
      "holds": 23,
      "chords": 85
     }
@@ -1790,7 +1790,7 @@
     "holds": true,
     "chords": true
    },
-   "sourceHash": "ab7e1fc8d77e2d18"
+   "sourceHash": "f76e0d4631180d87"
   },
   {
    "id": "malachi-barton-stay-for-the-credits",
@@ -1970,7 +1970,7 @@
     "holds": true,
     "chords": true
    },
-   "sourceHash": "54a7af2419c361f9"
+   "sourceHash": "0c9c580ae532ca74"
   },
   {
    "id": "no-doubt-dont-speak",
@@ -2150,7 +2150,7 @@
     "holds": true,
     "chords": true
    },
-   "sourceHash": "a21acb13f3a7a3c0"
+   "sourceHash": "be0a2bca282faae2"
   },
   {
    "id": "nsync-bye-bye-bye",
@@ -2313,8 +2313,8 @@
      "chords": 19
     },
     "hard": {
-     "notes": 726,
-     "nps": 3.77,
+     "notes": 719,
+     "nps": 3.74,
      "holds": 0,
      "chords": 92
     }
@@ -2330,7 +2330,7 @@
     "holds": true,
     "chords": true
    },
-   "sourceHash": "e4da44c5c3fd7d88"
+   "sourceHash": "85384765982a0b9d"
   },
   {
    "id": "post-malone-swae-lee-sunflower",
@@ -2493,8 +2493,8 @@
      "chords": 20
     },
     "hard": {
-     "notes": 572,
-     "nps": 3.72,
+     "notes": 570,
+     "nps": 3.71,
      "holds": 10,
      "chords": 67
     }
@@ -2510,7 +2510,7 @@
     "holds": true,
     "chords": true
    },
-   "sourceHash": "0867960826e2424e"
+   "sourceHash": "62882d7100ba29c3"
   },
   {
    "id": "red-hot-chili-peppers-californication",
@@ -2673,8 +2673,8 @@
      "chords": 59
     },
     "hard": {
-     "notes": 1237,
-     "nps": 3.93,
+     "notes": 1232,
+     "nps": 3.92,
      "holds": 9,
      "chords": 157
     }
@@ -2690,7 +2690,7 @@
     "holds": true,
     "chords": true
    },
-   "sourceHash": "c75dbb6c0314d09b"
+   "sourceHash": "0c234378a8fb626d"
   },
   {
    "id": "red-hot-chili-peppers-cant-stop",
@@ -2853,8 +2853,8 @@
      "chords": 38
     },
     "hard": {
-     "notes": 1027,
-     "nps": 3.85,
+     "notes": 1020,
+     "nps": 3.82,
      "holds": 7,
      "chords": 141
     }
@@ -2870,7 +2870,7 @@
     "holds": true,
     "chords": true
    },
-   "sourceHash": "745d02e64cbb4f38"
+   "sourceHash": "f9ae0f15ee967124"
   },
   {
    "id": "red-hot-chili-peppers-under-the-bridge",
@@ -3033,8 +3033,8 @@
      "chords": 11
     },
     "hard": {
-     "notes": 939,
-     "nps": 3.57,
+     "notes": 936,
+     "nps": 3.56,
      "holds": 4,
      "chords": 92
     }
@@ -3050,7 +3050,7 @@
     "holds": true,
     "chords": true
    },
-   "sourceHash": "e5ee4df801841d48"
+   "sourceHash": "334618c8c57fd0e8"
   },
   {
    "id": "taylor-swift-style",
@@ -3213,8 +3213,8 @@
      "chords": 38
     },
     "hard": {
-     "notes": 880,
-     "nps": 4.04,
+     "notes": 876,
+     "nps": 4.03,
      "holds": 1,
      "chords": 117
     }
@@ -3230,7 +3230,7 @@
     "holds": true,
     "chords": true
    },
-   "sourceHash": "6ff6a647504fddeb"
+   "sourceHash": "df7273e82e57e120"
   }
  ]
 }

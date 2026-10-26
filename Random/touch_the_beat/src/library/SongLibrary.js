@@ -7,6 +7,7 @@ import { analyzeAudio } from '../audio/AudioAnalyzer.js';
 import { DEMO_DURATION, DEMO_SONG, demoAnalysis } from '../audio/DemoComposition.js';
 import { renderDemoSong } from '../audio/DemoSong.js';
 import { parseBeatMap } from '../charts/BeatMap.js';
+import { validateChart } from '../charts/ChartValidator.js';
 import {
   DIFFICULTIES,
   analysisOptionsFrom,
@@ -106,7 +107,8 @@ export class SongLibrary {
       raw = generateAllDifficulties(demoAnalysis(), DEMO_SONG, normalizeCompileSettings({}))[difficulty];
     }
     if (!raw) throw new Error('No chart is available for this song. Try recompiling it.');
-    const chart = parseBeatMap(raw);
+    // re-validate so charts stored by older versions follow the current rules (e.g. two-thumb chords)
+    const chart = validateChart(parseBeatMap(raw)).chart;
     this.chartCache.set(key, chart);
     return chart;
   }

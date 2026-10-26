@@ -159,13 +159,14 @@ doesn't "understand" music, and every stage reports a confidence score.
   Long audible gaps are then filled.
 - **Easy**: downbeats and beats, about 1.2 notes/s, rare 2-note chords.
   **Normal**: adds eighths, about 2.2 notes/s, occasional chords.
-  **Hard**: sixteenths, triplets and strong off-grid accents, about 3.7 notes/s, up to 3-note chords.
+  **Hard**: sixteenths, triplets and strong off-grid accents, about 3.7 notes/s, frequent 2-note chords.
 - **Holds** appear only where the loudness envelope stays steady through a long gap.
   Their length is quantised to half beats.
 - **Lanes**: spectral brightness sets a preferred lane region, mirrored per phrase so bass doesn't
   always land on lane 1. Movement patterns (stairs and steps), jack avoidance, lane balancing,
   anti-trill rules and seeded noise shape the rest. Output is deterministic for the same song and settings.
-- **Validation** removes out-of-range notes, same-lane overlaps and chords above 3 notes, and
+- **Validation** removes out-of-range notes, same-lane overlaps and anything needing more than
+  two fingers at once (chord notes plus lanes still being held), and
   reports statistics and warnings.
 
 ## Beat-map format (version 1)

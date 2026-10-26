@@ -111,18 +111,22 @@ export class SongSelect {
   }
 
   renderList() {
-    // songs arrive sorted by artist; each artist gets a header and one accent colour
-    const items = [];
-    let artist = null;
-    let group = -1;
+    // songs arrive sorted by artist; each artist gets a group with a sticky header and one accent colour
+    const groups = [];
     for (const s of this.filtered()) {
-      if (artist === null || compareText(s.artist, artist) !== 0) {
-        artist = s.artist;
-        group++;
-        items.push(el('li', { class: 'artist-header', role: 'presentation', text: s.artist }));
-      }
-      items.push(this.songItem(s, LANES[group % 4].color));
+      const last = groups[groups.length - 1];
+      if (last && compareText(s.artist, last.artist) === 0) last.songs.push(s);
+      else groups.push({ artist: s.artist, songs: [s] });
     }
+    const items = groups.map(({ artist, songs }, i) => {
+      const accent = LANES[i % 4].color;
+      return el(
+        'li',
+        { class: 'artist-group', role: 'group', 'aria-label': artist, style: { '--accent': accent } },
+        el('div', { class: 'artist-header', 'aria-hidden': 'true', text: artist }),
+        songs.map((s) => this.songItem(s, accent)),
+      );
+    });
     if (!items.length) items.push(el('li', { class: 'library-note', text: 'No songs match your search.' }));
     this.list.replaceChildren(...items);
   }
@@ -131,7 +135,7 @@ export class SongSelect {
     const best = bestScore(s.id, this.difficulty);
     const playable = this.library.canPlay(s) !== '';
     return el(
-      'li',
+      'div',
       {
         class: 'song-item',
         role: 'option',

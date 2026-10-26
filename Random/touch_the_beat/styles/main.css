@@ -480,23 +480,33 @@ body.reduced-motion .logo-eq i {
   gap: 6px;
 }
 
+/* the header sticks only within its own group, so the next artist pushes it away */
+.artist-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .artist-header {
   position: sticky;
   top: 0;
   z-index: 1;
-  padding: 8px 4px 4px;
+  padding: 10px 4px 6px;
   font-family: var(--display);
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  font-size: 0.86rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  line-height: 1.2;
   text-transform: uppercase;
-  color: var(--muted);
-  background: rgba(5, 4, 15, 0.94);
-  border-bottom: 1px solid var(--line);
+  color: #fff;
+  text-shadow: 0 0 8px var(--accent, var(--cyan));
+  background: var(--bg);
+  border-bottom: 2px solid var(--accent, var(--cyan));
+  box-shadow: 0 6px 10px -8px var(--accent, var(--cyan));
 }
 
 .song-item {
-  scroll-margin-top: 34px;
+  scroll-margin-top: 42px;
   display: grid;
   grid-template-columns: 6px 1fr auto;
   gap: 10px;

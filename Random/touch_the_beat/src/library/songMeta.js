@@ -35,6 +35,11 @@ export function parseSongFileName(name) {
   return { artist: 'Unknown Artist', title: base };
 }
 
+/** Case- and accent-insensitive text order ("ADÉLA" sits with "Adela"). */
+export function compareText(a, b) {
+  return String(a || '').localeCompare(String(b || ''), undefined, { sensitivity: 'base', numeric: true });
+}
+
 export function slugify(text) {
   return (
     text

@@ -480,7 +480,23 @@ body.reduced-motion .logo-eq i {
   gap: 6px;
 }
 
+.artist-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 8px 4px 4px;
+  font-family: var(--display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: rgba(5, 4, 15, 0.94);
+  border-bottom: 1px solid var(--line);
+}
+
 .song-item {
+  scroll-margin-top: 34px;
   display: grid;
   grid-template-columns: 6px 1fr auto;
   gap: 10px;

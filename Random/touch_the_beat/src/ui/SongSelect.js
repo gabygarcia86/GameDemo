@@ -3,7 +3,7 @@
 
 import { LANES } from '../config.js';
 import { DIFFICULTIES, DEFAULT_COMPILE_SETTINGS, normalizeCompileSettings } from '../charts/DifficultyGenerator.js';
-import { formatDuration } from '../library/songMeta.js';
+import { compareText, formatDuration } from '../library/songMeta.js';
 import { bestScore } from '../util/Settings.js';
 import { $, $$, closeModal, downloadJson, el, messageBox, openModal, toast } from '../util/dom.js';
 
@@ -115,47 +115,59 @@ export class SongSelect {
     this.stopPreview();
     this.selectedId = id;
     this.settings.set('lastSongId', id);
-    for (const li of this.list.children) li.setAttribute('aria-selected', String(li.dataset.id === id));
+    for (const li of this.list.querySelectorAll('[data-id]')) li.setAttribute('aria-selected', String(li.dataset.id === id));
     this.renderDetail();
   }
 
   renderList() {
-    const songs = this.filtered();
-    const items = songs.map((s, i) => {
-      const best = bestScore(s.id, this.difficulty);
-      const playable = this.library.canPlay(s) !== '';
-      return el(
-        'li',
-        {
-          class: 'song-item',
-          role: 'option',
-          'data-id': s.id,
-          'aria-selected': String(s.id === this.selectedId),
-          style: { '--accent': LANES[i % 4].color },
-        },
-        el(
-          'div',
-          { class: 'info' },
-          el(
-            'div',
-            { class: 't' },
-            s.title,
-            s.source === 'imported' ? el('span', { class: 'tag local', text: 'local' }) : null,
-            s.recompiled ? el('span', { class: 'tag', text: 'custom' }) : null,
-            !playable ? el('span', { class: 'tag warn', text: 'unsupported' }) : null,
-          ),
-          el('div', { class: 'a', text: s.artist }),
-        ),
-        el(
-          'div',
-          { class: 'meta' },
-          best ? el('div', { class: 'best', text: best.grade }) : null,
-          el('div', { text: `${formatDuration(s.duration)} · ${Math.round(s.bpm || 0)} bpm` }),
-        ),
-      );
-    });
+    // songs arrive sorted by artist; each artist gets a header and one accent colour
+    const items = [];
+    let artist = null;
+    let group = -1;
+    for (const s of this.filtered()) {
+      if (artist === null || compareText(s.artist, artist) !== 0) {
+        artist = s.artist;
+        group++;
+        items.push(el('li', { class: 'artist-header', role: 'presentation', text: s.artist }));
+      }
+      items.push(this.songItem(s, LANES[group % 4].color));
+    }
     if (!items.length) items.push(el('li', { class: 'library-note', text: 'No songs match your search.' }));
     this.list.replaceChildren(...items);
+  }
+
+  songItem(s, accent) {
+    const best = bestScore(s.id, this.difficulty);
+    const playable = this.library.canPlay(s) !== '';
+    return el(
+      'li',
+      {
+        class: 'song-item',
+        role: 'option',
+        'data-id': s.id,
+        'aria-selected': String(s.id === this.selectedId),
+        style: { '--accent': accent },
+      },
+      el(
+        'div',
+        { class: 'info' },
+        el(
+          'div',
+          { class: 't' },
+          s.title,
+          s.source === 'imported' ? el('span', { class: 'tag local', text: 'local' }) : null,
+          s.recompiled ? el('span', { class: 'tag', text: 'custom' }) : null,
+          !playable ? el('span', { class: 'tag warn', text: 'unsupported' }) : null,
+        ),
+        el('div', { class: 'a', text: s.artist }),
+      ),
+      el(
+        'div',
+        { class: 'meta' },
+        best ? el('div', { class: 'best', text: best.grade }) : null,
+        el('div', { text: `${formatDuration(s.duration)} · ${Math.round(s.bpm || 0)} bpm` }),
+      ),
+    );
   }
 
   renderDetail() {

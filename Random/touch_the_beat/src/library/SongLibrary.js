@@ -15,7 +15,7 @@ import {
   normalizeCompileSettings,
 } from '../charts/DifficultyGenerator.js';
 import { decodeForAnalysis } from './BrowserSongImporter.js';
-import { extensionOf, mimeFor } from './songMeta.js';
+import { compareText, extensionOf, mimeFor } from './songMeta.js';
 
 export const MANIFEST_URL = 'public/metadata/library.json';
 
@@ -82,11 +82,17 @@ export class SongLibrary {
     return this.probe.canPlayType(mime);
   }
 
+  /** All songs: the demo first, then grouped by artist and sorted by title. */
   get songs() {
-    return [...this.builtin, ...this.imported].map((s) => {
-      const o = this.overrides.get(s.id);
-      return o ? { ...s, ...o.meta, recompiled: true, compileSettings: o.settings } : { ...s, compileSettings: s.settings };
-    });
+    return [...this.builtin, ...this.imported]
+      .map((s) => {
+        const o = this.overrides.get(s.id);
+        return o ? { ...s, ...o.meta, recompiled: true, compileSettings: o.settings } : { ...s, compileSettings: s.settings };
+      })
+      .sort(
+        (a, b) =>
+          (b.source === 'procedural') - (a.source === 'procedural') || compareText(a.artist, b.artist) || compareText(a.title, b.title),
+      );
   }
 
   find(id) {

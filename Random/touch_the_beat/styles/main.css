@@ -541,14 +541,6 @@ body.reduced-motion .logo-eq i {
   white-space: nowrap;
 }
 
-.song-item .a {
-  color: var(--muted);
-  font-size: 0.85rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .song-item .meta {
   text-align: right;
   font-size: 0.78rem;

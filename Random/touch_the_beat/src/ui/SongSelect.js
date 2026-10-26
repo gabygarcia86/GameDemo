@@ -150,7 +150,6 @@ export class SongSelect {
           s.recompiled ? el('span', { class: 'tag', text: 'custom' }) : null,
           !playable ? el('span', { class: 'tag warn', text: 'unsupported' }) : null,
         ),
-        el('div', { class: 'a', text: s.artist }),
       ),
       el(
         'div',

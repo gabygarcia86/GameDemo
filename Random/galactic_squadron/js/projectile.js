@@ -7,7 +7,7 @@ import { Pool } from './utils.js';
 import { getSprites } from './sprites.js';
 
 const { W, H } = WORLD;
-const makeBullet = () => ({ x: 0, y: 0, vx: 0, vy: 0, r: 4, angle: 0, kind: 'basic', damage: 1, t: 0 });
+const makeBullet = () => ({ x: 0, y: 0, vx: 0, vy: 0, r: 4, angle: 0, kind: 'basic', damage: 1, t: 0, ally: false });
 
 export class Projectiles {
   constructor() {
@@ -16,7 +16,8 @@ export class Projectiles {
     this.sprites = getSprites().bullets;
   }
 
-  firePlayer(x, y, angle) {
+  /** Player-side bolt; kind 'ally' is the Falcon's (excluded from accuracy stats). */
+  firePlayer(x, y, angle, kind = 'player') {
     const b = this.player.obtain();
     if (!b) return null;
     const sp = CONFIG.player.bulletSpeed;
@@ -25,7 +26,8 @@ export class Projectiles {
     b.vy = -Math.cos(angle) * sp;
     b.angle = angle;
     b.r = 5;
-    b.kind = 'player';
+    b.kind = kind;
+    b.ally = kind === 'ally';
     b.damage = 1;
     b.t = 0;
     return b;

@@ -267,7 +267,7 @@ export class UI {
       if (!s) return;
       const k = Math.min(1, (size - 4) / Math.max(s.w, s.h));
       g.translate(size / 2, size / 2);
-      if (name !== 'player') g.rotate(Math.PI);
+      if (name !== 'player' && name !== 'falcon') g.rotate(Math.PI); // enemies face down
       g.drawImage(s.canvas, (-s.w * k) / 2, (-s.h * k) / 2, s.w * k, s.h * k);
     });
   }
@@ -454,10 +454,11 @@ export class UI {
     if (game.powerups.timers.rapid > 0) items.push(['rapid', game.powerups.timers.rapid, P.rapid]);
     if (game.powerups.timers.spread > 0) items.push(['spread', game.powerups.timers.spread, P.spread]);
     if (game.player.shieldTime > 0) items.push(['shield', game.player.shieldTime, game.player.shieldMax]);
+    if (game.falcon && game.falcon.remaining > 0) items.push(['falcon', game.falcon.remaining, CONFIG.falcon.duration]);
     let x = W - 12;
     const y = H - 38;
     for (const [type, left, max] of items) {
-      const color = POWERUP_COLORS[type];
+      const color = type === 'falcon' ? '#ff9a3c' : POWERUP_COLORS[type];
       const w = 92;
       x -= w;
       if (left > 2 || Math.floor(left * 6) % 2 === 0) {
@@ -466,14 +467,19 @@ export class UI {
         ctx.strokeStyle = color;
         ctx.lineWidth = 1;
         ctx.strokeRect(x + 0.5, y + 0.5, w - 7, 27);
-        ctx.save();
-        ctx.translate(x + 14, y + 13);
-        drawPowerIcon(ctx, type, 7, color);
-        ctx.restore();
+        if (type === 'falcon') {
+          const fs = getSprites().falcon;
+          ctx.drawImage(fs.canvas, x + 6, y + 2, fs.w * 0.25, fs.h * 0.25);
+        } else {
+          ctx.save();
+          ctx.translate(x + 14, y + 13);
+          drawPowerIcon(ctx, type, 7, color);
+          ctx.restore();
+        }
         ctx.textAlign = 'left';
         ctx.font = UI_FONT(11, 800);
         ctx.fillStyle = '#ffffff';
-        ctx.fillText(POWERUP_INFO[type].short, x + 26, y + 15);
+        ctx.fillText(type === 'falcon' ? 'FALCON' : POWERUP_INFO[type].short, x + 26, y + 15);
         ctx.fillStyle = color;
         ctx.fillRect(x + 26, y + 20, (w - 38) * Math.max(0, left / max), 3);
       }

@@ -11,6 +11,7 @@ import { PowerUps } from './powerups.js';
 import { Player } from './player.js';
 import { WaveManager } from './waveManager.js';
 import { Boss } from './boss.js';
+import { Falcon } from './falcon.js';
 import { handleCollisions } from './collision.js';
 import { getSprites } from './sprites.js';
 import { clamp, rand } from './utils.js';
@@ -66,6 +67,7 @@ export class Game {
     this.sprites = getSprites();
     this.enemies = [];
     this.boss = null;
+    this.falcon = null;
 
     this.state = STATE.TITLE;
     this.stateTime = 0;
@@ -121,6 +123,7 @@ export class Game {
   clearWorld() {
     this.enemies.length = 0;
     this.boss = null;
+    this.falcon = null;
     this.projectiles.clear();
     this.particles.clear();
     this.powerups.items.length = 0;
@@ -277,6 +280,7 @@ export class Game {
     this.gameOverTimer = 0;
     if (!this.setState(STATE.GAME_OVER)) return;
     const newBest = this.saveHighScore();
+    if (this.falcon) this.falcon.leave();
     this.banner = null;
     this.background.warpTarget = 0;
     this.audio.stopMusic();
@@ -371,6 +375,7 @@ export class Game {
     this.kills++;
     this.streak++;
     this.streakTimer = CONFIG.scoring.streakWindow;
+    if (this.streak % CONFIG.falcon.streakEvery === 0) this.callFalcon();
     const prevMult = this.multiplier;
     this.multiplier = this.multiplierFor(this.streak);
     const dive = e.diving && e.state !== 'entering' ? CONFIG.scoring.diveMultiplier : 1;
@@ -381,6 +386,14 @@ export class Game {
       this.particles.text(W / 2, 560, 'MULTIPLIER x' + this.multiplier, '#ffd23f', 22, 1.4);
     }
     this.powerups.maybeDrop(e);
+  }
+
+  /** Streak reward: the Falcon arrives (or stays for another full run if it's already here). */
+  callFalcon() {
+    if (this.falcon && !this.falcon.done) this.falcon.extend();
+    else this.falcon = new Falcon(this);
+    this.audio.play('falcon');
+    this.particles.text(W / 2, 500, 'THE FALCON HAS ARRIVED!', '#ff9a3c', 24, 2.2);
   }
 
   playerStruck(x, y) {
@@ -570,6 +583,10 @@ export class Game {
     this.waves.update(dt);
     for (let i = 0; i < this.enemies.length; i++) this.enemies[i].update(dt, this);
     if (this.boss) this.boss.update(dt);
+    if (this.falcon) {
+      this.falcon.update(dt);
+      if (this.falcon.done) this.falcon = null;
+    }
     this.projectiles.update(dt);
     this.powerups.update(dt);
     if (active) handleCollisions(this);
@@ -642,6 +659,7 @@ export class Game {
       if (this.boss) this.boss.draw(ctx);
       this.powerups.draw(ctx);
       for (let i = 0; i < this.enemies.length; i++) this.enemies[i].draw(ctx, this.sprites);
+      if (this.falcon) this.falcon.draw(ctx);
       this.player.draw(ctx);
       this.projectiles.drawPlayer(ctx);
     }

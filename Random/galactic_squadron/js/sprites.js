@@ -855,6 +855,250 @@ function drawAce(g, damaged) {
   g.restore();
 }
 
+/* ------------------------------------------------------------------- ally */
+
+/*
+ * The Falcon: saucer freighter with forward mandibles, an offset cockpit,
+ * a dorsal quad-laser turret and six engine grilles. Authored nose-up in
+ * reference-image space (800×1050, centered at 400,526). The blue engine
+ * strip along the rear rim is drawn live in falcon.js.
+ */
+const FALCON_SCALE = 0.085;
+const FC_OUTLINE = '#2a2a2e';
+const FC_MANDIBLES = [130, 480, 262, 22, 348, 22, 348, 185, 452, 185, 452, 22, 538, 22, 670, 480];
+const FC_TUBE = [505, 575, 722, 372];
+const FC_ENGINES = [[330, 790], [400, 800], [470, 790], [300, 870], [400, 880], [500, 870]];
+const FC_RED = [[285, 255, 46, 30], [168, 455, 40, 26], [520, 440, 44, 26], [210, 660, 52, 20], [556, 690, 44, 30], [162, 940, 46, 22], [430, 1000, 44, 20], [580, 935, 40, 22]];
+
+function drawFalcon(g) {
+  const rng = mulberry32(77);
+  const disc = () => circle(g, 400, 660, 360);
+  const tube = (width) => {
+    g.lineCap = 'butt';
+    g.lineWidth = width;
+    g.beginPath();
+    g.moveTo(FC_TUBE[0], FC_TUBE[1]);
+    g.lineTo(FC_TUBE[2], FC_TUBE[3]);
+    g.stroke();
+  };
+  const pods = () => {
+    rrect(g, 30, 588, 265, 96, 30);
+    rrect(g, 505, 588, 265, 96, 30);
+  };
+
+  g.save();
+  g.scale(FALCON_SCALE, FALCON_SCALE);
+  g.translate(-400, -526);
+  g.lineJoin = 'round';
+
+  // outline pass: everything stroked thick first, so the fill pass below
+  // hides the inner seams and leaves one clean silhouette outline
+  g.strokeStyle = FC_OUTLINE;
+  g.lineWidth = 22;
+  disc();
+  g.stroke();
+  poly(g, FC_MANDIBLES);
+  g.stroke();
+  pods();
+  g.stroke();
+  circle(g, 735, 345, 52);
+  g.stroke();
+  tube(86 + 22);
+
+  // fill pass
+  const hull = g.createRadialGradient(330, 430, 40, 400, 600, 560);
+  hull.addColorStop(0, '#f0eee8');
+  hull.addColorStop(1, '#aca89f');
+  g.fillStyle = hull;
+  disc();
+  g.fill();
+  poly(g, FC_MANDIBLES);
+  g.fill();
+  g.strokeStyle = '#d2cfc7';
+  tube(86);
+  g.fillStyle = '#d6d3cc';
+  circle(g, 735, 345, 52);
+  g.fill();
+  g.fillStyle = '#cfccc5';
+  pods();
+  g.fill();
+
+  // hull plating: concentric rings, radial seams and darker panels
+  g.save();
+  disc();
+  g.clip();
+  g.strokeStyle = 'rgba(90,86,80,0.45)';
+  g.lineWidth = 4;
+  for (const r of [170, 250, 320]) {
+    circle(g, 400, 660, r);
+    g.stroke();
+  }
+  g.beginPath();
+  for (let a = 0; a < 360; a += 12) {
+    const rad = (a * Math.PI) / 180;
+    g.moveTo(400 + Math.cos(rad) * 110, 660 + Math.sin(rad) * 110);
+    g.lineTo(400 + Math.cos(rad) * 360, 660 + Math.sin(rad) * 360);
+  }
+  g.stroke();
+  for (let i = 0; i < 70; i++) {
+    const a = rng() * TAU;
+    const r = 120 + rng() * 220;
+    g.fillStyle = rng() < 0.5 ? 'rgba(120,115,105,0.28)' : 'rgba(255,255,255,0.25)';
+    g.fillRect(400 + Math.cos(a) * r, 660 + Math.sin(a) * r, 20 + rng() * 40, 14 + rng() * 26);
+  }
+  // rear exhaust housing (the glow is animated in falcon.js)
+  g.strokeStyle = '#41464f';
+  g.lineWidth = 26;
+  g.beginPath();
+  g.arc(400, 660, 342, Math.PI * 0.3, Math.PI * 0.7);
+  g.stroke();
+  g.restore();
+
+  // mandible plating and gun ports
+  g.strokeStyle = 'rgba(90,86,80,0.5)';
+  g.lineWidth = 4;
+  g.beginPath();
+  for (const sx of [1, -1]) {
+    const x = (v) => 400 + sx * (v - 400);
+    g.moveTo(x(300), 60); g.lineTo(x(300), 380);
+    g.moveTo(x(240), 160); g.lineTo(x(190), 420);
+    g.moveTo(x(270), 120); g.lineTo(x(345), 120);
+  }
+  g.stroke();
+  g.strokeStyle = FC_OUTLINE;
+  g.lineWidth = 7;
+  for (const [x, y, r] of [[275, 185, 26], [232, 270, 24], [525, 185, 26], [565, 270, 24]]) {
+    g.fillStyle = '#4a4c50';
+    circle(g, x, y, r);
+    g.fill();
+    g.stroke();
+  }
+
+  // forward cargo spine between the mandibles
+  g.fillStyle = '#c4c0b8';
+  g.fillRect(338, 180, 124, 350);
+  g.strokeRect(338, 180, 124, 350);
+  g.lineWidth = 4;
+  g.strokeStyle = 'rgba(60,58,54,0.6)';
+  g.strokeRect(360, 205, 80, 300);
+  g.beginPath();
+  g.moveTo(400, 205);
+  g.lineTo(400, 505);
+  for (let y = 240; y < 500; y += 45) {
+    g.moveTo(360, y);
+    g.lineTo(440, y);
+  }
+  g.stroke();
+
+  // side pods with docking rings
+  g.strokeStyle = FC_OUTLINE;
+  g.lineWidth = 7;
+  for (const [x, y] of [[110, 636], [185, 636], [262, 636], [630, 636], [700, 636]]) {
+    g.fillStyle = '#4a4c50';
+    circle(g, x, y, 18);
+    g.fill();
+    g.stroke();
+  }
+
+  // cockpit tube ribs and canopy
+  const [ax, ay, bx, by] = FC_TUBE;
+  const len = Math.hypot(bx - ax, by - ay);
+  const nx = -(by - ay) / len;
+  const ny = (bx - ax) / len;
+  g.strokeStyle = 'rgba(80,78,72,0.6)';
+  g.lineWidth = 5;
+  g.beginPath();
+  for (let t = 0.12; t < 0.9; t += 0.11) {
+    const px = lerp(ax, bx, t);
+    const py = lerp(ay, by, t);
+    g.moveTo(px - nx * 42, py - ny * 42);
+    g.lineTo(px + nx * 42, py + ny * 42);
+  }
+  g.stroke();
+  g.fillStyle = '#26282d';
+  for (let i = 0; i < 4; i++) {
+    const a0 = -Math.PI * 0.95 + i * 0.42;
+    g.beginPath();
+    g.moveTo(735 + Math.cos(a0 + 0.2) * 14, 345 + Math.sin(a0 + 0.2) * 14);
+    g.arc(735, 345, 44, a0, a0 + 0.34);
+    g.closePath();
+    g.fill();
+  }
+  g.strokeStyle = FC_OUTLINE;
+  g.lineWidth = 7;
+  circle(g, 735, 345, 14);
+  g.stroke();
+
+  // sensor dish on the port side
+  g.fillStyle = '#9d9a93';
+  g.fillRect(205, 392, 22, 52);
+  g.strokeRect(205, 392, 22, 52);
+  g.fillStyle = '#c9c6bf';
+  g.beginPath();
+  g.ellipse(216, 384, 60, 22, -0.15, 0, TAU);
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#4a4c50';
+  circle(g, 216, 384, 9);
+  g.fill();
+
+  // engine block and the six grilles
+  g.fillStyle = 'rgba(120,118,112,0.45)';
+  rrect(g, 250, 740, 300, 190, 40);
+  g.fill();
+  for (const [x, y] of FC_ENGINES) {
+    g.fillStyle = '#55585e';
+    circle(g, x, y, 34);
+    g.fill();
+    g.save();
+    g.clip();
+    g.strokeStyle = '#2c2e33';
+    g.lineWidth = 4;
+    g.beginPath();
+    for (let yy = y - 28; yy <= y + 28; yy += 8) {
+      g.moveTo(x - 34, yy);
+      g.lineTo(x + 34, yy);
+    }
+    g.stroke();
+    g.restore();
+    g.strokeStyle = FC_OUTLINE;
+    g.lineWidth = 7;
+    circle(g, x, y, 34);
+    g.stroke();
+  }
+
+  // dorsal quad-laser turret
+  g.fillStyle = '#e2dfd8';
+  circle(g, 400, 635, 100);
+  g.fill();
+  g.lineWidth = 9;
+  g.stroke();
+  g.fillStyle = '#3c3e44';
+  circle(g, 400, 635, 50);
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#2c2e33';
+  g.fillRect(380, 545, 12, 72);
+  g.fillRect(408, 545, 12, 72);
+  g.fillStyle = '#6a6d73';
+  g.fillRect(372, 608, 56, 40);
+  g.strokeRect(372, 608, 56, 40);
+
+  // red panels and weathering
+  g.fillStyle = '#c8352b';
+  for (const [x, y, w, h] of FC_RED) g.fillRect(x, y, w, h);
+  for (const [x, y, r] of [[150, 470, 60], [320, 300, 45], [575, 830, 55], [120, 520, 30]]) {
+    const smudge = g.createRadialGradient(x, y, 0, x, y, r);
+    smudge.addColorStop(0, 'rgba(40,38,36,0.45)');
+    smudge.addColorStop(1, 'rgba(40,38,36,0)');
+    g.fillStyle = smudge;
+    circle(g, x, y, r);
+    g.fill();
+  }
+
+  g.restore();
+}
+
 /* ------------------------------------------------------------------- boss */
 
 /*
@@ -1231,6 +1475,19 @@ function makeBullets() {
       trail(g, 12, 15, 40, 6, '#ff2e63', 0.55);
       orb(g, 12, 12, 6.5, '#ff2e63');
     }),
+    // the Falcon's laser: same capsule as the player's bolt, in red
+    ally: makeBullet(14, 42, 7, 12, (g) => {
+      trail(g, 7, 18, 42, 3, '#ff5a3a', 0.55);
+      g.shadowColor = '#ff5a3a';
+      g.shadowBlur = 7;
+      g.fillStyle = '#ff5a3a';
+      rrect(g, 4, 3, 6, 19, 3);
+      g.fill();
+      g.shadowBlur = 0;
+      g.fillStyle = '#ffe2d6';
+      rrect(g, 5.8, 5, 2.4, 15, 1.2);
+      g.fill();
+    }),
   };
 }
 
@@ -1344,6 +1601,7 @@ export function getSprites() {
     heavy: makeSprite(48, 56, (g) => drawHeavy(g, false)),
     heavyDamaged: makeSprite(48, 56, (g) => drawHeavy(g, true)),
     bomber: makeSprite(54, 46, drawBomber),
+    falcon: makeSprite(72, 98, drawFalcon),
     ace: makeSprite(44, 70, (g) => drawAce(g, false)),
     aceDamaged: makeSprite(44, 70, (g) => drawAce(g, true)),
     flames: {

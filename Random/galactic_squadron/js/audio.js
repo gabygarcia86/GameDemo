@@ -158,7 +158,7 @@ export class AudioEngine {
   play(name) {
     if (!this.ready) return;
     const now = this.ctx.currentTime;
-    const gap = { shoot: 0.045, enemyShoot: 0.06, hit: 0.04, coreHit: 0.05, explode: 0.03, dive: 0.25, shieldHit: 0.06, bossShoot: 0.08 }[name] || 0;
+    const gap = { shoot: 0.045, allyShoot: 0.06, enemyShoot: 0.06, hit: 0.04, coreHit: 0.05, explode: 0.03, dive: 0.25, shieldHit: 0.06, bossShoot: 0.08 }[name] || 0;
     if (gap && now - (this.last[name] || 0) < gap) return;
     const important = name === 'playerHit' || name === 'bossDefeat' || name === 'gameOver' || name === 'extraLife';
     if (this.voices > 40 && !important) return;
@@ -168,6 +168,13 @@ export class AudioEngine {
       case 'shoot':
         this.tone({ type: 'square', freq: 1180, to: 520, dur: 0.07, vol: 0.05, filter: 3500 });
         this.tone({ type: 'sine', freq: 2200, to: 900, dur: 0.05, vol: 0.025 });
+        break;
+      case 'allyShoot':
+        this.tone({ type: 'sawtooth', freq: 820, to: 260, dur: 0.09, vol: 0.035, filter: 2600 });
+        break;
+      case 'falcon':
+        this.noiseBurst({ freq: 400, to: 4000, dur: 0.6, vol: 0.12, ftype: 'bandpass', q: 2 });
+        this.notes([midi(67), midi(72), midi(76), midi(79), midi(84)], 0.09, { type: 'square', dur: 0.22, vol: 0.06, filter: 3500, delay: 0.3 });
         break;
       case 'enemyShoot':
         this.tone({ type: 'triangle', freq: 620, to: 240, dur: 0.12, vol: 0.05 });

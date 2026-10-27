@@ -52,6 +52,7 @@ Touch movement is a relative drag, so your finger never covers the ship. In port
 - **Fair-play rules:** a ship shakes before it dives. Enemies don't fire from point-blank range. Bullets near your respawn point are cleared, and you're invulnerable for a short time after respawning.
 - **Boss tips:** the glowing reactor core takes double damage. The laser is telegraphed by a dashed line and side markers for about a second before it fires.
 - **Power-ups:** Rapid Fire (10 s), Spread Shot (12 s), Shield (8 s), Extra Life, Score Bonus. Each has its own shape and colour, and the timers show at the bottom right.
+- **The Falcon:** every 50 kills in one streak, an allied freighter drops out of hyperspace above you and fires red lasers at the nearest enemies (or the boss's core) for 10 seconds. Its kills count toward your score and streak, and it can't be hit. Hitting another 50 while it's still around resets its 10 seconds.
 
 ## Settings
 
@@ -74,6 +75,7 @@ galactic_squadron/
     paths.js        entry curves and dive attack paths (Catmull-Rom splines)
     enemy.js        enemy state machine and rendering
     boss.js         capital ship: phases, attack patterns, laser, defeat sequence
+    falcon.js       the allied Falcon: arrival, targeting, firing, departure
     player.js       movement modes, firing, shield, respawn
     projectile.js   pooled player/enemy bullets
     collision.js    per-step collision pass
@@ -105,6 +107,8 @@ The simulation runs at a fixed 120 Hz step, rendered with `requestAnimationFrame
 **Boss (`CONFIG.boss`)**: `every` (7), `baseHp` (150), `hpPerEncounter` (+90), `score`, `defeatBonus`, `introTime`, `maxMinions`.
 
 **Scoring (`CONFIG.scoring`)**: `diveMultiplier` (2), `streakWindow` (3.5 s), `multiplierThresholds` ([0, 10, 22, 38] for ×1–×4), `perfectWaveBase` / `perfectWavePerStage`, `extraLifeEvery` (30,000), `scoreBonus`.
+
+**Falcon (`CONFIG.falcon`)**: `streakEvery` (50), `duration` (10 s), `arriveTime`, `hoverY`, `speed`, `fireInterval` (0.15 s).
 
 **Power-ups (`CONFIG.powerups`)**: `dropChance` (7%), `typeBonus`, `pityKills` (guaranteed drop after 26 kills without one), `maxOnScreen`, `duration`, `weights`.
 

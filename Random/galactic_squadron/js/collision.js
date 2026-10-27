@@ -40,7 +40,7 @@ export function handleCollisions(game) {
       }
     }
     if (hit) {
-      game.stageHits++;
+      if (!b.ally) game.stageHits++;
       pool.releaseAt(i);
     }
   }

@@ -101,6 +101,15 @@ export const CONFIG = {
     scoreBonus: 1500,
   },
 
+  falcon: {
+    streakEvery: 50,        // the Falcon arrives on every 50th kill of a streak
+    duration: 10,           // seconds of assistance once it's in position
+    arriveTime: 1.4,
+    hoverY: 690,            // stays above the player's lane
+    speed: 340,
+    fireInterval: 0.15,
+  },
+
   powerups: {
     dropChance: 0.07,
     typeBonus: { heavy: 0.03, ace: 0.08 },

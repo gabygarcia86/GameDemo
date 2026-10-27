@@ -377,49 +377,174 @@ function drawInterceptor(g) {
   g.restore();
 }
 
-const HEAVY_HULL = [0, -19, 13, -11, 15, 9, 8, 18, -8, 18, -15, 9, -13, -11];
+/*
+ * Heavy fighter: ball cockpit with a grated viewport, short struts and bent
+ * wing panels that end in twin gun barrels. Authored in reference-image space
+ * (cockpit at 500,360, barrels at the image bottom); the y flip points the
+ * barrels at the nose (-y). Centered on the whole ship (y 567), not the
+ * cockpit, so the long wings don't hang into the formation row below.
+ */
+const HEAVY_SCALE = 0.044;
+const HEAVY_CENTER_Y = 567;
+const HV_OUTLINE = '#15181d';
+const HV_MESH = '#262a30';
+const HV_WING = [72, 28, 238, 122, 244, 318, 236, 345, 104, 1040, 66, 1040, 64, 320, 70, 300];
+const HV_MESH_UP = [92, 72, 206, 136, 210, 272, 92, 272];
+const HV_MESH_LOW = [86, 368, 207, 368, 110, 880, 86, 880];
+const HV_BACK_UP = [238, 160, 292, 190, 292, 300, 244, 300];
+const HV_BACK_LOW = [244, 345, 292, 345, 162, 960, 120, 985];
+const HV_BALL = [];
+for (let i = 0; i < 16; i++) {
+  const a = (i / 16) * TAU;
+  HV_BALL.push(500 + Math.cos(a) * 152, 360 + Math.sin(a) * 152);
+}
 
 function drawHeavy(g, damaged) {
-  g.shadowColor = 'rgba(255,150,50,0.45)';
-  g.shadowBlur = 6;
-  g.fillStyle = linear(g, 0, -19, 0, 18, [[0, '#9aa59a'], [0.55, '#5c665e'], [1, '#30372f']]);
-  poly(g, HEAVY_HULL);
-  g.fill();
-  g.shadowBlur = 0;
-  g.strokeStyle = '#141814';
-  g.lineWidth = 1.2;
-  g.stroke();
-
-  mirrored(g, () => {
-    g.fillStyle = '#3c443d';
-    g.fillRect(14, -4, 6, 8);
-    g.fillStyle = linear(g, 18, 0, 27, 0, [[0, '#7b857c'], [1, '#3a423b']]);
-    rrect(g, 18, -13, 9, 26, 3);
+  const shape = (pts, fill, stroke = true) => {
+    poly(g, pts);
+    g.fillStyle = fill;
     g.fill();
-    g.strokeStyle = '#141814';
-    g.lineWidth = 1;
+    if (stroke) g.stroke();
+  };
+  const mesh = (pts) => {
+    shape(pts, HV_MESH, false);
+    g.save();
+    poly(g, pts);
+    g.clip();
+    g.strokeStyle = '#3b4149';
+    g.lineWidth = 3;
+    g.beginPath();
+    for (let d = -1100; d < 1100; d += 22) {
+      g.moveTo(0, d);
+      g.lineTo(1000, d + 1000);
+      g.moveTo(0, d + 1000);
+      g.lineTo(1000, d);
+    }
     g.stroke();
-    g.fillStyle = '#20251f';
-    g.fillRect(21, -22, 3, 10);
-    g.fillStyle = '#ffae4a';
-    g.fillRect(21, -23.5, 3, 2);
+    g.restore();
+  };
+  // draws the left half, then mirrors it about x = 500
+  const both = (fn) => {
+    fn();
+    g.save();
+    g.translate(1000, 0);
+    g.scale(-1, 1);
+    fn();
+    g.restore();
+  };
+
+  g.save();
+  g.scale(HEAVY_SCALE, -HEAVY_SCALE);
+  g.translate(-500, -HEAVY_CENTER_Y);
+  g.lineJoin = 'round';
+  g.strokeStyle = HV_OUTLINE;
+  g.lineWidth = 7;
+
+  both(() => {
+    // twin gun barrels below the wing tip, with hot muzzles
+    for (const [x, end] of [[78, 1112], [112, 1095]]) {
+      g.fillStyle = '#7d858f';
+      g.fillRect(x - 7, 930, 14, end - 930);
+      g.strokeRect(x - 7, 930, 14, end - 930);
+      g.shadowColor = '#ff9a2e';
+      g.shadowBlur = 5;
+      g.fillStyle = '#ffae4a';
+      g.fillRect(x - 7, end - 16, 14, 16);
+      g.shadowBlur = 0;
+    }
+
+    // rear faces of the wing, seen past the front panel
+    shape(HV_BACK_UP, '#4b535c');
+    shape(HV_BACK_LOW, '#4b535c');
+    shape([256, 362, 280, 362, 160, 930, 138, 945], HV_MESH, false);
+
+    // strut into the cockpit
+    shape([244, 292, 362, 280, 362, 345, 244, 336], linear(g, 0, 280, 0, 345, [[0, '#a9b1ba'], [1, '#5b636c']]));
+    g.fillStyle = '#646c76';
+    g.fillRect(292, 290, 40, 46);
+    g.strokeRect(292, 290, 40, 46);
+
+    // front wing panel: light frame around dark solar mesh, fold band at the strut
+    shape(HV_WING, linear(g, 64, 0, 244, 0, [[0, '#8b949e'], [0.5, '#b7c0c9'], [1, '#8b949e']]));
+    mesh(HV_MESH_UP);
+    mesh(HV_MESH_LOW);
+    g.fillStyle = '#c3cbd3';
+    g.fillRect(66, 292, 176, 56);
+    g.beginPath();
+    g.moveTo(66, 302);
+    g.lineTo(242, 302);
+    g.moveTo(66, 338);
+    g.lineTo(242, 338);
+    g.lineWidth = 4;
+    g.stroke();
+    g.lineWidth = 7;
+    poly(g, HV_WING);
+    g.stroke();
   });
 
-  g.strokeStyle = 'rgba(20,24,20,0.7)';
-  g.lineWidth = 1;
+  // cockpit ball
+  const ball = g.createRadialGradient(450, 280, 20, 500, 360, 165);
+  ball.addColorStop(0, '#c3cad2');
+  ball.addColorStop(0.55, '#7d868f');
+  ball.addColorStop(1, '#454c55');
+  g.fillStyle = ball;
+  circle(g, 500, 360, 152);
+  g.fill();
+  g.stroke();
+  g.fillStyle = '#6d7680';
+  g.fillRect(482, 196, 36, 22);
+  g.strokeRect(482, 196, 36, 22);
+  g.fillStyle = '#2a2f36';
+  g.fillRect(405, 450, 190, 38);
+  g.strokeStyle = '#8a939d';
+  g.lineWidth = 5;
   g.beginPath();
-  g.moveTo(-13, -1); g.lineTo(13, -1);
-  g.moveTo(-10, 9); g.lineTo(10, 9);
-  g.moveTo(0, -1); g.lineTo(0, 9);
+  for (let x = 430; x <= 570; x += 35) {
+    g.moveTo(x, 452);
+    g.lineTo(x, 486);
+  }
   g.stroke();
 
-  g.shadowColor = '#ff9a2e';
-  g.shadowBlur = 6;
-  g.fillStyle = '#ffa53a';
-  g.fillRect(-6, -10, 12, 3);
-  g.shadowBlur = 0;
+  // grated viewport: dark glass with slats above, vented panel below
+  g.strokeStyle = HV_OUTLINE;
+  g.lineWidth = 7;
+  g.fillStyle = '#5f6872';
+  circle(g, 500, 340, 98);
+  g.fill();
+  g.stroke();
+  g.save();
+  circle(g, 500, 340, 86);
+  g.clip();
+  g.fillStyle = '#14171c';
+  g.fillRect(400, 250, 200, 110);
+  g.fillStyle = 'rgba(255,150,50,0.22)';
+  g.fillRect(400, 250, 200, 110);
+  g.fillStyle = '#8a939d';
+  g.fillRect(400, 360, 200, 70);
+  for (const x of [440, 470, 530, 560]) g.fillRect(x - 5, 250, 10, 110);
+  g.fillStyle = '#a3acb6';
+  g.fillRect(486, 250, 28, 180);
+  g.strokeStyle = '#2a2f36';
+  g.lineWidth = 5;
+  g.beginPath();
+  for (const y of [380, 398, 416]) {
+    g.moveTo(420, y);
+    g.lineTo(478, y);
+    g.moveTo(522, y);
+    g.lineTo(580, y);
+  }
+  g.stroke();
+  g.restore();
+  g.strokeStyle = HV_OUTLINE;
+  g.lineWidth = 7;
+  circle(g, 500, 340, 86);
+  g.stroke();
 
-  if (damaged) scorch(g, HEAVY_HULL, [[-6, 4, 8], [7, -7, 6], [3, 13, 5]]);
+  if (damaged) {
+    scorch(g, HV_WING, [[150, 600, 64], [175, 200, 42]]);
+    scorch(g, HV_BALL, [[420, 300, 50], [575, 430, 40]]);
+  }
+  g.restore();
 }
 
 const BOMBER_HULL = [0, -21, 7, -6, 21, 15, 9, 11, 0, 18, -9, 11, -21, 15, -7, -6];
@@ -901,8 +1026,8 @@ export function getSprites() {
   cache = {
     player: makeSprite(62, 66, drawPlayer),
     interceptor: makeSprite(46, 52, drawInterceptor),
-    heavy: makeSprite(62, 56, (g) => drawHeavy(g, false)),
-    heavyDamaged: makeSprite(62, 56, (g) => drawHeavy(g, true)),
+    heavy: makeSprite(48, 56, (g) => drawHeavy(g, false)),
+    heavyDamaged: makeSprite(48, 56, (g) => drawHeavy(g, true)),
     bomber: makeSprite(54, 52, drawBomber),
     ace: makeSprite(58, 60, (g) => drawAce(g, false)),
     aceDamaged: makeSprite(58, 60, (g) => drawAce(g, true)),

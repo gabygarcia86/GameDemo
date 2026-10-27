@@ -857,144 +857,238 @@ function drawAce(g, damaged) {
 
 /* ------------------------------------------------------------------- boss */
 
-export const BOSS_HULL = [-165, -72, -126, -96, 126, -96, 165, -72, 152, -30, 86, 66, 60, 108, 44, 102, 36, 32, -36, 32, -44, 102, -60, 108, -86, 66, -152, -30];
+/*
+ * Capital ship: wedge-hulled destroyer seen from the bow, with a stepped
+ * superstructure, command tower and sensor globes. Hull and superstructure
+ * are traced in reference-image space (1220 wide, centered at 610,310); the
+ * weapons, reactor core, hangar and engine bells are then drawn in sprite
+ * units at the positions boss.js fires and launches from (keep them in sync).
+ */
+const BOSS_ART_SCALE = 0.28;
+const BOSS_OUTLINE = '#0b0f19';
+const BOSS_DECK = [22, 442, 300, 385, 610, 330, 920, 385, 1200, 447, 610, 522];
+const BOSS_BELLY = [22, 447, 610, 522, 1200, 452, 1188, 472, 622, 600, 36, 468];
+const BOSS_TIERS = [
+  [300, 398, 920, 398, 878, 335, 342, 335],
+  [400, 335, 820, 335, 788, 285, 432, 285],
+  [470, 285, 750, 285, 728, 238, 492, 238],
+];
+const BOSS_ENGINES = [[-145, 33], [-105, 25], [105, 25], [145, 33]];
+const BOSS_TURRETS = [[-87, 31], [87, 31]];
+const BOSS_PRONGS = [[-129, 45], [129, 45]];
+const BOSS_CORE = [0, 20];
+const BOSS_HANGAR = [0, 64];
 
-/** Capital ship, authored facing DOWN (toward the player). */
 function drawBoss(g, accent, dmg) {
-  for (const ex of [-112, -56, 56, 112]) {
-    g.fillStyle = '#1a1f2c';
-    rrect(g, ex - 15, -106, 30, 14, 3);
-    g.fill();
-    g.strokeStyle = '#0b0f19';
-    g.lineWidth = 1.5;
-    g.stroke();
-    g.fillStyle = '#8fb4ff';
-    g.fillRect(ex - 11, -106, 22, 3);
-  }
-
-  g.shadowColor = hexToRgba(accent, 0.35);
-  g.shadowBlur = 18;
-  g.fillStyle = linear(g, 0, -100, 0, 110, [[0, '#6f7a90'], [0.45, '#3d4558'], [1, '#20253a']]);
-  poly(g, BOSS_HULL);
-  g.fill();
-  g.shadowBlur = 0;
-
-  g.save();
-  poly(g, BOSS_HULL);
-  g.clip();
-  g.fillStyle = linear(g, -165, 0, 165, 0, [[0, 'rgba(0,0,0,0.4)'], [0.32, 'rgba(0,0,0,0)'], [0.68, 'rgba(0,0,0,0)'], [1, 'rgba(0,0,0,0.4)']]);
-  g.fillRect(-170, -110, 340, 230);
   const rng = mulberry32(1337);
-  for (let i = 0; i < 90; i++) {
-    const x = (rng() * 2 - 1) * 150;
-    const y = -92 + rng() * 190;
-    g.fillStyle = rng() < 0.5 ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.28)';
-    g.fillRect(x, y, 3 + rng() * 12, 2 + rng() * 5);
-  }
-  g.strokeStyle = 'rgba(10,14,24,0.8)';
-  g.lineWidth = 1.2;
+  const greeble = (outline, count, x0, x1, y0, y1) => {
+    g.save();
+    poly(g, outline);
+    g.clip();
+    for (let i = 0; i < count; i++) {
+      g.fillStyle = rng() < 0.5 ? 'rgba(255,255,255,0.16)' : 'rgba(0,0,0,0.22)';
+      g.fillRect(lerp(x0, x1, rng()), lerp(y0, y1, rng()), 8 + rng() * 40, 5 + rng() * 14);
+    }
+    g.restore();
+  };
+  const windows = (x0, x1, y, n) => {
+    g.fillStyle = '#ffd27a';
+    for (let i = 0; i < n; i++) {
+      if (rng() < 0.35) continue;
+      g.fillRect(lerp(x0, x1, (i + rng() * 0.5) / n), y + rng() * 6, 7, 5);
+    }
+  };
+  const face = (pts, top, bottom) => {
+    poly(g, pts);
+    let minY = Infinity;
+    let maxY = -Infinity;
+    for (let i = 1; i < pts.length; i += 2) {
+      minY = Math.min(minY, pts[i]);
+      maxY = Math.max(maxY, pts[i]);
+    }
+    g.fillStyle = linear(g, 0, minY, 0, maxY, [[0, top], [1, bottom]]);
+    g.fill();
+    g.stroke();
+  };
+
+  /* ---- hull and superstructure, in reference-image units */
+  g.save();
+  g.scale(BOSS_ART_SCALE, BOSS_ART_SCALE);
+  g.translate(-610, -310);
+  g.lineJoin = 'round';
+  g.strokeStyle = BOSS_OUTLINE;
+  g.lineWidth = 6;
+
+  g.shadowColor = hexToRgba(accent, 0.4);
+  g.shadowBlur = 18;
+  face(BOSS_BELLY, '#5d6678', '#232835');
+  g.shadowBlur = 0;
+  poly(g, BOSS_DECK);
+  g.fillStyle = linear(g, 22, 0, 1200, 0, [[0, '#cfd5dd'], [0.5, '#9fa8b6'], [1, '#78818f']]);
+  g.fill();
+  g.stroke();
+  greeble(BOSS_DECK, 260, 40, 1180, 330, 520);
+  greeble(BOSS_BELLY, 120, 60, 1160, 450, 590);
+
+  // deck seams converging on the bow
+  g.strokeStyle = 'rgba(30,36,48,0.55)';
+  g.lineWidth = 4;
   g.beginPath();
-  for (const sx of [-1, 1]) {
-    g.moveTo(sx * 150, -62); g.lineTo(sx * 66, -62);
-    g.moveTo(sx * 140, -42); g.lineTo(sx * 74, 26);
-    g.moveTo(sx * 72, 40); g.lineTo(sx * 54, 98);
+  for (const [x, y] of [[160, 414], [300, 385], [450, 362], [770, 362], [920, 385], [1060, 416]]) {
+    g.moveTo(x, y);
+    g.lineTo(610, 522);
   }
   g.stroke();
-  g.strokeStyle = 'rgba(255,255,255,0.14)';
-  g.lineWidth = 1;
+
+  // equator trench with lit ports
+  g.strokeStyle = '#272c39';
+  g.lineWidth = 12;
   g.beginPath();
-  for (const sx of [-1, 1]) {
-    g.moveTo(sx * 150, -28); g.lineTo(sx * 86, 64);
-  }
+  g.moveTo(40, 450);
+  g.lineTo(610, 524);
+  g.lineTo(1185, 455);
   g.stroke();
+  g.fillStyle = '#ffd27a';
+  for (let i = 1; i < 26; i++) {
+    if (rng() < 0.4) continue;
+    const t = i / 26;
+    const x = lerp(40, 1185, t);
+    const y = t < 0.5 ? lerp(450, 524, t * 2) : lerp(524, 455, t * 2 - 1);
+    g.fillRect(x, y - 2, 8, 4);
+  }
+
+  // stepped superstructure
+  g.strokeStyle = BOSS_OUTLINE;
+  g.lineWidth = 6;
+  BOSS_TIERS.forEach((tier, i) => {
+    face(tier, ['#b9c0ca', '#a7afbb', '#9aa3af'][i], ['#6b7483', '#636c7b', '#5b6472'][i]);
+    windows(tier[0] + 20, tier[2] - 30, tier[5] + 10, 18 - i * 4);
+  });
+  g.fillStyle = '#5d6678';
+  g.fillRect(588, 160, 44, 80);
+  g.strokeRect(588, 160, 44, 80);
+
+  // command tower
+  face([440, 98, 780, 98, 762, 80, 458, 80], '#d3d9e0', '#aeb6c1');
+  face([430, 98, 790, 98, 790, 168, 430, 168], '#a9b1bc', '#6a7381');
+  face([430, 168, 790, 168, 762, 184, 458, 184], '#4c5463', '#363c48');
+  windows(445, 770, 112, 22);
+  windows(445, 770, 140, 22);
+
+  // shield-generator globes and antenna mast
+  for (const gx of [470, 745]) {
+    g.fillStyle = '#6a7381';
+    g.fillRect(gx - 6, 62, 12, 38);
+    g.strokeRect(gx - 6, 62, 12, 38);
+    const globe = g.createRadialGradient(gx - 10, 40, 4, gx, 52, 30);
+    globe.addColorStop(0, '#e7ebf0');
+    globe.addColorStop(1, '#7c8593');
+    g.fillStyle = globe;
+    circle(g, gx, 52, 27);
+    g.fill();
+    g.stroke();
+    g.lineWidth = 3;
+    g.beginPath();
+    g.ellipse(gx, 52, 27, 9, 0, 0, TAU);
+    g.moveTo(gx, 25);
+    g.lineTo(gx, 79);
+    g.stroke();
+    g.lineWidth = 6;
+  }
+  g.fillStyle = '#7c8593';
+  g.fillRect(600, 16, 20, 66);
+  g.strokeRect(600, 16, 20, 66);
+  g.fillRect(546, 22, 128, 12);
+  g.strokeRect(546, 22, 128, 12);
+
+  if (dmg >= 1) {
+    scorch(g, BOSS_DECK, [[260, 420, 70], [880, 405, 55], [470, 470, 45]]);
+    scorch(g, BOSS_TIERS[0], [[420, 370, 42]]);
+  }
+  if (dmg >= 2) {
+    scorch(g, BOSS_DECK, [[1060, 440, 52], [130, 444, 42], [740, 470, 46]], '#ff4a2a');
+    scorch(g, BOSS_BELLY, [[420, 520, 55], [860, 520, 50]], '#ff4a2a');
+    scorch(g, BOSS_TIERS[1], [[700, 310, 40]], '#ff4a2a');
+  }
   g.restore();
 
-  if (dmg >= 1) scorch(g, BOSS_HULL, [[-112, -50, 26], [84, -74, 18], [-58, 58, 16], [122, -34, 14]]);
-  if (dmg >= 2) scorch(g, BOSS_HULL, [[30, -60, 22], [-132, -74, 16], [66, 50, 18], [-20, -40, 12], [104, 6, 12]], '#ff4a2a');
+  /* ---- functional details, in sprite units */
+  g.lineJoin = 'round';
+  g.strokeStyle = BOSS_OUTLINE;
 
-  g.lineWidth = 2;
-  g.strokeStyle = '#0b0f19';
-  poly(g, BOSS_HULL);
-  g.stroke();
-
-  g.fillStyle = linear(g, 0, -96, 0, -56, [[0, '#68728a'], [1, '#3a4255']]);
-  rrect(g, -62, -96, 124, 40, 6);
-  g.fill();
-  g.strokeStyle = '#0b0f19';
-  g.lineWidth = 1.5;
-  g.stroke();
-  g.fillStyle = '#323a4c';
-  rrect(g, -48, -88, 96, 24, 4);
-  g.fill();
-
-  g.fillStyle = linear(g, 0, -114, 0, -86, [[0, '#8a94aa'], [1, '#4a5367']]);
-  rrect(g, -26, -114, 52, 26, 5);
-  g.fill();
-  g.stroke();
-  g.fillStyle = '#9fe8ff';
-  for (let x = -20; x <= 16; x += 6) g.fillRect(x, -104, 3.5, 2.2);
-
-  g.fillStyle = '#080b12';
-  rrect(g, -30, 14, 60, 13, 3);
-  g.fill();
-  g.strokeStyle = '#0b0f19';
-  g.stroke();
-  g.fillStyle = '#ff9a3c';
-  for (let x = -26; x <= 22; x += 8) g.fillRect(x, 23, 4, 1.6);
-
-  for (const sx of [-1, 1]) {
-    const tx = sx * 100;
-    const ty = -30;
-    g.fillStyle = '#20263a';
-    g.fillRect(tx - 5, ty, 3, 17);
-    g.fillRect(tx + 2, ty, 3, 17);
-    g.fillStyle = linear(g, tx - 10, ty, tx + 10, ty, [[0, '#3a4256'], [0.5, '#7d889e'], [1, '#3a4256']]);
-    circle(g, tx, ty, 10);
+  for (const [ex, ey] of BOSS_ENGINES) {
+    g.fillStyle = '#1a1f2c';
+    rrect(g, ex - 8, ey - 6, 16, 9, 2);
     g.fill();
-    g.strokeStyle = '#0b0f19';
+    g.lineWidth = 1.2;
+    g.stroke();
+    g.fillStyle = '#8fb4ff';
+    g.fillRect(ex - 6, ey - 6, 12, 2.5);
+  }
+
+  for (const [tx, ty] of BOSS_TURRETS) {
+    g.fillStyle = '#20263a';
+    g.fillRect(tx - 4.5, ty, 3, 14);
+    g.fillRect(tx + 1.5, ty, 3, 14);
+    g.fillStyle = linear(g, tx - 8, ty, tx + 8, ty, [[0, '#3a4256'], [0.5, '#8a95ab'], [1, '#3a4256']]);
+    circle(g, tx, ty, 8);
+    g.fill();
     g.lineWidth = 1.5;
     g.stroke();
     g.fillStyle = accent;
-    circle(g, tx, ty, 3);
+    circle(g, tx, ty, 2.5);
     g.fill();
+  }
 
-    const px = sx * 54;
-    const py = 90;
+  for (const [px, py] of BOSS_PRONGS) {
     g.fillStyle = '#20263a';
-    g.fillRect(px - 1.5, py, 3, 13);
+    g.fillRect(px - 1.5, py, 3, 11);
     g.fillStyle = '#4a5368';
-    circle(g, px, py, 6);
+    circle(g, px, py, 5.5);
     g.fill();
+    g.lineWidth = 1.3;
     g.stroke();
   }
 
+  const [hx, hy] = BOSS_HANGAR;
+  g.fillStyle = '#080b12';
+  rrect(g, hx - 22, hy - 5, 44, 11, 3);
+  g.fill();
+  g.lineWidth = 1.3;
+  g.stroke();
+  g.fillStyle = '#ff9a3c';
+  for (let x = -18; x <= 14; x += 8) g.fillRect(hx + x, hy + 2, 4, 1.6);
+
+  // reactor core housing (the glow itself is drawn live by boss.js)
+  const [cx, cy] = BOSS_CORE;
   g.fillStyle = '#121724';
-  circle(g, 0, -12, 29);
+  circle(g, cx, cy, 20);
   g.fill();
   g.strokeStyle = '#7d889e';
   g.lineWidth = 2;
   g.stroke();
   g.strokeStyle = hexToRgba(accent, 0.6);
   g.lineWidth = 1.5;
-  circle(g, 0, -12, 23);
+  circle(g, cx, cy, 15);
   g.stroke();
-  g.strokeStyle = 'rgba(125,136,158,0.6)';
+  g.strokeStyle = 'rgba(125,136,158,0.7)';
   g.lineWidth = 2;
   g.beginPath();
   for (let i = 0; i < 8; i++) {
     const a = (i / 8) * TAU;
-    g.moveTo(Math.cos(a) * 30, -12 + Math.sin(a) * 30);
-    g.lineTo(Math.cos(a) * 36, -12 + Math.sin(a) * 36);
+    g.moveTo(cx + Math.cos(a) * 21, cy + Math.sin(a) * 21);
+    g.lineTo(cx + Math.cos(a) * 25, cy + Math.sin(a) * 25);
   }
   g.stroke();
 
+  // running lights along the equator trench
   g.fillStyle = accent;
   g.shadowColor = accent;
   g.shadowBlur = 6;
   for (const sx of [-1, 1]) {
-    for (let i = 0; i < 5; i++) {
-      const t = (i + 0.5) / 5;
-      circle(g, lerp(150, 88, t) * sx, lerp(-28, 62, t), 1.8);
+    for (let i = 0; i < 6; i++) {
+      const t = (i + 0.5) / 7;
+      circle(g, sx * lerp(156, 26, t), lerp(39.5, 56, t), 1.8);
       g.fill();
     }
   }
@@ -1279,7 +1373,7 @@ const bossCache = new Map();
 export function getBossSprites(accent) {
   let s = bossCache.get(accent);
   if (!s) {
-    s = [0, 1, 2].map((dmg) => makeSprite(350, 250, (g) => drawBoss(g, accent, dmg)));
+    s = [0, 1, 2].map((dmg) => makeSprite(350, 200, (g) => drawBoss(g, accent, dmg)));
     bossCache.set(accent, s);
   }
   return s;

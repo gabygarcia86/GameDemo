@@ -16,14 +16,21 @@ const ACCENTS = ['#ff3b4e', '#b26bff', '#ff8a2a'];
 const CORE_COLORS = ['#5ad1ff', '#ffb02e', '#ff3b4e'];
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
 
-const CORE = { x: 0, y: -12, r: 26 };
-const HULL = [[0, -58, 60], [-112, -58, 44], [112, -58, 44], [-98, 0, 28], [98, 0, 28], [-68, 36, 26], [68, 36, 26], [-55, 84, 20], [55, 84, 20]];
-const SIDE_GUNS = [[-100, -14], [100, -14]];
-const PRONG_GUNS = [[-54, 104], [54, 104]];
-const ENGINES = [-112, -56, 56, 112];
+// Positions relative to the ship center; they match the art in sprites.js drawBoss.
+const CORE = { x: 0, y: 20, r: 22 };
+const HULL = [
+  [-28, -52, 24], [28, -52, 24],                 // command tower
+  [0, -5, 40], [-55, 15, 22], [55, 15, 22],      // superstructure
+  [0, 45, 34], [-70, 35, 26], [70, 35, 26],      // hull center
+  [-115, 38, 18], [115, 38, 18], [-148, 39, 12], [148, 39, 12], // wings
+];
+const SIDE_GUNS = [[-87, 45], [87, 45]];         // muzzles of the deck turrets (centers 14 above)
+const PRONG_GUNS = [[-129, 56], [129, 56]];      // muzzles of the wing-tip guns
+const HANGAR = [0, 70];
+const ENGINES = [[-145, 27], [-105, 19], [105, 19], [145, 27]]; // top of each engine bell
 const DAMAGE_POINTS = {
-  2: [[-112, -50], [84, -74], [-58, 58], [122, -34]],
-  3: [[-112, -50], [84, -74], [-58, 58], [122, -34], [30, -60], [-132, -74], [66, 50], [104, 6]],
+  2: [[-90, 30], [70, 22], [-30, -12], [120, 38]],
+  3: [[-90, 30], [70, 22], [-30, -12], [120, 38], [30, -50], [-135, 38], [45, 55], [-55, 5]],
 };
 const PATTERNS = {
   1: ['fan', 'aimed', 'rain'],
@@ -77,7 +84,8 @@ export class Boss {
         const k = clamp(this.t / CONFIG.boss.introTime, 0, 1);
         this.y = lerp(-170, this.baseY, easeOutCubic(k));
         if (Math.random() < 0.5) {
-          this.game.particles.glow(this.x + pick(ENGINES), this.y - 110, rand(6, 12), '#6f9bff', 0.4, 0, rand(-80, -40));
+          const [ex, ey] = pick(ENGINES);
+          this.game.particles.glow(this.x + ex, this.y + ey - 18, rand(6, 12), '#6f9bff', 0.4, 0, rand(-80, -40));
         }
         if (k >= 1) {
           this.state = 'fight';
@@ -188,7 +196,7 @@ export class Boss {
         const n = 10 + 4 * ph + 2 * enc;
         for (let i = 0; i < n; i++) {
           at(i * 0.085, () => {
-            this.fire(rand(-130, 130), rand(-10, 40), rand(-0.12, 0.12), 'spread', 0.8);
+            this.fire(rand(-140, 140), rand(30, 55), rand(-0.12, 0.12), 'spread', 0.8);
             if (i % 3 === 0) audio.play('enemyShoot');
           });
         }
@@ -264,8 +272,8 @@ export class Boss {
   launchMinion() {
     const game = this.game;
     if (this.minionCount() >= CONFIG.boss.maxMinions || !game.player.alive) return;
-    const hx = this.x;
-    const hy = this.y + 24;
+    const hx = this.x + HANGAR[0];
+    const hy = this.y + HANGAR[1];
     const e = new Enemy('interceptor');
     const path = new Path(buildMinionRun(hx, hy, game.player));
     e.follow(path, CONFIG.dive.speed * 1.05 * game.diff.enemySpeed, 'remove');
@@ -394,7 +402,7 @@ export class Boss {
     ctx.scale(1, -1); // flames point backward, which is up for this ship
     ctx.globalCompositeOperation = 'lighter';
     const fl = 1 + 0.15 * Math.sin(this.t * 30) + (this.state === 'intro' ? 0.8 : 0);
-    for (const ex of ENGINES) ctx.drawImage(this.flame, ex - 11, 106, 22, 34 * fl);
+    for (const [ex, ey] of ENGINES) ctx.drawImage(this.flame, ex - 8, -ey, 16, 28 * fl);
     ctx.restore();
 
     ctx.drawImage(spr.canvas, x - spr.w / 2, y - spr.h / 2, spr.w, spr.h);
@@ -407,13 +415,13 @@ export class Boss {
 
     ctx.globalCompositeOperation = 'lighter';
     const L = this.laser;
-    let core = 30 * (1 + 0.15 * Math.sin(this.t * (3 + this.phase * 2)));
+    let core = 24 * (1 + 0.15 * Math.sin(this.t * (3 + this.phase * 2)));
     if (L.state === 'charge') core *= 1 + (L.t / LASER_CHARGE) * 0.9;
     if (L.state === 'fire') core *= 1.8;
     ctx.drawImage(getGlow(CORE_COLORS[this.phase - 1]), x + CORE.x - core, y + CORE.y - core, core * 2, core * 2);
     if (Math.sin(this.t * 5) > 0.3) {
       const glow = getGlow(this.accent);
-      for (const [gx, gy] of SIDE_GUNS) ctx.drawImage(glow, x + gx - 8, y + gy - 24, 16, 16);
+      for (const [gx, gy] of SIDE_GUNS) ctx.drawImage(glow, x + gx - 8, y + gy - 22, 16, 16);
     }
     ctx.globalCompositeOperation = 'source-over';
   }
@@ -422,7 +430,7 @@ export class Boss {
     const L = this.laser;
     if (L.state === 'off' || this.state !== 'fight') return;
     const x = this.x;
-    const y0 = this.y + 10;
+    const y0 = this.y + CORE.y + 12;
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
     if (L.state === 'charge') {

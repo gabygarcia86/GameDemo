@@ -467,14 +467,17 @@
   // ===========================================================================
 
   const STORAGE_KEY = 'stackAttack.v1';
+  // Bumped when a default changes in a way saved settings should pick up.
+  const PREF_VERSION = 2;
   const PREF_DEFAULTS = {
+    version: PREF_VERSION,
     theme: 'neon',
     difficulty: 'easy',
     das: 167,
     arr: 33,
     sdf: 20,
     ghost: true,
-    letters: true,
+    letters: false,
     touch: 'auto',
     musicVol: 60,
     sfxVol: 80,
@@ -482,7 +485,7 @@
     best: { easy: 0, medium: 0, hard: 0 },
   };
   const SETTINGS_DEFAULTS = {
-    das: 167, arr: 33, sdf: 20, ghost: true, letters: true, touch: 'auto', musicVol: 60, sfxVol: 80,
+    das: 167, arr: 33, sdf: 20, ghost: true, letters: false, touch: 'auto', musicVol: 60, sfxVol: 80,
   };
 
   class Preferences {
@@ -505,7 +508,8 @@
       if (Number.isFinite(s.arr)) d.arr = clamp(Math.round(s.arr), 0, 100);
       if ([10, 20, 40, 1000].includes(s.sdf)) d.sdf = s.sdf;
       if (typeof s.ghost === 'boolean') d.ghost = s.ghost;
-      if (typeof s.letters === 'boolean') d.letters = s.letters;
+      // Letters used to default to on; older saves get the new default (off).
+      if (typeof s.letters === 'boolean' && s.version >= 2) d.letters = s.letters;
       if (['auto', 'on', 'off'].includes(s.touch)) d.touch = s.touch;
       if (Number.isFinite(s.musicVol)) d.musicVol = clamp(Math.round(s.musicVol), 0, 100);
       if (Number.isFinite(s.sfxVol)) d.sfxVol = clamp(Math.round(s.sfxVol), 0, 100);

@@ -1280,3 +1280,33 @@ dialog.dlg::backdrop {
         padding: 6px 8px;
     }
 }
+
+/* ---------- Main menu back link ---------- */
+
+.menu-back {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 32px;
+    margin: 2px 0 -6px -6px;
+    padding: 4px 12px 4px 8px;
+    background: var(--btn-bg);
+    color: var(--btn-text);
+    border: var(--border-w) solid var(--btn-border);
+    border-radius: var(--btn-radius);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    text-decoration: none;
+}
+
+.menu-back:hover {
+    filter: brightness(1.12);
+}
+
+.menu-back svg {
+    width: 14px;
+    height: 14px;
+}

@@ -175,7 +175,7 @@ A single `requestAnimationFrame` loop drives everything. Listeners are attached 
 
 - Semantic buttons, a fieldset with radio buttons for difficulty, native `<dialog>` for modals (focus trap, Esc closes).
 - A visible `:focus-visible` ring in every theme.
-- Pieces are told apart by more than color: each block can show its letter (on by default), and Medium and Hard pieces carry tier markings.
+- Pieces are told apart by more than color: Medium and Hard pieces carry tier markings, and **Settings → Piece letters** (off by default) labels every block with its piece letter.
 - `prefers-reduced-motion` turns off CSS animations, particles and hard-drop trails, and shortens the line-clear animation.
 - The hold and next canvases have live `aria-label`s that name the pieces.
 
@@ -184,6 +184,7 @@ A single `requestAnimationFrame` loop drives everything. Listeners are attached 
 **Start and menu**
 - [ ] The page loads with no console errors and the main menu shows a gallery of the selected difficulty's pieces.
 - [ ] Switching Easy / Medium / Hard updates the gallery (7 / 11 / 15 pieces), the toolbar label and the BEST stat.
+- [ ] BACK (bottom-left of the main menu) returns to the Random games page.
 - [ ] PLAY starts a game. Five next pieces are shown and the first piece is I, T, J or L.
 
 **Movement and rotation**

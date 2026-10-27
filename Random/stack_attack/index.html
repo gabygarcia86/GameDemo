@@ -14,11 +14,16 @@
         <link rel="icon"
             href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2305050f'/%3E%3Crect x='5' y='17' width='7' height='7' fill='%2300f0ff'/%3E%3Crect x='12' y='17' width='7' height='7' fill='%2300f0ff'/%3E%3Crect x='19' y='17' width='7' height='7' fill='%23ff2e88'/%3E%3Crect x='12' y='10' width='7' height='7' fill='%23f5ff3d'/%3E%3Crect x='19' y='24' width='7' height='3' fill='%233dff7a'/%3E%3C/svg%3E">
         <link rel="stylesheet" href="styles.css">
+        <link rel="stylesheet" href="themes.css">
         <script>
             // Apply the saved theme before first paint so there is no flash.
             try {
                 var saved = JSON.parse(localStorage.getItem('stackAttack.v1') || '{}');
-                if (/^(retro70|arcade80|classic90|neon)$/.test(saved.theme)) {
+                var ids = ['retro70', 'arcade80', 'classic90', 'neon', 'scifi',
+                    'matrix', 'ninjas', 'western', 'america', 'halloween',
+                    'thanksgiving', 'hanukkah', 'christmas', 'easter', 'spring',
+                    'beach', 'winter'];
+                if (ids.indexOf(saved.theme) !== -1) {
                     document.documentElement.dataset.theme = saved.theme;
                 }
             } catch (e) { }
@@ -56,6 +61,17 @@
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path
                                 d="M5 20V14M12 20V9M19 20V4" /></svg>
                         <span class="tb-label" id="diff-label">Easy</span>
+                    </button>
+                    <button type="button" id="btn-mute" class="tb-btn"
+                        aria-label="Mute sound" aria-pressed="false">
+                        <svg class="icon-on" viewBox="0 0 24 24"
+                            aria-hidden="true"><path
+                                d="M4 9v6h4l5 4V5L8 9H4z" /><path
+                                d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" /></svg>
+                        <svg class="icon-off" viewBox="0 0 24 24"
+                            aria-hidden="true"><path
+                                d="M4 9v6h4l5 4V5L8 9H4z" /><path
+                                d="M16 9l5 6M21 9l-5 6" /></svg>
                     </button>
                     <button type="button" id="btn-settings" class="tb-btn"
                         aria-label="Settings" aria-haspopup="dialog">
@@ -173,7 +189,8 @@
                 </div>
                 <dl class="best-list" id="best-list"></dl>
                 <p class="hint keys-hint">← → move · ↓ soft drop · Space hard
-                    drop · ↑/X rotate · Z rotate back · C hold · P pause</p>
+                    drop · ↑/X rotate · Z rotate back · C hold · P pause · M
+                    mute</p>
             </div>
         </section>
 
@@ -210,7 +227,7 @@
         <dialog id="dlg-theme" class="dlg" aria-labelledby="theme-title">
             <form method="dialog" class="dlg-body">
                 <h2 id="theme-title" class="card-title">Theme</h2>
-                <div class="theme-grid" id="theme-grid"></div>
+                <div class="theme-groups" id="theme-groups"></div>
                 <button type="submit" class="btn btn-primary" value="close">Done</button>
             </form>
         </dialog>
@@ -256,6 +273,17 @@
                     </select>
                 </label>
                 <label class="field">
+                    <span>Music volume <output id="out-music"></output></span>
+                    <input type="range" id="set-music" min="0" max="100"
+                        step="1">
+                </label>
+                <label class="field">
+                    <span>Sound effects volume <output
+                            id="out-sfx"></output></span>
+                    <input type="range" id="set-sfx" min="0" max="100"
+                        step="1">
+                </label>
+                <label class="field">
                     <span>Touch controls</span>
                     <select id="set-touch">
                         <option value="auto">Automatic</option>
@@ -286,6 +314,8 @@
             </form>
         </dialog>
 
+        <script src="audio/audio-config.js"></script>
+        <script src="audio/audio-engine.js"></script>
         <script src="game.js"></script>
     </body>
 </html>

@@ -309,7 +309,7 @@ svg {
 .logo,
 .menu-logo {
     margin: 0;
-    font-family: var(--font-display);
+    font-family: var(--font-logo, var(--font-display));
     color: var(--title-color);
     text-shadow: var(--title-shadow);
     text-transform: var(--title-transform);
@@ -727,7 +727,7 @@ body.touch-on .keys-hint {
     display: none;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 880px) {
     .tb-btn:not(.tb-strong):not(#btn-difficulty) .tb-label {
         display: none;
     }
@@ -1042,9 +1042,29 @@ dialog.dlg::backdrop {
 }
 
 /* Theme picker: each card carries its own data-theme to preview itself */
+#dlg-theme {
+    width: min(720px, calc(100vw - 24px));
+}
+
+.theme-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    text-align: left;
+}
+
+.theme-group-title {
+    margin: 0 0 8px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
 .theme-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 12px;
 }
 
@@ -1054,7 +1074,7 @@ dialog.dlg::backdrop {
     flex-direction: column;
     justify-content: flex-end;
     gap: 8px;
-    min-height: 120px;
+    min-height: 92px;
     padding: 10px;
     background-color: var(--bg);
     background-image: var(--bg-image);
@@ -1237,5 +1257,26 @@ dialog.dlg::backdrop {
     40%,
     80% {
         transform: translateX(4px);
+    }
+}
+
+/* ---------- Sound toggle ---------- */
+
+#btn-mute[aria-pressed="true"] .icon-on,
+#btn-mute:not([aria-pressed="true"]) .icon-off {
+    display: none;
+}
+
+#btn-mute[aria-pressed="true"] {
+    color: var(--muted);
+}
+
+@media (max-width: 400px) {
+    #btn-difficulty .tb-label {
+        display: none;
+    }
+
+    .tb-btn {
+        padding: 6px 8px;
     }
 }

@@ -182,7 +182,7 @@
 
   const THEMES = {
     retro70: {
-      id: 'retro70', label: '70s Retro', blurb: 'Warm, groovy and round',
+      id: 'retro70', label: '70s Retro', blurb: 'Warm, groovy and round', group: 'Arcade eras',
       block: 'round',
       boardBg: ['#3e2c1f', '#2a1d14'],
       grid: 'rgba(243, 227, 195, 0.07)',
@@ -198,7 +198,7 @@
       },
     },
     arcade80: {
-      id: 'arcade80', label: '80s Arcade', blurb: 'Cabinet glow and grids',
+      id: 'arcade80', label: '80s Arcade', blurb: 'Cabinet glow and grids', group: 'Arcade eras',
       block: 'bevel',
       boardBg: ['#140b45', '#06031c'],
       grid: 'rgba(0, 229, 255, 0.12)',
@@ -214,7 +214,7 @@
       },
     },
     classic90: {
-      id: 'classic90', label: '90s Classic', blurb: 'Chunky primary colors',
+      id: 'classic90', label: '90s Classic', blurb: 'Chunky primary colors', group: 'Arcade eras',
       block: 'chunky',
       boardBg: ['#1c1c48', '#10102a'],
       grid: 'rgba(255, 255, 255, 0.08)',
@@ -230,7 +230,7 @@
       },
     },
     neon: {
-      id: 'neon', label: 'Neon Future', blurb: 'Glowing lines in the dark',
+      id: 'neon', label: 'Neon Future', blurb: 'Glowing lines in the dark', group: 'Arcade eras',
       block: 'glow',
       boardBg: ['#08081c', '#03030b'],
       grid: 'rgba(0, 240, 255, 0.07)',
@@ -245,8 +245,222 @@
         X: '#ffffff', W: '#8a7dff', Y: '#ffd36b', V: '#2effc0',
       },
     },
+    scifi: {
+      id: 'scifi', label: 'Sci-Fi', blurb: 'Starship hull plating', group: 'Worlds',
+      block: 'metal',
+      boardBg: ['#0f1a2b', '#060b14'],
+      grid: 'rgba(79, 195, 247, 0.10)',
+      flash: '#e0f7ff',
+      dead: '#3a4556',
+      letter: 'rgba(0, 0, 0, 0.5)',
+      particles: true,
+      colors: {
+        I: '#4fc3f7', O: '#ffd166', T: '#b388ff', S: '#69f0ae', Z: '#ff5252',
+        J: '#448aff', L: '#ff9f1c',
+        C: '#f06292', R: '#80deea', P: '#c6ff00', U: '#ff8a65',
+        X: '#eceff1', W: '#7c4dff', Y: '#ffe57f', V: '#26a69a',
+      },
+    },
+    matrix: {
+      id: 'matrix', label: 'Matrix', blurb: 'Green code in the dark', group: 'Worlds',
+      block: 'glow',
+      boardBg: ['#001a08', '#000000'],
+      grid: 'rgba(0, 255, 65, 0.08)',
+      flash: '#d4ffd9',
+      dead: '#0f3318',
+      letter: null,
+      particles: true,
+      colors: {
+        I: '#00ff41', O: '#b6ff00', T: '#39ff14', S: '#00e676', Z: '#76ff03',
+        J: '#00ffa3', L: '#c6ff00',
+        C: '#64ffda', R: '#1de9b6', P: '#aeea00', U: '#00c853',
+        X: '#e0ffe0', W: '#69f0ae', Y: '#f4ff81', V: '#00bfa5',
+      },
+    },
+    ninjas: {
+      id: 'ninjas', label: 'Ninjas', blurb: 'Ink, paper and a red sun', group: 'Worlds',
+      block: 'chunky',
+      boardBg: ['#1d1a22', '#0e0c12'],
+      grid: 'rgba(255, 255, 255, 0.06)',
+      flash: '#fff5e6',
+      dead: '#4a4450',
+      letter: 'rgba(0, 0, 0, 0.5)',
+      particles: true,
+      colors: {
+        I: '#3fa7d6', O: '#f2c14e', T: '#7b2d8b', S: '#5c946e', Z: '#c8102e',
+        J: '#2e4a7d', L: '#e07a1f',
+        C: '#f28fad', R: '#9cc5a1', P: '#b5a642', U: '#8c1c13',
+        X: '#f2ead8', W: '#4a6670', Y: '#e9b44c', V: '#6b4226',
+      },
+    },
+    western: {
+      id: 'western', label: 'Western', blurb: 'Sunset saloon wood', group: 'Worlds',
+      block: 'wood',
+      boardBg: ['#4a2c17', '#2b190c'],
+      grid: 'rgba(255, 210, 150, 0.07)',
+      flash: '#fff0d0',
+      dead: '#6e5c4c',
+      letter: 'rgba(30, 15, 5, 0.55)',
+      particles: true,
+      colors: {
+        I: '#4f86c6', O: '#e0a526', T: '#8b3a62', S: '#6b8e23', Z: '#b7410e',
+        J: '#2f4f6f', L: '#d2691e',
+        C: '#e9967a', R: '#87ceeb', P: '#9acd32', U: '#a52a2a',
+        X: '#f5deb3', W: '#708090', Y: '#daa520', V: '#8b5a2b',
+      },
+    },
+    america: {
+      id: 'america', label: 'America', blurb: 'Stars and stripes', group: 'Holidays',
+      block: 'bevel',
+      boardBg: ['#0b2552', '#061633'],
+      grid: 'rgba(255, 255, 255, 0.08)',
+      flash: '#ffffff',
+      dead: '#5a6478',
+      letter: 'rgba(0, 0, 0, 0.45)',
+      particles: true,
+      colors: {
+        I: '#4a90e2', O: '#f5f5f5', T: '#b22234', S: '#1d3c78', Z: '#ff4d5a',
+        J: '#7fa7e0', L: '#f2c14e',
+        C: '#ffb3c1', R: '#bde0fe', P: '#2a9d8f', U: '#8b0000',
+        X: '#ffd700', W: '#5e60ce', Y: '#c0c0c0', V: '#0077b6',
+      },
+    },
+    halloween: {
+      id: 'halloween', label: 'Halloween', blurb: 'Pumpkins under a full moon', group: 'Holidays',
+      block: 'round',
+      boardBg: ['#1e0b26', '#0b0410'],
+      grid: 'rgba(255, 117, 24, 0.08)',
+      flash: '#fff1d6',
+      dead: '#3d3340',
+      letter: 'rgba(20, 0, 20, 0.55)',
+      particles: true,
+      colors: {
+        I: '#7cff4f', O: '#ff7518', T: '#8e44ad', S: '#2ecc71', Z: '#e74c3c',
+        J: '#5b2c6f', L: '#ffb347',
+        C: '#f8f8ff', R: '#a3e635', P: '#d35400', U: '#c0392b',
+        X: '#fdf5e6', W: '#6c3483', Y: '#f1c40f', V: '#566573',
+      },
+    },
+    thanksgiving: {
+      id: 'thanksgiving', label: 'Thanksgiving', blurb: 'Harvest plaid and wood', group: 'Holidays',
+      block: 'wood',
+      boardBg: ['#3b2414', '#24150b'],
+      grid: 'rgba(255, 220, 170, 0.07)',
+      flash: '#fff3dc',
+      dead: '#6d5a4a',
+      letter: 'rgba(40, 20, 5, 0.5)',
+      particles: true,
+      colors: {
+        I: '#c0392b', O: '#e9a23b', T: '#8e5a2b', S: '#7a8b2c', Z: '#d35400',
+        J: '#5d4037', L: '#f39c12',
+        C: '#e6b88a', R: '#b7950b', P: '#a04000', U: '#7b241c',
+        X: '#f5deb3', W: '#556b2f', Y: '#ffcf40', V: '#8d6e63',
+      },
+    },
+    hanukkah: {
+      id: 'hanukkah', label: 'Hanukkah', blurb: 'Blue, silver and candlelight', group: 'Holidays',
+      block: 'metal',
+      boardBg: ['#0d2c74', '#06163d'],
+      grid: 'rgba(200, 215, 240, 0.10)',
+      flash: '#ffffff',
+      dead: '#4a5878',
+      letter: 'rgba(0, 0, 0, 0.45)',
+      particles: true,
+      colors: {
+        I: '#4f8ef7', O: '#ffd36b', T: '#c9d3e6', S: '#2a5bd7', Z: '#89b4ff',
+        J: '#1b3a8a', L: '#f5b041',
+        C: '#e8eef9', R: '#6fa8dc', P: '#b0bec5', U: '#3d6fd1',
+        X: '#fff3b0', W: '#7986cb', Y: '#d4af37', V: '#90caf9',
+      },
+    },
+    christmas: {
+      id: 'christmas', label: 'Christmas', blurb: 'Ornaments and falling snow', group: 'Holidays',
+      block: 'round',
+      boardBg: ['#0d3b23', '#062214'],
+      grid: 'rgba(255, 255, 255, 0.06)',
+      flash: '#fffaf0',
+      dead: '#4b5a50',
+      letter: 'rgba(0, 0, 0, 0.45)',
+      particles: true,
+      colors: {
+        I: '#2ecc71', O: '#ffd700', T: '#9b59b6', S: '#27ae60', Z: '#e3121b',
+        J: '#3498db', L: '#ff8c1a',
+        C: '#ff9eb5', R: '#c0e8ff', P: '#a5d610', U: '#b3141f',
+        X: '#ffffff', W: '#1abc9c', Y: '#f7dc6f', V: '#c0c0c0',
+      },
+    },
+    easter: {
+      id: 'easter', label: 'Easter', blurb: 'Pastel eggs and polka dots', group: 'Holidays',
+      block: 'flat',
+      boardBg: ['#fff6fb', '#f1e6f7'],
+      grid: 'rgba(120, 80, 160, 0.10)',
+      flash: '#ffffff',
+      dead: '#c9c0cf',
+      letter: 'rgba(60, 30, 80, 0.55)',
+      particles: true,
+      colors: {
+        I: '#7ec8e3', O: '#ffe066', T: '#c39bd3', S: '#90e0a0', Z: '#ff8fab',
+        J: '#8fa8ff', L: '#ffb870',
+        C: '#ffc8dd', R: '#a0f0e0', P: '#d4f08c', U: '#f4978e',
+        X: '#fff1c1', W: '#b8a1e8', Y: '#f9d56e', V: '#9ad1d4',
+      },
+    },
+    spring: {
+      id: 'spring', label: 'Spring', blurb: 'Blossoms on green hills', group: 'Seasons',
+      block: 'round',
+      boardBg: ['#24452a', '#142a18'],
+      grid: 'rgba(255, 255, 255, 0.07)',
+      flash: '#fffde7',
+      dead: '#55655a',
+      letter: 'rgba(0, 0, 0, 0.45)',
+      particles: true,
+      colors: {
+        I: '#4fc3f7', O: '#ffeb3b', T: '#ce93d8', S: '#66bb6a', Z: '#f06292',
+        J: '#7986cb', L: '#ffa726',
+        C: '#f8bbd0', R: '#b2dfdb', P: '#d4e157', U: '#ef5350',
+        X: '#fffde7', W: '#9575cd', Y: '#ffd54f', V: '#a1887f',
+      },
+    },
+    beach: {
+      id: 'beach', label: 'Beach', blurb: 'Sun, sea and sand', group: 'Seasons',
+      block: 'flat',
+      boardBg: ['#0e7490', '#0b4f63'],
+      grid: 'rgba(255, 255, 255, 0.08)',
+      flash: '#fffbe6',
+      dead: '#5f7f88',
+      letter: 'rgba(0, 0, 0, 0.4)',
+      particles: true,
+      colors: {
+        I: '#38bdf8', O: '#fde047', T: '#f472b6', S: '#4ade80', Z: '#fb7185',
+        J: '#3b82f6', L: '#fb923c',
+        C: '#f9a8d4', R: '#a5f3fc', P: '#bef264', U: '#f87171',
+        X: '#fef3c7', W: '#2dd4bf', Y: '#facc15', V: '#d6a76c',
+      },
+    },
+    winter: {
+      id: 'winter', label: 'Winter', blurb: 'Ice blocks and snowfall', group: 'Seasons',
+      block: 'bevel',
+      boardBg: ['#1c3550', '#0e1d2e'],
+      grid: 'rgba(200, 230, 255, 0.10)',
+      flash: '#ffffff',
+      dead: '#5b6b7b',
+      letter: 'rgba(0, 0, 0, 0.4)',
+      particles: true,
+      colors: {
+        I: '#9be7ff', O: '#e3f2fd', T: '#b39ddb', S: '#80cbc4', Z: '#ef9a9a',
+        J: '#64b5f6', L: '#ffcc80',
+        C: '#f8bbd0', R: '#b2ebf2', P: '#c5e1a5', U: '#90a4ae',
+        X: '#ffffff', W: '#7986cb', Y: '#fff59d', V: '#4dd0e1',
+      },
+    },
   };
-  const THEME_ORDER = ['retro70', 'arcade80', 'classic90', 'neon'];
+  const THEME_GROUPS = [
+    ['Arcade eras', ['retro70', 'arcade80', 'classic90', 'neon']],
+    ['Worlds', ['scifi', 'matrix', 'ninjas', 'western']],
+    ['Holidays', ['america', 'halloween', 'thanksgiving', 'hanukkah', 'christmas', 'easter']],
+    ['Seasons', ['spring', 'beach', 'winter']],
+  ];
+  const THEME_ORDER = THEME_GROUPS.flatMap(([, ids]) => ids);
 
   // ===========================================================================
   // 4. Preferences (localStorage, failure-tolerant)
@@ -262,9 +476,14 @@
     ghost: true,
     letters: true,
     touch: 'auto',
+    musicVol: 60,
+    sfxVol: 80,
+    muted: false,
     best: { easy: 0, medium: 0, hard: 0 },
   };
-  const INPUT_DEFAULTS = { das: 167, arr: 33, sdf: 20, ghost: true, letters: true, touch: 'auto' };
+  const SETTINGS_DEFAULTS = {
+    das: 167, arr: 33, sdf: 20, ghost: true, letters: true, touch: 'auto', musicVol: 60, sfxVol: 80,
+  };
 
   class Preferences {
     constructor() {
@@ -288,6 +507,9 @@
       if (typeof s.ghost === 'boolean') d.ghost = s.ghost;
       if (typeof s.letters === 'boolean') d.letters = s.letters;
       if (['auto', 'on', 'off'].includes(s.touch)) d.touch = s.touch;
+      if (Number.isFinite(s.musicVol)) d.musicVol = clamp(Math.round(s.musicVol), 0, 100);
+      if (Number.isFinite(s.sfxVol)) d.sfxVol = clamp(Math.round(s.sfxVol), 0, 100);
+      if (typeof s.muted === 'boolean') d.muted = s.muted;
       if (s.best && typeof s.best === 'object') {
         for (const id of DIFFICULTY_ORDER) {
           const v = s.best[id];
@@ -477,6 +699,7 @@
       this.bag = new Bag(this.diff.pieces);
       this.fillQueue();
       this.state = State.PLAYING;
+      this.emit('sound', 'start');
       this.spawn(this.takeNext());
       this.emit('state');
       this.emit('hud');
@@ -536,7 +759,7 @@
           this.hDir = d;
           this.dasTimer = 0;
           this.arrTimer = 0;
-          if (this.canControl()) this.tryMove(d, 0);
+          if (this.canControl() && this.tryMove(d, 0)) this.emit('sound', 'move');
           break;
         }
         case 'soft':
@@ -547,10 +770,8 @@
           }
           break;
         case 'cw':
-          if (this.canControl()) this.tryRotate(1);
-          break;
         case 'ccw':
-          if (this.canControl()) this.tryRotate(-1);
+          if (this.canControl() && this.tryRotate(action === 'cw' ? 1 : -1)) this.emit('sound', 'rotate');
           break;
         case 'hard':
           if (this.canControl()) this.hardDrop();
@@ -654,6 +875,7 @@
       }
       a.y = gy;
       this.addScore(dist * SCORING.hardDrop);
+      this.emit('sound', 'hardDrop');
       this.lock();
     }
 
@@ -666,6 +888,7 @@
       const incoming = this.holdId || this.takeNext();
       this.holdId = current;
       this.holdUsed = true;
+      this.emit('sound', 'hold');
       this.spawn(incoming);
       this.emit('hud');
     }
@@ -676,6 +899,7 @@
       this.active = null;
       this.holdUsed = false;
       this.emit('effect', { kind: 'lock', id: a.id, cells });
+      this.emit('sound', 'lock');
 
       // Lock out: the whole piece came to rest above the visible field.
       if (cells.every(([, y]) => y < BUFFER)) {
@@ -686,6 +910,7 @@
       const rows = this.board.fullRows();
       if (rows.length) {
         this.combo++;
+        this.emit('sound', `clear${Math.min(4, rows.length)}`);
         this.awardLines(rows.length, this.board.emptyApartFrom(rows));
         this.clearing = {
           rows, t: 0,
@@ -722,6 +947,7 @@
       if (newLevel > this.level) {
         this.level = newLevel;
         parts.push(`Level ${newLevel}`);
+        this.emit('sound', 'levelUp');
       }
       this.emit('action', `${parts.join('\n')}\n+${pts.toLocaleString()}`);
     }
@@ -755,6 +981,7 @@
       this.overT = 0;
       this.releaseAll();
       this.isNewBest = this.recordBest();
+      this.emit('sound', 'gameOver');
       this.emit('state');
       this.emit('hud');
     }
@@ -810,23 +1037,25 @@
       const before = this.dasTimer;
       this.dasTimer = Math.min(this.dasTimer + dt, das + 1000);
       if (this.dasTimer < das || !this.canControl()) return;
+      const x0 = this.active.x;
       if (arr === 0) {
         while (this.tryMove(d, 0));
-        return;
-      }
-      if (before < das) {
-        this.arrTimer = this.dasTimer - das;
-        this.tryMove(d, 0);
       } else {
-        this.arrTimer += dt;
-      }
-      while (this.arrTimer >= arr) {
-        this.arrTimer -= arr;
-        if (!this.tryMove(d, 0)) {
-          this.arrTimer = 0;
-          break;
+        if (before < das) {
+          this.arrTimer = this.dasTimer - das;
+          this.tryMove(d, 0);
+        } else {
+          this.arrTimer += dt;
+        }
+        while (this.arrTimer >= arr) {
+          this.arrTimer -= arr;
+          if (!this.tryMove(d, 0)) {
+            this.arrTimer = 0;
+            break;
+          }
         }
       }
+      if (this.active && this.active.x !== x0) this.emit('sound', 'move');
     }
 
     updateGravity(dt) {
@@ -1009,6 +1238,56 @@
         ctx.fillRect(s - lw - s * 0.16, lw, s * 0.16, s - lw * 2);
         ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
         ctx.fillRect(lw + s * 0.08, lw + s * 0.08, s * 0.18, s * 0.18);
+      } else if (style === 'metal') {
+        const g = ctx.createLinearGradient(0, 0, 0, s);
+        g.addColorStop(0, shade(color, 0.45));
+        g.addColorStop(0.5, color);
+        g.addColorStop(0.52, shade(color, -0.12));
+        g.addColorStop(1, shade(color, -0.4));
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, s, s);
+        ctx.strokeStyle = shade(color, -0.55);
+        ctx.lineWidth = Math.max(1, s * 0.06);
+        ctx.strokeRect(ctx.lineWidth / 2, ctx.lineWidth / 2, s - ctx.lineWidth, s - ctx.lineWidth);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.lineWidth = Math.max(1, s * 0.03);
+        ctx.strokeRect(s * 0.14, s * 0.14, s * 0.72, s * 0.72);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        for (const [rx, ry] of [[0.24, 0.24], [0.76, 0.76]]) {
+          ctx.beginPath();
+          ctx.arc(s * rx, s * ry, Math.max(0.8, s * 0.045), 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (style === 'flat') {
+        const i = s * 0.05;
+        roundRectPath(ctx, i, i, s - i * 2, s - i * 2, s * 0.22);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.strokeStyle = shade(color, -0.32);
+        ctx.lineWidth = Math.max(1, s * 0.06);
+        ctx.stroke();
+        roundRectPath(ctx, s * 0.17, s * 0.17, s * 0.66, s * 0.66, s * 0.14);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.lineWidth = Math.max(1, s * 0.05);
+        ctx.stroke();
+      } else if (style === 'wood') {
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, s, s);
+        ctx.strokeStyle = shade(color, -0.25);
+        ctx.lineWidth = Math.max(1, s * 0.04);
+        for (let k = 1; k <= 3; k++) {
+          const y = (s * k) / 4;
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.bezierCurveTo(s * 0.3, y - s * 0.07, s * 0.6, y + s * 0.07, s, y);
+          ctx.stroke();
+        }
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
+        ctx.fillRect(0, 0, s, s * 0.14);
+        const lw = Math.max(1, s * 0.07);
+        ctx.strokeStyle = shade(color, -0.5);
+        ctx.lineWidth = lw;
+        ctx.strokeRect(lw / 2, lw / 2, s - lw, s - lw);
       } else {
         const i = s * 0.1;
         roundRectPath(ctx, i, i, s - i * 2, s - i * 2, s * 0.14);
@@ -1070,7 +1349,7 @@
 
     paintGhost(ctx, s, color) {
       const i = s * 0.1;
-      const r = this.theme.block === 'round' ? s * 0.28 : s * 0.1;
+      const r = this.theme.block === 'round' || this.theme.block === 'flat' ? s * 0.26 : s * 0.1;
       roundRectPath(ctx, i, i, s - i * 2, s - i * 2, r);
       ctx.fillStyle = withAlpha(color, 0.16);
       ctx.fill();
@@ -1320,6 +1599,7 @@
     KeyC: 'hold', ShiftLeft: 'hold', ShiftRight: 'hold',
     KeyP: 'pause', Escape: 'pause',
     KeyR: 'restart',
+    KeyM: 'mute',
   };
 
   /**
@@ -1459,7 +1739,8 @@
         dlgDiff: $('dlg-difficulty'),
         dlgSettings: $('dlg-settings'),
         dlgConfirm: $('dlg-confirm'),
-        themeGrid: $('theme-grid'),
+        themeGroups: $('theme-groups'),
+        btnMute: $('btn-mute'),
         diffNote: $('diff-note'),
       };
       this.hudDirty = true;
@@ -1470,6 +1751,8 @@
       this.actionTimer = 0;
       this.layoutQueued = false;
       this.lastState = null;
+      this.previewing = false;
+      this.audio = createAudio();
 
       this.reduceMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
       this.coarseMQ = window.matchMedia('(hover: none) and (pointer: coarse)');
@@ -1485,6 +1768,7 @@
       this.input.bindButtons(this.el.touchBar);
 
       this.applyReducedMotion();
+      this.applyAudioPrefs();
       this.applyTheme(this.prefs.data.theme, false);
       this.renderer.setOptions(this.prefs.data);
       this.buildDifficultyOptions($('menu-diff-options'), 'menu-diff');
@@ -1533,6 +1817,10 @@
           break;
         case 'denied':
           this.flashDenied();
+          this.audio.play('denied');
+          break;
+        case 'sound':
+          this.audio.play(payload);
           break;
         default:
           break;
@@ -1542,6 +1830,7 @@
     onPress(action) {
       if (action === 'pause') this.togglePause();
       else if (action === 'restart') this.requestRestart();
+      else if (action === 'mute') this.toggleMute();
       else this.game.press(action);
     }
 
@@ -1582,6 +1871,7 @@
         if (!this.dialogOpen()) this.el.boardFrame.focus({ preventScroll: true });
       }
       this.hudDirty = true;
+      this.updateMusic();
     }
 
     focusSoon(el, delay = 0) {
@@ -1595,6 +1885,8 @@
 
     startGame() {
       if (this.game.inRun) this.game.abandon();
+      this.audio.stopMusic();
+      this.audio.rewindMusic();
       this.renderer.clearEffects();
       this.game.start(this.prefs.data.difficulty);
     }
@@ -1604,6 +1896,31 @@
       this.input.releaseAll();
       if (s === State.PAUSED) this.game.resume();
       else if (s === State.PLAYING || s === State.CLEARING) this.game.pause();
+      else return;
+      this.audio.play('pause');
+    }
+
+    // ---- audio ----
+
+    /** Music plays on the menu, during play, and while previewing themes. */
+    updateMusic() {
+      const s = this.game.state;
+      const on = this.previewing || s === State.MENU || s === State.PLAYING || s === State.CLEARING;
+      if (on) this.audio.playMusic();
+      else this.audio.stopMusic();
+    }
+
+    applyAudioPrefs() {
+      const d = this.prefs.data;
+      this.audio.setVolumes({ music: d.musicVol / 100, sfx: d.sfxVol / 100, muted: d.muted });
+      const b = this.el.btnMute;
+      b.setAttribute('aria-pressed', String(d.muted));
+      b.setAttribute('aria-label', d.muted ? 'Unmute sound' : 'Mute sound');
+    }
+
+    toggleMute() {
+      this.prefs.set('muted', !this.prefs.data.muted);
+      this.applyAudioPrefs();
     }
 
     async requestRestart() {
@@ -1641,6 +1958,8 @@
       this.setText('lines', String(g.lines));
       this.setText('best', best.toLocaleString());
       this.setText('diffLabel', DIFFICULTIES[diffId].label);
+      $('btn-difficulty').setAttribute('aria-label', `Difficulty: ${DIFFICULTIES[diffId].label}`);
+      this.audio.setLevel(g.state === State.MENU ? 1 : g.level);
       this.renderer.drawHold(g);
       this.renderer.drawNext(g);
       const name = (id) => (PIECES[id].tier === 'classic' ? `${id} piece` : PIECES[id].name);
@@ -1777,32 +2096,47 @@
     // ---- themes ----
 
     buildThemeGrid() {
-      for (const id of THEME_ORDER) {
-        const t = THEMES[id];
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'theme-card';
-        btn.dataset.theme = id;
-        btn.setAttribute('aria-pressed', 'false');
-        const name = document.createElement('span');
-        name.className = 'theme-name';
-        name.textContent = t.label;
-        const sw = document.createElement('span');
-        sw.className = 'theme-swatches';
-        sw.setAttribute('aria-hidden', 'true');
-        for (const p of ['I', 'O', 'T', 'Z', 'S']) {
-          const i = document.createElement('i');
-          i.style.background = t.colors[p];
-          sw.append(i);
-        }
-        const blurb = document.createElement('span');
-        blurb.className = 'sr-only';
-        blurb.textContent = `: ${t.blurb}`;
-        btn.append(name, blurb, sw);
-        btn.addEventListener('click', () => this.applyTheme(id, true));
-        this.el.themeGrid.append(btn);
+      for (const [title, ids] of THEME_GROUPS) {
+        const group = document.createElement('section');
+        group.className = 'theme-group';
+        const h = document.createElement('h3');
+        h.className = 'theme-group-title';
+        h.textContent = title;
+        const grid = document.createElement('div');
+        grid.className = 'theme-grid';
+        for (const id of ids) grid.append(this.themeCard(THEMES[id]));
+        group.append(h, grid);
+        this.el.themeGroups.append(group);
       }
       this.markTheme();
+    }
+
+    themeCard(t) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'theme-card';
+      btn.dataset.theme = t.id;
+      btn.setAttribute('aria-pressed', 'false');
+      const name = document.createElement('span');
+      name.className = 'theme-name';
+      name.textContent = t.label;
+      const sw = document.createElement('span');
+      sw.className = 'theme-swatches';
+      sw.setAttribute('aria-hidden', 'true');
+      for (const p of ['I', 'O', 'T', 'Z', 'S']) {
+        const i = document.createElement('i');
+        i.style.background = t.colors[p];
+        sw.append(i);
+      }
+      const blurb = document.createElement('span');
+      blurb.className = 'sr-only';
+      blurb.textContent = `: ${t.blurb}`;
+      btn.append(name, blurb, sw);
+      btn.addEventListener('click', () => {
+        this.applyTheme(t.id, true);
+        this.audio.play('select');
+      });
+      return btn;
     }
 
     applyTheme(id, persist) {
@@ -1812,6 +2146,7 @@
       if (meta) meta.setAttribute('content', theme.boardBg[1]);
       this.renderer.setTheme(theme);
       if (persist) this.prefs.set('theme', theme.id);
+      this.audio.setTheme(theme.id);
       this.markTheme();
       this.hudDirty = true;
       this.drawGallery();
@@ -1819,7 +2154,7 @@
 
     markTheme() {
       const current = document.documentElement.dataset.theme;
-      this.el.themeGrid.querySelectorAll('.theme-card').forEach((b) => {
+      this.el.themeGroups.querySelectorAll('.theme-card').forEach((b) => {
         b.setAttribute('aria-pressed', String(b.dataset.theme === current));
       });
     }
@@ -1836,6 +2171,10 @@
       this.input.releaseAll();
       dlg.returnValue = '';
       dlg.showModal();
+      if (dlg === this.el.dlgTheme) {
+        this.previewing = true;
+        this.updateMusic();
+      }
     }
 
     confirm(message, okLabel) {
@@ -1874,6 +2213,11 @@
         });
       });
       this.el.dlgDiff.addEventListener('close', () => this.applyDifficultyDialog());
+      this.el.dlgTheme.addEventListener('close', () => {
+        this.previewing = false;
+        this.updateMusic();
+      });
+      this.el.btnMute.addEventListener('click', () => this.toggleMute());
     }
 
     bindSettings() {
@@ -1884,6 +2228,8 @@
       const touch = $('set-touch');
       const ghost = $('set-ghost');
       const letters = $('set-letters');
+      const music = $('set-music');
+      const sfx = $('set-sfx');
 
       const sync = () => {
         das.value = p.data.das;
@@ -1892,6 +2238,10 @@
         touch.value = p.data.touch;
         ghost.checked = p.data.ghost;
         letters.checked = p.data.letters;
+        music.value = p.data.musicVol;
+        sfx.value = p.data.sfxVol;
+        $('out-music').textContent = `${p.data.musicVol}%`;
+        $('out-sfx').textContent = `${p.data.sfxVol}%`;
         $('out-das').textContent = `${p.data.das} ms`;
         $('out-arr').textContent = p.data.arr === 0 ? 'instant' : `${p.data.arr} ms`;
       };
@@ -1907,11 +2257,15 @@
       touch.addEventListener('change', () => { p.set('touch', touch.value); this.layout(); });
       ghost.addEventListener('change', () => { p.set('ghost', ghost.checked); visuals(); });
       letters.addEventListener('change', () => { p.set('letters', letters.checked); visuals(); });
+      music.addEventListener('input', () => { p.set('musicVol', Number(music.value)); sync(); this.applyAudioPrefs(); });
+      sfx.addEventListener('input', () => { p.set('sfxVol', Number(sfx.value)); sync(); this.applyAudioPrefs(); });
+      sfx.addEventListener('change', () => this.audio.play('select'));
       $('btn-settings-reset').addEventListener('click', () => {
-        Object.assign(p.data, INPUT_DEFAULTS);
+        Object.assign(p.data, SETTINGS_DEFAULTS);
         p.save();
         sync();
         visuals();
+        this.applyAudioPrefs();
         this.layout();
       });
       sync();
@@ -1934,9 +2288,23 @@
 
       document.addEventListener('visibilitychange', () => {
         this.input.releaseAll();
-        if (document.hidden) this.game.pause();
+        if (document.hidden) {
+          this.game.pause();
+          this.audio.suspend();
+        } else {
+          this.audio.resume();
+        }
         this.last = null;
       });
+
+      // Browsers only allow sound after a user gesture.
+      const unlock = () => {
+        const first = !this.audio.unlocked;
+        this.audio.unlock();
+        if (first && this.audio.unlocked) this.updateMusic();
+      };
+      window.addEventListener('pointerdown', unlock, { capture: true });
+      window.addEventListener('keydown', unlock, { capture: true });
       window.addEventListener('blur', () => this.input.releaseAll());
       window.addEventListener('pagehide', () => {
         if (this.game.inRun) this.game.recordBest();
@@ -1996,6 +2364,32 @@
       this.hudDirty = true;
       this.drawGallery();
     }
+  }
+
+  // ===========================================================================
+  // 11. Audio hookup (engine and settings live in the audio/ folder)
+  // ===========================================================================
+
+  const SILENT_AUDIO = {
+    unlocked: false,
+    unlock() {}, setTheme() {}, setVolumes() {}, setLevel() {}, playMusic() {}, stopMusic() {},
+    rewindMusic() {}, suspend() {}, resume() {}, play() {},
+  };
+
+  function createAudio() {
+    const Engine = window.StackAttackAudio;
+    const config = window.STACK_ATTACK_AUDIO;
+    if (!Engine || !config) {
+      console.warn('[Stack Attack] audio/audio-engine.js or audio/audio-config.js is missing; playing silently.');
+      return SILENT_AUDIO;
+    }
+    for (const problem of Engine.validate(config)) console.warn(`[Stack Attack audio config] ${problem}`);
+    for (const id of THEME_ORDER) {
+      if (!config.themes || !config.themes[id]) {
+        console.warn(`[Stack Attack audio config] no entry for theme "${id}"; it uses the default sounds and no music.`);
+      }
+    }
+    return new Engine(config);
   }
 
   function boot() {

@@ -1,0 +1,574 @@
+/* =========================================================================
+   Stack Attack — extra themes
+   Each block defines the full token set used by styles.css. To add a theme:
+   copy a block, change the id and colors, then add the matching canvas
+   palette in game.js (THEMES) and music/sound settings in
+   audio/audio-config.js. See README.md → "Adding a theme".
+   ========================================================================= */
+
+/* ---------- Worlds ---------- */
+
+[data-theme="scifi"] {
+    --bg: #060b16;
+    --bg-image:
+        radial-gradient(circle at 82% 18%, #6fa8ff 0 5%, rgba(111, 168, 255, .25) 5.4% 7%, transparent 7.5%),
+        radial-gradient(circle at 20% 30%, rgba(255, 255, 255, .9) 0 1px, transparent 1.5px),
+        radial-gradient(circle at 60% 70%, rgba(255, 255, 255, .7) 0 1px, transparent 1.5px),
+        radial-gradient(circle at 40% 10%, rgba(160, 200, 255, .8) 0 1.2px, transparent 1.8px),
+        linear-gradient(160deg, #0a1428 0%, #060b16 60%, #10091f 100%);
+    --bg-size: auto, 140px 140px, 190px 190px, 230px 230px, auto;
+    --text: #e3efff;
+    --muted: #8fa6c8;
+    --panel: rgba(10, 20, 38, .88);
+    --panel-border: #4fc3f7;
+    --panel-shadow: 0 0 0 1px rgba(255, 159, 28, .35) inset, 0 0 18px rgba(79, 195, 247, .25);
+    --accent: #4fc3f7;
+    --accent-2: #ff9f1c;
+    --accent-3: #b388ff;
+    --btn-bg: rgba(10, 20, 38, .92);
+    --btn-text: #4fc3f7;
+    --btn-border: #4fc3f7;
+    --btn-primary-bg: #ff9f1c;
+    --btn-primary-text: #1a0d00;
+    --btn-shadow: 0 0 10px rgba(79, 195, 247, .3);
+    --focus: #ffe066;
+    --radius: 6px;
+    --btn-radius: 4px;
+    --border-w: 2px;
+    --board-border: #4fc3f7;
+    --board-ring: 0 0 0 2px #4fc3f7, 0 0 0 6px rgba(79, 195, 247, .15), 0 0 30px rgba(79, 195, 247, .35);
+    --overlay: rgba(3, 6, 14, .72);
+    --font-display: "Eurostile", "Bank Gothic", "Agency FB", "Segoe UI", sans-serif;
+    --font-ui: "Segoe UI", "Trebuchet MS", system-ui, sans-serif;
+    --title-transform: uppercase;
+    --title-spacing: .2em;
+    --title-shadow: 0 0 10px rgba(79, 195, 247, .8);
+    --title-color: #e3f6ff;
+    --card-bg: #0a1426;
+}
+
+[data-theme="matrix"] {
+    --bg: #000000;
+    --bg-image:
+        repeating-linear-gradient(90deg, rgba(0, 255, 65, .05) 0 1px, transparent 1px 18px),
+        radial-gradient(ellipse at 50% 0%, rgba(0, 255, 65, .12), transparent 60%),
+        linear-gradient(#000000, #010d04);
+    --bg-size: auto;
+    --text: #b9ffc4;
+    --muted: #4fd06a;
+    --panel: rgba(0, 12, 4, .9);
+    --panel-border: #00ff41;
+    --panel-shadow: 0 0 14px rgba(0, 255, 65, .25);
+    --accent: #00ff41;
+    --accent-2: #b6ff00;
+    --accent-3: #00ffa3;
+    --btn-bg: rgba(0, 10, 3, .9);
+    --btn-text: #00ff41;
+    --btn-border: #00ff41;
+    --btn-primary-bg: #00ff41;
+    --btn-primary-text: #001a06;
+    --btn-shadow: 0 0 10px rgba(0, 255, 65, .3);
+    --focus: #e8ffe8;
+    --radius: 2px;
+    --btn-radius: 0px;
+    --border-w: 1px;
+    --board-border: #00ff41;
+    --board-ring: 0 0 0 1px #00ff41, 0 0 24px rgba(0, 255, 65, .35);
+    --overlay: rgba(0, 0, 0, .75);
+    --font-display: "Consolas", "Lucida Console", "Courier New", monospace;
+    --font-ui: "Consolas", "Lucida Console", "Courier New", monospace;
+    --title-transform: uppercase;
+    --title-spacing: .18em;
+    --title-shadow: 0 0 8px #00ff41;
+    --title-color: #d9ffe0;
+    --card-bg: #010d04;
+}
+
+[data-theme="ninjas"] {
+    --bg: #15121b;
+    --bg-image:
+        radial-gradient(circle at 78% 26%, #c8102e 0 10%, rgba(200, 16, 46, .25) 10.5% 13%, transparent 14%),
+        linear-gradient(172deg, transparent 0 64%, #0b0a0f 64.2%),
+        linear-gradient(188deg, transparent 0 72%, #07060a 72.2%),
+        repeating-linear-gradient(90deg, transparent 0 60px, rgba(95, 140, 90, .18) 60px 64px, transparent 64px 130px),
+        linear-gradient(#2b2233, #15121b);
+    --bg-size: auto;
+    --text: #1a1a1a;
+    --muted: #5a4f45;
+    --panel: #f2ead8;
+    --panel-border: #1a1a1a;
+    --panel-shadow: 4px 4px 0 #8c1c13;
+    --accent: #c8102e;
+    --accent-2: #f2c14e;
+    --accent-3: #5c946e;
+    --btn-bg: #f2ead8;
+    --btn-text: #1a1a1a;
+    --btn-border: #1a1a1a;
+    --btn-primary-bg: #b3001b;
+    --btn-primary-text: #ffffff;
+    --btn-shadow: 3px 3px 0 #1a1a1a;
+    --focus: #f2c14e;
+    --radius: 4px;
+    --btn-radius: 2px;
+    --border-w: 3px;
+    --board-border: #1a1a1a;
+    --board-ring: 0 0 0 3px #1a1a1a, 0 0 0 6px #b3001b, 6px 6px 0 6px #000000;
+    --overlay: rgba(10, 8, 14, .7);
+    --font-display: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+    --font-ui: "Segoe UI", system-ui, sans-serif;
+    --title-transform: uppercase;
+    --title-spacing: .3em;
+    --title-shadow: 2px 2px 0 #b3001b;
+    --title-color: #f2ead8;
+    --card-bg: #f2ead8;
+}
+
+[data-theme="western"] {
+    --bg: #f4a259;
+    --bg-image:
+        radial-gradient(circle at 50% 74%, #ffe08a 0 8%, rgba(255, 210, 122, .45) 8.5% 13%, transparent 22%),
+        linear-gradient(180deg, #f9c46b 0%, #f4845f 45%, #c8553d 72%, #6b2f1a 72.4%, #4a2010 100%);
+    --bg-size: auto;
+    --text: #3a2410;
+    --muted: #6d4a2a;
+    --panel: #f3e0bc;
+    --panel-border: #5b3a1a;
+    --panel-shadow: 0 4px 0 #3a2410;
+    --accent: #8b2e16;
+    --accent-2: #daa520;
+    --accent-3: #6b8e23;
+    --btn-bg: #f3e0bc;
+    --btn-text: #3a2410;
+    --btn-border: #5b3a1a;
+    --btn-primary-bg: #8b2e16;
+    --btn-primary-text: #ffffff;
+    --btn-shadow: 0 3px 0 #3a2410;
+    --focus: #1f5f8b;
+    --radius: 4px;
+    --btn-radius: 6px;
+    --border-w: 3px;
+    --board-border: #5b3a1a;
+    --board-ring: 0 0 0 4px #5b3a1a, 0 0 0 8px #c08a4a, 0 10px 0 8px #3a2410;
+    --overlay: rgba(40, 20, 8, .6);
+    --font-display: "Rockwell Extra Bold", "Rockwell", "Playbill", Georgia, serif;
+    --font-ui: Georgia, "Times New Roman", serif;
+    --title-transform: uppercase;
+    --title-spacing: .06em;
+    --title-shadow: 2px 2px 0 #f3e0bc;
+    --title-color: #4a2010;
+    --card-bg: #f3e0bc;
+}
+
+/* ---------- Holidays ---------- */
+
+[data-theme="america"] {
+    --bg: #0a2a5e;
+    --bg-image:
+        radial-gradient(circle, rgba(255, 255, 255, .85) 0 1.6px, transparent 2.2px),
+        radial-gradient(circle at 25% 25%, rgba(255, 255, 255, .35) 0 1.2px, transparent 1.8px),
+        linear-gradient(180deg, #0a2a5e, #0d3b85);
+    --bg-size: 48px 48px, 24px 24px, auto;
+    --text: #0a1f44;
+    --muted: #3d4f73;
+    --panel: #fbfbfb;
+    --panel-border: #0a3161;
+    --panel-shadow: 0 4px 0 #b22234;
+    --accent: #b22234;
+    --accent-2: #f2c14e;
+    --accent-3: #3c78d8;
+    --btn-bg: #fbfbfb;
+    --btn-text: #0a3161;
+    --btn-border: #0a3161;
+    --btn-primary-bg: #b22234;
+    --btn-primary-text: #ffffff;
+    --btn-shadow: 0 3px 0 #0a3161;
+    --focus: #ffbf00;
+    --radius: 10px;
+    --btn-radius: 8px;
+    --border-w: 3px;
+    --board-border: #0a3161;
+    --board-ring: 0 0 0 4px #fbfbfb, 0 0 0 8px #b22234, 0 0 0 11px #0a3161;
+    --overlay: rgba(5, 20, 50, .6);
+    --font-display: "Rockwell", Georgia, serif;
+    --font-ui: "Segoe UI", system-ui, sans-serif;
+    --title-transform: uppercase;
+    --title-spacing: .08em;
+    --title-shadow: 2px 2px 0 #b22234;
+    --title-color: #ffffff;
+    --card-bg: #fbfbfb;
+}
+
+[data-theme="halloween"] {
+    --bg: #120818;
+    --bg-image:
+        radial-gradient(circle at 86% 14%, #fff3c4 0 6%, rgba(255, 214, 120, .3) 6.5% 10%, transparent 16%),
+        radial-gradient(ellipse at 50% 115%, rgba(255, 117, 24, .45), transparent 55%),
+        radial-gradient(circle at 12% 80%, rgba(124, 255, 79, .12), transparent 30%),
+        linear-gradient(#0b0410, #2a0f2e);
+    --bg-size: auto;
+    --text: #ffe8cc;
+    --muted: #d9a77a;
+    --panel: rgba(26, 10, 32, .9);
+    --panel-border: #ff7518;
+    --panel-shadow: 0 0 16px rgba(255, 117, 24, .3);
+    --accent: #ff7518;
+    --accent-2: #7cff4f;
+    --accent-3: #8e44ad;
+    --btn-bg: rgba(26, 10, 32, .92);
+    --btn-text: #ffb066;
+    --btn-border: #ff7518;
+    --btn-primary-bg: #ff7518;
+    --btn-primary-text: #1a0600;
+    --btn-shadow: 0 0 12px rgba(255, 117, 24, .35);
+    --focus: #7cff4f;
+    --radius: 14px;
+    --btn-radius: 10px;
+    --border-w: 2px;
+    --board-border: #ff7518;
+    --board-ring: 0 0 0 2px #ff7518, 0 0 26px rgba(255, 117, 24, .45), 0 0 50px rgba(142, 68, 173, .3);
+    --overlay: rgba(8, 2, 10, .72);
+    --font-logo: "Chiller", "Jokerman", "Papyrus", "Copperplate", Georgia, serif;
+    --font-display: "Copperplate Gothic Bold", "Copperplate", Georgia, serif;
+    --font-ui: "Trebuchet MS", system-ui, sans-serif;
+    --title-transform: uppercase;
+    --title-spacing: .06em;
+    --title-shadow: 0 0 10px #ff7518, 2px 2px 0 #3b0a45;
+    --title-color: #ff9a3c;
+    --card-bg: #1a0a20;
+}
+
+[data-theme="thanksgiving"] {
+    --bg: #f3dfb6;
+    --bg-image:
+        repeating-linear-gradient(0deg, rgba(160, 64, 0, .12) 0 18px, transparent 18px 54px),
+        repeating-linear-gradient(90deg, rgba(160, 64, 0, .12) 0 18px, transparent 18px 54px),
+        repeating-linear-gradient(0deg, rgba(122, 139, 44, .1) 0 4px, transparent 4px 27px),
+        repeating-linear-gradient(90deg, rgba(122, 139, 44, .1) 0 4px, transparent 4px 27px),
+        linear-gradient(#f6e6c3, #e8c893);
+    --bg-size: auto;
+    --text: #3d2008;
+    --muted: #6e4420;
+    --panel: #fff8ea;
+    --panel-border: #7b3f00;
+    --panel-shadow: 0 4px 0 #7b3f00;
+    --accent: #b5491b;
+    --accent-2: #e9a23b;
+    --accent-3: #7a8b2c;
+    --btn-bg: #fff8ea;
+    --btn-text: #3d2008;
+    --btn-border: #7b3f00;
+    --btn-primary-bg: #a3401a;
+    --btn-primary-text: #ffffff;
+    --btn-shadow: 0 3px 0 #7b3f00;
+    --focus: #2b6e8f;
+    --radius: 14px;
+    --btn-radius: 12px;
+    --border-w: 3px;
+    --board-border: #7b3f00;
+    --board-ring: 0 0 0 4px #7b3f00, 0 0 0 8px #e9a23b, 0 10px 0 8px #5d2e00;
+    --overlay: rgba(61, 32, 8, .55);
+    --font-display: Georgia, "Palatino Linotype", serif;
+    --font-ui: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+    --title-transform: none;
+    --title-spacing: .02em;
+    --title-shadow: 2px 2px 0 #e9a23b;
+    --title-color: #7b3f00;
+    --card-bg: #fff8ea;
+}
+
+[data-theme="hanukkah"] {
+    --bg: #0b2a6f;
+    --bg-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cg fill='none' stroke='%23c9d3e6' stroke-opacity='.22' stroke-width='2'%3E%3Cpath d='M40 18 L58 50 L22 50 Z'/%3E%3Cpath d='M40 62 L22 30 L58 30 Z'/%3E%3C/g%3E%3C/svg%3E"),
+        radial-gradient(circle at 50% 0%, rgba(255, 211, 107, .18), transparent 50%),
+        linear-gradient(#0d2f7a, #06163d);
+    --bg-size: 80px 80px, auto, auto;
+    --text: #eaf0ff;
+    --muted: #a9b9dd;
+    --panel: rgba(9, 30, 82, .9);
+    --panel-border: #c9d3e6;
+    --panel-shadow: 0 0 0 1px rgba(255, 211, 107, .35) inset, 0 6px 18px rgba(0, 0, 0, .35);
+    --accent: #c9d3e6;
+    --accent-2: #ffd36b;
+    --accent-3: #4f8ef7;
+    --btn-bg: rgba(9, 30, 82, .92);
+    --btn-text: #eaf0ff;
+    --btn-border: #c9d3e6;
+    --btn-primary-bg: #e9eef8;
+    --btn-primary-text: #0b2a6f;
+    --btn-shadow: 0 3px 0 #06163d;
+    --focus: #ffd36b;
+    --radius: 12px;
+    --btn-radius: 10px;
+    --border-w: 2px;
+    --board-border: #c9d3e6;
+    --board-ring: 0 0 0 3px #c9d3e6, 0 0 0 6px #0b2a6f, 0 0 28px rgba(255, 211, 107, .35);
+    --overlay: rgba(3, 10, 30, .7);
+    --font-display: Georgia, "Palatino Linotype", serif;
+    --font-ui: "Segoe UI", system-ui, sans-serif;
+    --title-transform: uppercase;
+    --title-spacing: .12em;
+    --title-shadow: 0 0 12px rgba(255, 211, 107, .7);
+    --title-color: #ffffff;
+    --card-bg: #0b2459;
+}
+
+[data-theme="christmas"] {
+    --bg: #0b3320;
+    --bg-image:
+        radial-gradient(circle, rgba(255, 255, 255, .8) 0 1.5px, transparent 2px),
+        radial-gradient(circle, rgba(255, 255, 255, .5) 0 1px, transparent 1.6px),
+        radial-gradient(ellipse at 50% 120%, rgba(255, 255, 255, .25), transparent 50%),
+        linear-gradient(#0f3d22, #072414);
+    --bg-size: 60px 60px, 37px 37px, auto, auto;
+    --text: #14281c;
+    --muted: #4a5d50;
+    --panel: #fffaf0;
+    --panel-border: #b3141f;
+    --panel-shadow: 0 4px 0 #6b0b12;
+    --accent: #c8102e;
+    --accent-2: #ffd700;
+    --accent-3: #1e7b45;
+    --btn-bg: #fffaf0;
+    --btn-text: #8e0f18;
+    --btn-border: #b3141f;
+    --btn-primary-bg: #c8102e;
+    --btn-primary-text: #ffffff;
+    --btn-shadow: 0 3px 0 #6b0b12;
+    --focus: #ffd700;
+    --radius: 16px;
+    --btn-radius: 999px;
+    --border-w: 3px;
+    --board-border: #b3141f;
+    --board-ring: 0 0 0 4px #ffd700, 0 0 0 8px #b3141f, 0 0 30px rgba(255, 215, 0, .3);
+    --overlay: rgba(4, 20, 10, .65);
+    --font-logo: "Brush Script MT", "Segoe Script", "Lucida Handwriting", cursive;
+    --font-display: Georgia, "Times New Roman", serif;
+    --font-ui: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+    --title-transform: none;
+    --title-spacing: .02em;
+    --title-shadow: 2px 2px 0 #6b0b12, 0 0 12px rgba(255, 215, 0, .5);
+    --title-color: #fff7e0;
+    --card-bg: #fffaf0;
+}
+
+[data-theme="easter"] {
+    --bg: #fdf1f7;
+    --bg-image:
+        radial-gradient(circle at 20% 20%, #ffd6e7 0 7px, transparent 8px),
+        radial-gradient(circle at 70% 60%, #d3f8e2 0 8px, transparent 9px),
+        radial-gradient(circle at 40% 80%, #e4d9ff 0 6px, transparent 7px),
+        radial-gradient(circle at 85% 15%, #fff3b0 0 7px, transparent 8px),
+        linear-gradient(#fef6fb, #f3eafd);
+    --bg-size: 90px 90px, 110px 110px, 70px 70px, 130px 130px, auto;
+    --text: #4a3a5a;
+    --muted: #6f5f80;
+    --panel: #ffffff;
+    --panel-border: #c9a7e8;
+    --panel-shadow: 0 5px 0 #e2cff5;
+    --accent: #9d7ad6;
+    --accent-2: #ff9ec7;
+    --accent-3: #7fd4a8;
+    --btn-bg: #ffffff;
+    --btn-text: #5b3f8c;
+    --btn-border: #c9a7e8;
+    --btn-primary-bg: #7d5bb8;
+    --btn-primary-text: #ffffff;
+    --btn-shadow: 0 3px 0 #e2cff5;
+    --focus: #e0559a;
+    --radius: 22px;
+    --btn-radius: 999px;
+    --border-w: 3px;
+    --board-border: #c9a7e8;
+    --board-ring: 0 0 0 4px #ffffff, 0 0 0 8px #c9a7e8, 0 0 0 12px #ffd6e7;
+    --overlay: rgba(90, 60, 120, .35);
+    --font-display: "Segoe Print", "Comic Sans MS", "Chalkboard SE", cursive;
+    --font-ui: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+    --title-transform: none;
+    --title-spacing: .02em;
+    --title-shadow: 2px 2px 0 #ffd6e7, 4px 4px 0 #d3f8e2;
+    --title-color: #7d5bb8;
+    --card-bg: #ffffff;
+}
+
+/* ---------- Seasons ---------- */
+
+[data-theme="spring"] {
+    --bg: #e9f8e1;
+    --bg-image:
+        radial-gradient(circle at 30% 30%, #ffd54f 0 3px, #ffb3d1 3.5px 8px, transparent 8.5px),
+        radial-gradient(circle at 70% 60%, #ffd54f 0 3px, #d7c4ff 3.5px 7px, transparent 7.5px),
+        radial-gradient(circle at 50% 50%, #ffd54f 0 2.5px, #ffffff 3px 6px, transparent 6.5px),
+        radial-gradient(ellipse at 25% 125%, #8fd17a 0 36%, transparent 36.5%),
+        radial-gradient(ellipse at 85% 128%, #6cbf5a 0 40%, transparent 40.5%),
+        linear-gradient(#dff4ff, #f3fbe9);
+    --bg-size: 120px 120px, 150px 150px, 90px 90px, auto, auto, auto;
+    --text: #234a1c;
+    --muted: #4f6f45;
+    --panel: #fffef6;
+    --panel-border: #6cbf5a;
+    --panel-shadow: 0 5px 0 #b9e3a8;
+    --accent: #c93d7a;
+    --accent-2: #ffd54f;
+    --accent-3: #4fc3f7;
+    --btn-bg: #fffef6;
+    --btn-text: #2e6b22;
+    --btn-border: #6cbf5a;
+    --btn-primary-bg: #c93d7a;
+    --btn-primary-text: #ffffff;
+    --btn-shadow: 0 3px 0 #b9e3a8;
+    --focus: #6a4bc4;
+    --radius: 20px;
+    --btn-radius: 999px;
+    --border-w: 3px;
+    --board-border: #6cbf5a;
+    --board-ring: 0 0 0 4px #fffef6, 0 0 0 8px #6cbf5a, 0 0 0 12px #ffd1e3;
+    --overlay: rgba(35, 74, 28, .35);
+    --font-display: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
+    --font-ui: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+    --title-transform: none;
+    --title-spacing: .02em;
+    --title-shadow: 2px 2px 0 #ffd1e3;
+    --title-color: #2e6b22;
+    --card-bg: #fffef6;
+}
+
+[data-theme="beach"] {
+    --bg: #8edcff;
+    --bg-image:
+        radial-gradient(circle at 85% 14%, #fff7c2 0 5%, rgba(255, 236, 150, .5) 5.5% 9%, transparent 14%),
+        linear-gradient(180deg, transparent 0 66%, rgba(255, 255, 255, .7) 66.2% 66.8%, transparent 67%),
+        linear-gradient(180deg, #8edcff 0%, #bdeeff 50%, #2ab0c8 50.2%, #1b93ad 68%, #f2d49b 68.2%, #e9c27e 100%);
+    --bg-size: auto;
+    --text: #0e3b47;
+    --muted: #3f6a75;
+    --panel: rgba(255, 255, 255, .92);
+    --panel-border: #1c8fa8;
+    --panel-shadow: 0 5px 0 rgba(14, 59, 71, .25);
+    --accent: #ff7a59;
+    --accent-2: #ffd166;
+    --accent-3: #1c8fa8;
+    --btn-bg: #ffffff;
+    --btn-text: #0e3b47;
+    --btn-border: #1c8fa8;
+    --btn-primary-bg: #ff7a59;
+    --btn-primary-text: #2b0f06;
+    --btn-shadow: 0 3px 0 #1c8fa8;
+    --focus: #0e3b47;
+    --radius: 20px;
+    --btn-radius: 999px;
+    --border-w: 3px;
+    --board-border: #1c8fa8;
+    --board-ring: 0 0 0 4px #ffffff, 0 0 0 8px #1c8fa8, 0 10px 24px rgba(0, 0, 0, .25);
+    --overlay: rgba(14, 59, 71, .45);
+    --font-display: "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
+    --font-ui: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+    --title-transform: uppercase;
+    --title-spacing: .06em;
+    --title-shadow: 2px 2px 0 #ffffff, 4px 4px 0 #ff7a59;
+    --title-color: #0e3b47;
+    --card-bg: #ffffff;
+}
+
+[data-theme="winter"] {
+    --bg: #dceefe;
+    --bg-image:
+        radial-gradient(circle, #ffffff 0 2px, transparent 2.6px),
+        radial-gradient(circle, rgba(255, 255, 255, .8) 0 1.3px, transparent 1.9px),
+        radial-gradient(ellipse at 20% 110%, #ffffff 0 30%, transparent 30.5%),
+        radial-gradient(ellipse at 80% 115%, #f4faff 0 32%, transparent 32.5%),
+        linear-gradient(#bcd9f2, #e8f4ff);
+    --bg-size: 70px 70px, 43px 43px, auto, auto, auto;
+    --text: #12324f;
+    --muted: #44647f;
+    --panel: rgba(255, 255, 255, .86);
+    --panel-border: #6aa6d8;
+    --panel-shadow: 0 6px 18px rgba(18, 50, 79, .15);
+    --accent: #2f6fa8;
+    --accent-2: #9be7ff;
+    --accent-3: #b39ddb;
+    --btn-bg: rgba(255, 255, 255, .9);
+    --btn-text: #1d4f7c;
+    --btn-border: #6aa6d8;
+    --btn-primary-bg: #2f6fa8;
+    --btn-primary-text: #ffffff;
+    --btn-shadow: 0 3px 0 #a9cbe8;
+    --focus: #b33a6b;
+    --radius: 14px;
+    --btn-radius: 12px;
+    --border-w: 2px;
+    --board-border: #6aa6d8;
+    --board-ring: 0 0 0 3px #ffffff, 0 0 0 6px #6aa6d8, 0 0 30px rgba(155, 231, 255, .6);
+    --overlay: rgba(18, 50, 79, .4);
+    --font-display: "Century Gothic", "Futura", "Segoe UI", sans-serif;
+    --font-ui: "Segoe UI", system-ui, sans-serif;
+    --title-transform: uppercase;
+    --title-spacing: .2em;
+    --title-shadow: 0 2px 0 #ffffff, 0 0 14px rgba(155, 231, 255, .9);
+    --title-color: #1d4f7c;
+    --card-bg: #f7fbff;
+}
+
+/* ---------- Animated extras ---------- */
+
+/* Falling code streaks */
+[data-theme="matrix"] body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+        radial-gradient(1.2px 70px at 30% 100%, rgba(0, 255, 65, .7), transparent),
+        radial-gradient(1px 90px at 70% 100%, rgba(0, 255, 65, .45), transparent),
+        radial-gradient(1.4px 60px at 50% 100%, rgba(180, 255, 190, .55), transparent),
+        radial-gradient(1px 50px at 20% 100%, rgba(0, 255, 65, .35), transparent);
+    background-size: 31px 220px, 47px 300px, 67px 380px, 23px 170px;
+    animation: code-rain 6s linear infinite;
+    pointer-events: none;
+    z-index: -1;
+}
+
+@keyframes code-rain {
+    from {
+        background-position: 0 0, 0 0, 0 0, 0 0;
+    }
+
+    to {
+        background-position: 0 220px, 0 600px, 0 380px, 0 510px;
+    }
+}
+
+/* Snowfall */
+[data-theme="winter"] body::before,
+[data-theme="christmas"] body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+        radial-gradient(circle, rgba(255, 255, 255, .95) 0 2px, transparent 2.6px),
+        radial-gradient(circle, rgba(255, 255, 255, .7) 0 1.4px, transparent 2px);
+    background-size: 100px 100px, 160px 160px;
+    background-position: 10px 0, 60px 30px;
+    animation: snowfall 14s linear infinite;
+    pointer-events: none;
+    z-index: -1;
+}
+
+@keyframes snowfall {
+    to {
+        background-position: 110px 400px, -100px 670px;
+    }
+}
+
+/* Waving stripes along the bottom */
+[data-theme="america"] body::after {
+    content: "";
+    position: fixed;
+    left: -10%;
+    right: -10%;
+    bottom: -6%;
+    height: 34%;
+    background: repeating-linear-gradient(180deg, rgba(178, 34, 52, .8) 0 22px, rgba(245, 245, 245, .8) 22px 44px);
+    transform: skewY(-4deg);
+    pointer-events: none;
+    z-index: -1;
+}

@@ -1,16 +1,21 @@
 # Stack Attack
 
-A retro falling-block puzzle game for desktop and mobile browsers. Pick a difficulty (7, 11 or 15 piece types) and one of four themes, then stack and clear lines while gravity speeds up.
+A retro falling-block puzzle game for desktop and mobile browsers. Pick a difficulty (7, 11 or 15 piece types) and one of 17 themes, each with its own look, music and sound effects. Then stack and clear lines while gravity speeds up.
 
-Built with HTML5 Canvas and vanilla JavaScript. There are no dependencies, no build step and no downloaded assets.
+Built with HTML5 Canvas, the Web Audio API and vanilla JavaScript. There are no dependencies, no build step and no downloaded assets: every block, background, note and drum is generated in code. You can optionally swap in your own audio files.
 
 ## Files
 
 | File         | Purpose                                                        |
 | ------------ | -------------------------------------------------------------- |
 | `index.html` | Page structure: toolbar, HUD panels, overlays, dialogs, touch controls |
-| `styles.css` | Layout (desktop / portrait / landscape), the four themes, menus |
-| `game.js`    | Everything else (see [Code layout](#code-layout))               |
+| `styles.css` | Layout (desktop / portrait / landscape), menus, the four Arcade-era themes |
+| `themes.css` | The other 13 themes (colors, fonts, backgrounds, animated extras) |
+| `game.js`    | Game, rendering, input and UI (see [Code layout](#code-layout)) |
+| `audio/audio-config.js` | Music and sound effects for every theme. **Edit this to change the sound** |
+| `audio/audio-engine.js` | The synthesizer and sequencer that plays the config |
+| `audio/README.md` | Step-by-step guide to changing sounds and music, or using your own audio files |
+| `audio/files/` | Optional folder for your own `.mp3` / `.ogg` / `.wav` files |
 
 ## Running locally
 
@@ -47,6 +52,7 @@ All paths are relative, so the folder works at any URL depth.
 | Hold piece               | C or Shift        | HOLD           |
 | Pause / resume           | P or Esc          | ❙❙ in toolbar  |
 | Restart                  | R (asks first during a game) | ⟲ in toolbar |
+| Mute / unmute            | M                 | speaker in toolbar |
 
 Holding left/right uses DAS/ARR auto-repeat (delay and rate are adjustable in **Settings**). Keys and touch buttons are tracked per source, so releasing one of two held inputs never cancels the other, and all inputs are released when the window loses focus, the tab is hidden, a dialog opens or the game pauses.
 
@@ -105,14 +111,47 @@ The pieces in this game are at most 4 cells tall in any orientation, so a Quad i
 
 ## Themes
 
-**THEME** in the toolbar (or on the main menu) opens a picker with a live preview of each theme:
+**THEME** in the toolbar (or on the main menu) opens a picker. Each card previews its theme, and while the picker is open the selected theme's music plays.
 
-- **70s Retro**: cream and brown, rainbow arcs, film-grain texture, rounded glossy blocks.
-- **80s Arcade**: deep blue and purple, scrolling perspective grid, beveled cabinet blocks, monospace type.
-- **90s Classic**: purple geometric pattern, chunky black-outlined panels and blocks, bright primaries.
-- **Neon Future**: near-black background, slowly rotating aurora, glowing outline blocks.
+| Group | Theme | Look | Music |
+| ----- | ----- | ---- | ----- |
+| Arcade eras | 70s Retro | Cream and brown, rainbow arcs, film grain, glossy round blocks | Disco funk |
+| | 80s Arcade | Perspective grid, beveled cabinet blocks | Synthwave |
+| | 90s Classic | Purple geometric pattern, chunky outlined blocks | Eurodance chiptune |
+| | Neon Future | Rotating aurora, glowing outline blocks | Trance |
+| Worlds | Sci-Fi | Starfield and planet, riveted metal blocks | Spacey lydian pads and echoing arpeggios |
+| | Matrix | Falling green code streaks, glowing green blocks | Dark phrygian techno |
+| | Ninjas | Red sun, mountains and bamboo, ink-on-paper panels | Koto, bamboo flute and taiko drums |
+| | Western | Desert sunset, parchment panels, wood blocks | Country shuffle with harmonica and clip-clop woodblock |
+| Holidays | America | Stars on navy, waving stripes, red-white-blue | Brass-band march with snare |
+| | Halloween | Full moon, orange glow, pumpkin colors | Organ and theremin in harmonic minor |
+| | Thanksgiving | Harvest plaid, wood blocks | Warm folk fiddle |
+| | Hanukkah | Blue with silver star pattern, metal blocks | Lively klezmer hora with clarinet |
+| | Christmas | Falling snow, ornament blocks | Sleigh-bell jingle with celesta |
+| | Easter | Pastel polka dots, light board, soft flat blocks | Bouncy marimba and flute |
+| Seasons | Spring | Flowers on green hills | Harp and flute, birdsong-style effects |
+| | Beach | Sun, sea and sand | Calypso steel drums |
+| | Winter | Snowfall and drifts, ice blocks | Music-box waltz in 3/4 time |
 
-A theme changes appearance only: CSS custom properties for the UI and a canvas palette for the board. Gameplay, scoring and piece definitions are never touched. The choice is saved in `localStorage` and applied by a small inline script before first paint, so there is no flash of the default theme.
+All melodies are original compositions written as note patterns in `audio/audio-config.js`.
+
+A theme changes appearance and sound only: CSS custom properties for the UI, a canvas palette and block style for the board, and music settings for the audio. Gameplay, scoring and piece definitions are never touched. The choice is saved in `localStorage` and applied by a small inline script before first paint, so there is no flash of the default theme.
+
+## Sound and music
+
+- The music changes with the theme and speeds up slightly as the level rises. It plays on the menu and during play, and stops while paused and on game over.
+- Every game event has a sound: move, rotate, hold, hard drop, lock, 1–4 line clears, level up, game over, denied hold, start, pause.
+- **Settings** has separate **Music volume** and **Sound effects volume** sliders. The toolbar speaker button (or **M**) mutes everything. All of these are remembered.
+- Browsers block audio until the first click or key press, so the game starts its sound on your first interaction.
+
+**To change any sound or melody, or to use your own audio files, see [audio/README.md](audio/README.md).** It walks through each change with copy-and-paste examples. Mistakes in the config show up as readable warnings in the browser console instead of breaking the game.
+
+## Adding a theme
+
+1. **Look:** copy a theme block in `themes.css` (for example `[data-theme="beach"] { ... }`), give it a new id and change the colors and background.
+2. **Board:** copy an entry in the `THEMES` object in `game.js`, set the same `id`, a `label`, a `group`, a `block` style (`round`, `bevel`, `chunky`, `glow`, `metal`, `flat` or `wood`) and the 15 piece colors. Add the id to a group in `THEME_GROUPS` just below it.
+3. **Sound:** copy a theme entry in `audio/audio-config.js` and rename it to the same id (see [audio/README.md](audio/README.md#give-a-new-theme-its-own-music)).
+4. **No flash on load:** add the id to the `ids` list in the small script in `index.html`'s `<head>`.
 
 ## Code layout
 
@@ -125,9 +164,10 @@ A theme changes appearance only: CSS custom properties for the UI and a canvas p
 5. **Board**: grid, collision, placement, line detection
 6. **Bag**: randomizer
 7. **Game**: state machine (`menu`, `playing`, `paused`, `clearing`, `over`), gravity, DAS/ARR, lock delay with a 15-move reset limit, hold, scoring
-8. **Renderer**: cached block sprites per theme, ghost piece, lock flash, hard-drop trails, line-clear flash and wipe, particles, previews, menu piece gallery
+8. **Renderer**: cached block sprites per theme (seven block styles), ghost piece, lock flash, hard-drop trails, line-clear flash and wipe, particles, previews, menu piece gallery
 9. **InputManager**: keyboard and pointer input mapped to actions
-10. **App**: DOM, overlays, dialogs, HUD, layout sizing, lifecycle (resize, orientation, visibility)
+10. **App**: DOM, overlays, dialogs, HUD, layout sizing, lifecycle (resize, orientation, visibility), music state
+11. **Audio hookup**: creates the engine from `audio/`, checks the config and logs any problems, and falls back to silence if the audio files are missing
 
 A single `requestAnimationFrame` loop drives everything. Listeners are attached once at boot, and a guard stops the app from booting twice.
 
@@ -177,11 +217,20 @@ A single `requestAnimationFrame` loop drives everything. Listeners are attached 
 - [ ] Medium spawns the 4 starred pieces and Hard spawns all 8 custom pieces.
 
 **Themes and settings**
-- [ ] Each of the four themes restyles the background, board, blocks, HUD, buttons, dialogs and effects.
+- [ ] The theme picker shows 17 themes in four groups. Each one restyles the background, board, blocks, HUD, buttons, dialogs and effects.
 - [ ] Reloading keeps the theme and settings with no flash.
 - [ ] Changing the theme mid-game doesn't change the score, level, speed or pieces.
 - [ ] Ghost piece and piece letters toggle immediately. DAS / ARR / soft-drop speed take effect immediately.
 - [ ] Defaults restores the input settings.
+
+**Sound**
+- [ ] After the first click or key press, menu music plays. It keeps playing into the game, stops when paused and resumes with the game.
+- [ ] While the theme picker is open, choosing a theme switches to its music immediately.
+- [ ] Moving, rotating, holding, dropping, locking, clearing lines, levelling up and game over each make a sound that fits the theme.
+- [ ] The speaker button and **M** mute and unmute. The volume sliders change music and effects separately, and all three are remembered after reload.
+- [ ] Switching to another tab silences the game. Coming back doesn't blast sound.
+- [ ] Pointing a theme's `files.music` at a missing file logs a warning and plays the built-in music instead.
+- [ ] The browser console shows no `[Stack Attack audio config]` warnings.
 
 **Mobile**
 - [ ] Portrait: the board is centered between narrow HOLD/stats and NEXT columns, with the controls below. Nothing scrolls.
@@ -192,6 +241,5 @@ A single `requestAnimationFrame` loop drives everything. Listeners are attached 
 
 ## Known limitations
 
-- No sound or music.
 - Key bindings are fixed (only timing is configurable).
 - T-spins are not detected or scored separately.

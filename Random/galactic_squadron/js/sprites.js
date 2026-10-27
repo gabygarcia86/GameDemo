@@ -672,51 +672,187 @@ function drawBomber(g) {
   g.restore();
 }
 
-const ACE_WING = [-4, -4, -21, -17, -17, 3, -22, 19, -6, 10];
-const ACE_FUSELAGE = [0, -24, 4, -9, 4, 15, 0, 20, -4, 15, -4, -9];
+/*
+ * Elite ace: probe droid with a domed sensor head, saucer body and jointed
+ * claw legs. Authored in reference-image space (1080 wide, centered on the
+ * saucer at 550,600) with the legs hanging toward the image bottom; the y flip
+ * points them at the nose (-y). Legs are shortened from the reference so the
+ * droid fits a formation slot.
+ */
+const ACE_SCALE = 0.034;
+const ACE_OUTLINE = '#121417';
+const ACE_SIDE = [55, 490, 1050, 490, 1040, 620, 990, 700, 120, 700, 70, 620];
+const ACE_HEAD = [145, 300, 220, 150, 400, 85, 550, 75, 700, 85, 880, 150, 945, 300, 940, 380, 880, 400, 210, 400, 150, 380];
+// [hipX, hipY, hipR, kneeX, kneeY, kneeR, footX, footY]
+const ACE_LEGS = [
+  [870, 785, 45, 915, 1120, 24, 950, 1330],
+  [310, 800, 72, 455, 1170, 38, 405, 1470],
+  [715, 790, 55, 690, 1110, 26, 640, 1430],
+];
 
 function drawAce(g, damaged) {
-  g.shadowColor = 'rgba(255,70,60,0.75)';
-  g.shadowBlur = 10;
-  g.fillStyle = linear(g, -22, 0, -4, 0, [[0, '#2a0810'], [1, '#a3192f']]);
-  mirrored(g, () => {
-    poly(g, ACE_WING);
-    g.fill();
-  });
-  g.shadowBlur = 0;
-  g.strokeStyle = '#ffcf5a';
-  g.lineWidth = 1.1;
-  mirrored(g, () => {
-    poly(g, ACE_WING);
+  const limb = (x0, y0, x1, y1, w) => {
+    g.lineCap = 'round';
+    g.strokeStyle = ACE_OUTLINE;
+    g.lineWidth = w + 12;
+    g.beginPath();
+    g.moveTo(x0, y0);
+    g.lineTo(x1, y1);
     g.stroke();
-  });
-  if (damaged) {
-    mirrored(g, () => scorch(g, ACE_WING, [[-13, 2, 7]], '#ffcf5a'));
+    g.strokeStyle = '#7d848c';
+    g.lineWidth = w;
+    g.stroke();
+  };
+  const disc = (x, y, r, fill) => {
+    circle(g, x, y, r);
+    g.fillStyle = fill;
+    g.fill();
+    g.strokeStyle = ACE_OUTLINE;
+    g.lineWidth = 9;
+    g.stroke();
+  };
+  const claw = (x, y) => {
+    g.strokeStyle = '#9aa1a9';
+    g.lineWidth = 14;
+    g.lineCap = 'round';
+    g.beginPath();
+    g.moveTo(x, y);
+    g.lineTo(x - 34, y + 50);
+    g.moveTo(x, y);
+    g.lineTo(x + 30, y + 52);
+    g.stroke();
+  };
+  const sensor = (x, y, r, glass) => {
+    disc(x, y, r, '#5b6168');
+    disc(x, y, r * 0.72, glass);
+    g.fillStyle = 'rgba(255,255,255,0.35)';
+    circle(g, x - r * 0.25, y - r * 0.28, r * 0.18);
+    g.fill();
+  };
+
+  g.save();
+  g.scale(ACE_SCALE, -ACE_SCALE);
+  g.translate(-550, -600);
+  g.lineJoin = 'round';
+
+  // legs and claws (the back leg first so the front ones overlap it)
+  for (const [hx, hy, hr, kx, ky, kr, fx, fy] of ACE_LEGS) {
+    limb(hx, hy + hr * 0.4, kx, ky, 38);
+    limb(kx, ky, fx, fy, 30);
+    claw(fx, fy);
+    disc(kx, ky, kr, '#8c939b');
+  }
+  limb(320, 1000, 215, 960, 22);
+  claw(215, 960);
+
+  // underside drum and leg hips
+  g.fillStyle = '#34383e';
+  g.fillRect(400, 690, 370, 95);
+  g.strokeStyle = ACE_OUTLINE;
+  g.lineWidth = 9;
+  g.strokeRect(400, 690, 370, 95);
+  for (const [hx, hy, hr] of ACE_LEGS) {
+    const hub = g.createRadialGradient(hx - hr * 0.3, hy - hr * 0.3, 2, hx, hy, hr);
+    hub.addColorStop(0, '#b3b9c0');
+    hub.addColorStop(1, '#5b6168');
+    disc(hx, hy, hr, hub);
   }
 
-  g.fillStyle = linear(g, -4, 0, 4, 0, [[0, '#14141c'], [0.5, '#3a3a4a'], [1, '#14141c']]);
-  poly(g, ACE_FUSELAGE);
-  g.fill();
-  g.strokeStyle = '#ffcf5a';
-  g.lineWidth = 0.9;
-  g.stroke();
-
-  g.strokeStyle = 'rgba(255,207,90,0.7)';
-  g.lineWidth = 1;
-  mirrored(g, () => {
-    g.beginPath();
-    g.moveTo(-8, 0);
-    g.lineTo(-17, -10);
-    g.stroke();
-  });
-
-  g.shadowColor = '#ff4040';
-  g.shadowBlur = 6;
-  g.fillStyle = '#ff6a5a';
-  g.beginPath();
-  g.ellipse(0, -8, 2, 5, 0, 0, TAU);
+  // saucer: side band, then the top face
+  g.shadowColor = 'rgba(255,70,60,0.6)';
+  g.shadowBlur = 8;
+  poly(g, ACE_SIDE);
+  g.fillStyle = linear(g, 55, 0, 1050, 0, [[0, '#5b6168'], [0.4, '#9da4ac'], [1, '#575d64']]);
   g.fill();
   g.shadowBlur = 0;
+  g.strokeStyle = ACE_OUTLINE;
+  g.lineWidth = 9;
+  g.stroke();
+  g.strokeStyle = 'rgba(18,20,23,0.6)';
+  g.lineWidth = 5;
+  g.beginPath();
+  for (const x of [190, 420, 610, 800, 940]) {
+    g.moveTo(x, 535);
+    g.lineTo(x + (x < 550 ? 10 : -10), 690);
+  }
+  g.stroke();
+  for (const x of [235, 280, 325]) {
+    g.fillStyle = '#9aa1a9';
+    rrect(g, x - 17, 585, 34, 105, 16);
+    g.fill();
+    g.strokeStyle = ACE_OUTLINE;
+    g.lineWidth = 6;
+    g.stroke();
+  }
+  g.fillStyle = '#ff3a3a';
+  circle(g, 280, 600, 12);
+  g.fill();
+  g.fillStyle = '#aab1b8';
+  g.fillRect(475, 590, 34, 34);
+  g.beginPath();
+  g.ellipse(552, 490, 497, 52, 0, 0, TAU);
+  g.fillStyle = linear(g, 0, 440, 0, 540, [[0, '#c3c9cf'], [1, '#7a8189']]);
+  g.fill();
+  g.strokeStyle = ACE_OUTLINE;
+  g.lineWidth = 9;
+  g.stroke();
+
+  // neck and sensor head
+  g.fillStyle = '#2c2f34';
+  g.fillRect(410, 390, 310, 70);
+  poly(g, ACE_HEAD);
+  const head = g.createRadialGradient(420, 160, 30, 550, 260, 470);
+  head.addColorStop(0, '#d0d5da');
+  head.addColorStop(0.6, '#8a9199');
+  head.addColorStop(1, '#4d5258');
+  g.fillStyle = head;
+  g.fill();
+  g.stroke();
+  g.strokeStyle = 'rgba(18,20,23,0.55)';
+  g.lineWidth = 5;
+  g.beginPath();
+  g.moveTo(230, 200);
+  g.quadraticCurveTo(360, 230, 400, 395);
+  g.moveTo(560, 80);
+  g.quadraticCurveTo(540, 160, 600, 210);
+  g.stroke();
+  for (const x of [545, 700]) {
+    g.fillStyle = '#7d848c';
+    g.fillRect(x - 8, 10, 16, 75);
+    g.strokeStyle = ACE_OUTLINE;
+    g.lineWidth = 6;
+    g.strokeRect(x - 8, 10, 16, 75);
+  }
+
+  sensor(160, 290, 50, '#1a1b1f');
+  sensor(870, 215, 42, '#1a1b1f');
+  sensor(450, 320, 58, '#26282d');
+  disc(655, 300, 100, '#17181c');
+  g.fillStyle = 'rgba(255,255,255,0.22)';
+  g.beginPath();
+  g.ellipse(615, 255, 36, 22, -0.6, 0, TAU);
+  g.fill();
+
+  // searchlight lamp and red indicator eyes
+  disc(820, 320, 52, '#6a7078');
+  g.shadowColor = '#ffe9a8';
+  g.shadowBlur = 8;
+  g.fillStyle = '#fff6d8';
+  circle(g, 820, 320, 30);
+  g.fill();
+  g.shadowColor = '#ff2a2a';
+  g.fillStyle = '#ff3a3a';
+  for (const [x, y, r] of [[330, 175, 16], [245, 335, 12]]) {
+    circle(g, x, y, r);
+    g.fill();
+  }
+  g.shadowBlur = 0;
+
+  if (damaged) {
+    scorch(g, ACE_HEAD, [[300, 230, 70], [760, 160, 55]], '#ffcf5a');
+    scorch(g, ACE_SIDE, [[800, 600, 70]], '#ffcf5a');
+  }
+  g.restore();
 }
 
 /* ------------------------------------------------------------------- boss */
@@ -1114,8 +1250,8 @@ export function getSprites() {
     heavy: makeSprite(48, 56, (g) => drawHeavy(g, false)),
     heavyDamaged: makeSprite(48, 56, (g) => drawHeavy(g, true)),
     bomber: makeSprite(54, 46, drawBomber),
-    ace: makeSprite(58, 60, (g) => drawAce(g, false)),
-    aceDamaged: makeSprite(58, 60, (g) => drawAce(g, true)),
+    ace: makeSprite(44, 70, (g) => drawAce(g, false)),
+    aceDamaged: makeSprite(44, 70, (g) => drawAce(g, true)),
     flames: {
       cyan: makeFlame('#38d6ff'),
       red: makeFlame('#ff4a3a'),

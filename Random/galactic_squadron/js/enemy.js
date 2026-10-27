@@ -13,7 +13,7 @@ const LOOK = {
   interceptor: { flame: 'red', flames: [[0, 3]], fw: 6, fl: 7 },
   heavy: { flame: 'orange', flames: [[0, 14]], fw: 7, fl: 7 },
   bomber: { flame: 'violet', flames: [[-5.6, 10], [6.1, 10]], fw: 6, fl: 8 },
-  ace: { flame: 'gold', flames: [[0, 19]], fw: 6, fl: 14 },
+  ace: { flame: 'gold', flames: [], fw: 6, fl: 14 }, // probe droid: no exhaust; the red aura and afterimages mark it
 };
 
 export class Enemy {

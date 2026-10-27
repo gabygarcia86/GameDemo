@@ -547,44 +547,129 @@ function drawHeavy(g, damaged) {
   g.restore();
 }
 
-const BOMBER_HULL = [0, -21, 7, -6, 21, 15, 9, 11, 0, 18, -9, 11, -21, 15, -7, -6];
+/*
+ * Dive bomber: cockpit pod and ordnance pod side by side on a cross strut,
+ * between two angled wing panels. Authored in reference-image space
+ * (260×222, center 130,111) with the rounded pod ends at the image bottom;
+ * the y flip puts them at the nose (-y). Violet accents set it apart from the
+ * grey interceptors.
+ */
+const BOMBER_SCALE = 0.17;
+const BM_OUTLINE = '#15131d';
+const BM_WING = [6, 16, 54, 28, 54, 194, 6, 208];
+const BM_MESH = [12, 25, 48, 34, 48, 188, 12, 199];
+const BM_COCKPIT_POD = [62, 40, 132, 178];
+const BM_ORDNANCE_POD = [136, 38, 196, 178];
 
 function drawBomber(g) {
-  g.shadowColor = 'rgba(180,110,255,0.6)';
-  g.shadowBlur = 8;
-  g.fillStyle = linear(g, 0, -21, 0, 18, [[0, '#8a84b8'], [0.5, '#4b4672'], [1, '#26223d']]);
-  poly(g, BOMBER_HULL);
-  g.fill();
-  g.shadowBlur = 0;
-
-  g.fillStyle = 'rgba(255,255,255,0.12)';
-  poly(g, [0, -21, 3, -6, 0, 12, -3, -6]);
-  g.fill();
-  g.strokeStyle = '#b97dff';
-  g.lineWidth = 1.3;
-  poly(g, BOMBER_HULL);
-  g.stroke();
-
-  mirrored(g, () => {
-    g.fillStyle = '#2d2846';
-    poly(g, [15, 10, 22, 2, 21, 15]);
+  const pod = ([x0, y0, x1, y1], r) => {
+    rrect(g, x0, y0, x1 - x0, y1 - y0, r);
+    g.fillStyle = linear(g, x0, 0, x1, 0, [[0, '#6f7884'], [0.45, '#c3cbd4'], [1, '#6f7884']]);
     g.fill();
-    g.strokeStyle = '#b97dff';
-    g.lineWidth = 0.8;
     g.stroke();
+  };
+  const lines = (segs, color, width) => {
+    g.strokeStyle = color;
+    g.lineWidth = width;
+    g.beginPath();
+    for (const [x0, y0, x1, y1] of segs) {
+      g.moveTo(x0, y0);
+      g.lineTo(x1, y1);
+    }
+    g.stroke();
+  };
+  // draws the left wing, then mirrors it about x = 130
+  const bothWings = (fn) => {
+    fn();
+    g.save();
+    g.translate(260, 0);
+    g.scale(-1, 1);
+    fn();
+    g.restore();
+  };
+
+  g.save();
+  g.scale(BOMBER_SCALE, -BOMBER_SCALE);
+  g.translate(-130, -111);
+  g.lineJoin = 'round';
+  g.strokeStyle = BM_OUTLINE;
+  g.lineWidth = 1.8;
+
+  // cross strut and wing hubs
+  g.fillStyle = linear(g, 0, 117, 0, 135, [[0, '#c3cbd4'], [1, '#626b77']]);
+  g.fillRect(40, 117, 180, 18);
+  g.strokeRect(40, 117, 180, 18);
+
+  bothWings(() => {
+    g.shadowColor = 'rgba(180,110,255,0.7)';
+    g.shadowBlur = 6;
+    poly(g, BM_WING);
+    g.fillStyle = '#aeb7c1';
+    g.fill();
+    g.shadowBlur = 0;
+    g.strokeStyle = BM_OUTLINE;
+    g.lineWidth = 1.8;
+    g.stroke();
+    poly(g, BM_MESH);
+    g.fillStyle = '#2b2740';
+    g.fill();
+    g.save();
+    g.clip();
+    const ribs = [];
+    for (let x = 16; x < 48; x += 5) ribs.push([x, 20, x, 205]);
+    lines(ribs, '#4a4466', 1.2);
+    g.restore();
+    lines([[12, 111, 48, 111]], '#aeb7c1', 3);
+    g.fillStyle = '#7d8691';
+    g.strokeStyle = BM_OUTLINE;
+    g.lineWidth = 1.8;
+    g.fillRect(52, 110, 14, 32);
+    g.strokeRect(52, 110, 14, 32);
   });
 
-  g.fillStyle = '#16131f';
-  g.fillRect(-4, 5, 8, 6);
-  g.fillStyle = '#ff5ad9';
-  g.fillRect(-3, 9, 6, 1.5);
-
-  g.shadowColor = '#d9a6ff';
-  g.shadowBlur = 6;
-  g.fillStyle = '#ecd0ff';
-  poly(g, [0, -12, 3, -5, 0, 1, -3, -5]);
+  // cockpit pod (left) with viewport
+  g.strokeStyle = BM_OUTLINE;
+  g.lineWidth = 1.8;
+  pod(BM_COCKPIT_POD, 18);
+  g.fillStyle = '#4c5560';
+  g.fillRect(82, 50, 30, 80);
+  g.strokeRect(82, 50, 30, 80);
+  lines([[86, 62, 108, 62], [86, 76, 108, 76], [86, 90, 108, 90], [97, 50, 97, 130]], '#2a3038', 1.2);
+  g.strokeStyle = BM_OUTLINE;
+  g.lineWidth = 1.8;
+  g.shadowColor = '#c08bff';
+  g.shadowBlur = 5;
+  g.fillStyle = '#d9b8ff';
+  circle(g, 97, 153, 11);
   g.fill();
   g.shadowBlur = 0;
+  g.stroke();
+  lines([[90, 146, 104, 160], [104, 146, 90, 160]], '#5b3a8c', 1.4);
+
+  // ordnance pod (right) with bomb-bay hatch
+  g.strokeStyle = BM_OUTLINE;
+  g.lineWidth = 1.8;
+  pod(BM_ORDNANCE_POD, 14);
+  g.fillStyle = '#596270';
+  g.fillRect(148, 52, 36, 66);
+  g.strokeRect(148, 52, 36, 66);
+  lines([[148, 70, 184, 70], [148, 88, 184, 88], [148, 104, 184, 104], [166, 52, 166, 118]], '#2a3038', 1.2);
+  g.fillStyle = '#1c1a26';
+  rrect(g, 150, 146, 32, 22, 6);
+  g.fill();
+  g.fillStyle = '#ff5ad9';
+  g.fillRect(156, 162, 20, 3);
+
+  // antenna stubs on the pod tops
+  g.fillStyle = '#9aa3ae';
+  g.strokeStyle = BM_OUTLINE;
+  g.lineWidth = 1.4;
+  for (const [x, w] of [[84, 8], [104, 6], [146, 6], [176, 8]]) {
+    g.fillRect(x, 32, w, 9);
+    g.strokeRect(x, 32, w, 9);
+  }
+
+  g.restore();
 }
 
 const ACE_WING = [-4, -4, -21, -17, -17, 3, -22, 19, -6, 10];
@@ -1028,7 +1113,7 @@ export function getSprites() {
     interceptor: makeSprite(46, 52, drawInterceptor),
     heavy: makeSprite(48, 56, (g) => drawHeavy(g, false)),
     heavyDamaged: makeSprite(48, 56, (g) => drawHeavy(g, true)),
-    bomber: makeSprite(54, 52, drawBomber),
+    bomber: makeSprite(54, 46, drawBomber),
     ace: makeSprite(58, 60, (g) => drawAce(g, false)),
     aceDamaged: makeSprite(58, 60, (g) => drawAce(g, true)),
     flames: {

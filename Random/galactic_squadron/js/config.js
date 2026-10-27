@@ -46,7 +46,7 @@ export const CONFIG = {
     top: 122,               // y of the first formation row
     bossTop: 362,           // escorts sit below the boss
     spacingX: 50,
-    spacingY: 46,
+    spacingY: 50,
     sway: 34,
     swaySpeed: 0.5,
     breathe: 0.07,          // spread/contract amplitude once the formation is complete

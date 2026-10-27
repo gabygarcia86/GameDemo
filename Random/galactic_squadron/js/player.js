@@ -157,8 +157,8 @@ export class Player {
     ctx.globalCompositeOperation = 'lighter';
     const fl = 0.85 + 0.15 * Math.sin(this.t * 41) + 0.1 * Math.sin(this.t * 67);
     const flame = this.sprites.flames.cyan;
-    ctx.drawImage(flame, -9, 21, 9, 16 * fl);
-    ctx.drawImage(flame, 0, 21, 9, 16 * fl);
+    ctx.drawImage(flame, -14, 26, 8, 16 * fl);
+    ctx.drawImage(flame, 6, 26, 8, 16 * fl);
     if (this.muzzle > 0) ctx.drawImage(getGlow('#4fe3ff'), -10, -36, 20, 20);
     ctx.globalCompositeOperation = 'source-over';
 

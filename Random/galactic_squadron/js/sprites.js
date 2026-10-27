@@ -96,66 +96,156 @@ function scorch(g, outline, spots, glow = '#ff7a2a') {
 
 /* ------------------------------------------------------------------ ships */
 
-const PLAYER_HULL = [0, -27, 5, -15, 6, -4, 22, 8, 24, 17, 9, 14, 6, 22, -6, 22, -9, 14, -24, 17, -22, 8, -6, -4, -5, -15];
+/*
+ * Player fighter: flat-style starfighter with wingtip cannons, twin engines and
+ * a long nose. Authored in a 1200×1200 reference space (ship centered at 600,600)
+ * and scaled down; the left half is drawn and mirrored.
+ */
+const PLAYER_SCALE = 0.055;
+const P_OUTLINE = '#2c3e50';
+const P_WHITE = '#ecf0f1';
+const P_GREY = '#95a5a6';
+const P_RED = '#e74c3c';
+const P_YELLOW = '#f1c40f';
+const P_WING = [205, 800, 500, 800, 500, 995, 390, 1000, 205, 925];
+const P_BODY = [580, 102, 620, 102, 636, 128, 697, 715, 697, 995, 652, 1045, 548, 1045, 503, 995, 503, 715, 564, 128];
+const P_GLOW = 'rgba(90,200,255,0.55)';
 
 function drawPlayer(g) {
-  g.shadowColor = 'rgba(90,200,255,0.6)';
-  g.shadowBlur = 8;
-  g.fillStyle = linear(g, -24, 0, 24, 0, [[0, '#6f7c96'], [0.5, '#eef3fb'], [1, '#6f7c96']]);
-  poly(g, PLAYER_HULL);
-  g.fill();
-  g.shadowBlur = 0;
+  const o = (v) => v - 600;
+  const path = (pts) => poly(g, pts.map(o));
+  const box = (x0, y0, x1, y1, r) => rrect(g, o(x0), o(y0), x1 - x0, y1 - y0, r);
+  const fillStroke = (fill) => {
+    g.fillStyle = fill;
+    g.fill();
+    g.stroke();
+  };
+  const dot = (x, y, r, fill) => {
+    circle(g, o(x), o(y), r);
+    fillStroke(fill);
+  };
 
   g.save();
-  poly(g, PLAYER_HULL);
-  g.clip();
-  g.fillStyle = linear(g, 0, -27, 0, 22, [[0, 'rgba(255,255,255,0)'], [1, 'rgba(20,30,60,0.45)']]);
-  g.fillRect(-25, -28, 50, 52);
-  g.restore();
+  g.scale(PLAYER_SCALE, PLAYER_SCALE);
+  g.lineJoin = 'round';
+  g.lineWidth = 12;
+  g.strokeStyle = P_OUTLINE;
 
-  g.lineWidth = 1.1;
-  g.strokeStyle = '#18213d';
-  poly(g, PLAYER_HULL);
-  g.stroke();
-
-  g.fillStyle = '#ff8a2a';
   mirrored(g, () => {
-    poly(g, [11, 5, 20, 10, 21, 13, 12, 9]);
+    // wingtip cannon barrel with yellow band and collar
+    // (drawn wider than the reference so the barrel still reads at sprite size)
+    box(168, 395, 196, 760, 6);
+    g.fillStyle = P_WHITE;
     g.fill();
+    g.fillStyle = P_YELLOW;
+    g.fillRect(o(168), o(570), 28, 65);
+    g.lineWidth = 8;
+    box(168, 395, 196, 760, 6);
+    g.stroke();
+    box(160, 472, 204, 492, 8);
+    fillStroke(P_GREY);
+    g.lineWidth = 12;
+
+    // wing with red tip and yellow stripe
+    g.shadowColor = P_GLOW;
+    g.shadowBlur = 8;
+    path(P_WING);
+    fillStroke(P_WHITE);
+    g.shadowBlur = 0;
+    g.save();
+    path(P_WING);
+    g.clip();
+    g.fillStyle = P_RED;
+    path([205, 790, 258, 790, 258, 915, 292, 965, 205, 965]);
+    g.fill();
+    g.fillStyle = P_YELLOW;
+    g.fillRect(o(258), o(800), 15, 115);
+    g.restore();
+    path(P_WING);
+    g.stroke();
+
+    // cannon mount
+    box(158, 755, 205, 945, 4);
+    fillStroke(P_WHITE);
+    g.beginPath();
+    g.moveTo(o(158), o(783));
+    g.lineTo(o(205), o(783));
+    g.stroke();
+    box(152, 942, 211, 968, 10);
+    fillStroke(P_GREY);
+
+    // engine: exhaust pipe, nozzle, then the housing with its grey/red band
+    box(392, 900, 448, 1062, 4);
+    fillStroke(P_WHITE);
+    box(384, 1057, 457, 1097, 12);
+    fillStroke(P_GREY);
+    box(372, 735, 469, 910, 16);
+    g.fillStyle = P_WHITE;
+    g.fill();
+    g.save();
+    g.clip();
+    g.fillStyle = P_GREY;
+    g.fillRect(o(372), o(735), 97, 65);
+    g.fillStyle = P_RED;
+    g.fillRect(o(372), o(748), 97, 17);
+    g.restore();
+    box(372, 735, 469, 910, 16);
+    g.stroke();
   });
 
-  mirrored(g, () => {
-    g.fillStyle = '#2a3352';
-    g.fillRect(17.5, -9, 3, 20);
-    g.fillStyle = '#7ff3ff';
-    g.fillRect(17.5, -11.5, 3, 2.5);
-  });
-
-  g.strokeStyle = 'rgba(24,33,61,0.55)';
-  g.lineWidth = 0.8;
+  // fuselage: grey nose cone, red side stripes
+  g.shadowColor = P_GLOW;
+  g.shadowBlur = 8;
+  path(P_BODY);
+  fillStroke(P_WHITE);
+  g.shadowBlur = 0;
+  g.save();
+  path(P_BODY);
+  g.clip();
+  g.fillStyle = P_GREY;
   g.beginPath();
-  g.moveTo(0, -21); g.lineTo(0, -15);
-  g.moveTo(-6, 6); g.lineTo(-6, 18);
-  g.moveTo(6, 6); g.lineTo(6, 18);
-  g.moveTo(-14, 8); g.lineTo(-8, 4);
-  g.moveTo(14, 8); g.lineTo(8, 4);
-  g.stroke();
-
-  const cg = g.createRadialGradient(-1, -9, 0.5, 0, -6, 8);
-  cg.addColorStop(0, '#e6fdff');
-  cg.addColorStop(0.4, '#3fd2ff');
-  cg.addColorStop(1, '#0b3a66');
-  g.fillStyle = cg;
-  g.beginPath();
-  g.ellipse(0, -6, 3.6, 7.5, 0, 0, TAU);
+  g.moveTo(o(540), o(80));
+  g.lineTo(o(660), o(80));
+  g.lineTo(o(660), o(245));
+  g.quadraticCurveTo(o(600), o(232), o(540), o(245));
+  g.closePath();
   g.fill();
-  g.strokeStyle = '#18213d';
-  g.lineWidth = 0.8;
+  g.fillStyle = P_RED;
+  path([553, 245, 570, 245, 534, 620, 512, 632]);
+  g.fill();
+  path([647, 245, 630, 245, 666, 620, 688, 632]);
+  g.fill();
+  g.restore();
+  path(P_BODY);
+  g.stroke();
+  g.beginPath();
+  g.moveTo(o(553), o(245));
+  g.quadraticCurveTo(o(600), o(232), o(647), o(245));
   g.stroke();
 
-  g.fillStyle = '#39445f';
-  g.fillRect(-7.5, 16, 5, 7);
-  g.fillRect(2.5, 16, 5, 7);
+  g.fillStyle = P_YELLOW;
+  box(572, 420, 628, 442, 11);
+  g.fill();
+
+  path([575, 457, 625, 457, 636, 470, 651, 655, 635, 686, 565, 686, 549, 655, 564, 470]);
+  fillStroke('#34495e');
+  g.fillStyle = 'rgba(160,220,255,0.3)';
+  path([572, 485, 588, 472, 574, 610, 561, 645]);
+  g.fill();
+
+  // astromech strip
+  g.fillStyle = P_GREY;
+  box(558, 760, 642, 1005, 40);
+  g.fill();
+  g.lineWidth = 10;
+  dot(600, 770, 40, '#bdc3c7');
+  dot(600, 770, 16, P_RED);
+  dot(600, 850, 20, P_WHITE);
+  dot(600, 905, 20, P_WHITE);
+  box(580, 940, 620, 980, 2);
+  fillStroke(P_WHITE);
+
+  g.restore();
 }
 
 function drawInterceptor(g) {

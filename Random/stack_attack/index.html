@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en" data-theme="neon">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport"
+            content="width=device-width, initial-scale=1, viewport-fit=cover">
+        <meta name="theme-color" content="#05050f">
+        <meta name="description"
+            content="Stack Attack — a retro falling-block puzzle game with 15 piece types, three difficulties and four themes.">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="format-detection" content="telephone=no">
+        <title>Stack Attack</title>
+        <link rel="icon"
+            href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2305050f'/%3E%3Crect x='5' y='17' width='7' height='7' fill='%2300f0ff'/%3E%3Crect x='12' y='17' width='7' height='7' fill='%2300f0ff'/%3E%3Crect x='19' y='17' width='7' height='7' fill='%23ff2e88'/%3E%3Crect x='12' y='10' width='7' height='7' fill='%23f5ff3d'/%3E%3Crect x='19' y='24' width='7' height='3' fill='%233dff7a'/%3E%3C/svg%3E">
+        <link rel="stylesheet" href="styles.css">
+        <script>
+            // Apply the saved theme before first paint so there is no flash.
+            try {
+                var saved = JSON.parse(localStorage.getItem('stackAttack.v1') || '{}');
+                if (/^(retro70|arcade80|classic90|neon)$/.test(saved.theme)) {
+                    document.documentElement.dataset.theme = saved.theme;
+                }
+            } catch (e) { }
+        </script>
+    </head>
+    <body>
+        <div id="app">
+            <header class="topbar">
+                <h1 class="logo"><span>Stack</span><span>Attack</span></h1>
+                <nav class="toolbar" aria-label="Game options">
+                    <button type="button" id="btn-pause" class="tb-btn"
+                        aria-label="Pause" disabled>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path
+                                d="M8 5v14M16 5v14" /></svg>
+                        <span class="tb-label">Pause</span>
+                    </button>
+                    <button type="button" id="btn-restart" class="tb-btn"
+                        aria-label="Restart" disabled>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path
+                                d="M4 12a8 8 0 1 0 2.34-5.66" /><path
+                                d="M4 4v5h5" /></svg>
+                        <span class="tb-label">Restart</span>
+                    </button>
+                    <button type="button" id="btn-theme"
+                        class="tb-btn tb-strong" aria-haspopup="dialog">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path
+                                d="M12 3a9 9 0 1 0 0 18c1.5 0 2-1 2-2s-1-1.5-1-2.5 1-1.5 2-1.5h2a4 4 0 0 0 4-4c0-4.4-4-8-9-8z" /><circle
+                                cx="7.5" cy="11" r="1.2" /><circle cx="10.5"
+                                cy="7" r="1.2" /><circle cx="15" cy="7.5"
+                                r="1.2" /></svg>
+                        <span class="tb-label">Theme</span>
+                    </button>
+                    <button type="button" id="btn-difficulty" class="tb-btn"
+                        aria-haspopup="dialog">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path
+                                d="M5 20V14M12 20V9M19 20V4" /></svg>
+                        <span class="tb-label" id="diff-label">Easy</span>
+                    </button>
+                    <button type="button" id="btn-settings" class="tb-btn"
+                        aria-label="Settings" aria-haspopup="dialog">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><circle
+                                cx="12" cy="12" r="3" /><path
+                                d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1" /></svg>
+                        <span class="tb-label">Settings</span>
+                    </button>
+                </nav>
+            </header>
+
+            <main class="playfield" id="playfield">
+                <section class="side side-left" id="side-left"
+                    aria-label="Hold piece and statistics">
+                    <div class="panel hold-panel">
+                        <h2 class="panel-title">Hold</h2>
+                        <canvas id="hold-canvas" class="preview-canvas"
+                            role="img" aria-label="Held piece: none"></canvas>
+                    </div>
+                    <dl class="panel stats">
+                        <div class="stat"><dt>Score</dt><dd
+                                id="stat-score">0</dd></div>
+                        <div class="stat"><dt>Level</dt><dd
+                                id="stat-level">1</dd></div>
+                        <div class="stat"><dt>Lines</dt><dd
+                                id="stat-lines">0</dd></div>
+                        <div class="stat"><dt>Best</dt><dd
+                                id="stat-best">0</dd></div>
+                    </dl>
+                </section>
+
+                <div class="board-frame" id="board-frame" tabindex="-1">
+                    <canvas id="board-canvas" role="img"
+                        aria-label="Game board"></canvas>
+                    <div id="action-text" class="action-text"
+                        aria-live="polite"></div>
+                </div>
+
+                <section class="side side-right" id="side-right"
+                    aria-label="Next pieces">
+                    <div class="panel next-panel">
+                        <h2 class="panel-title">Next</h2>
+                        <canvas id="next-canvas" class="preview-canvas"
+                            role="img" aria-label="Next pieces"></canvas>
+                    </div>
+                </section>
+
+                <div class="touch-bar" id="touch-bar">
+                    <div class="touch-cluster touch-move" id="touch-move"
+                        role="group" aria-label="Movement">
+                        <button type="button" class="tbtn t-hard"
+                            data-action="hard" aria-label="Hard drop">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path
+                                    d="M6 4l6 6 6-6M6 10l6 6 6-6M5 20h14" /></svg>
+                            <span>Drop</span>
+                        </button>
+                        <button type="button" class="tbtn t-left"
+                            data-action="left" aria-label="Move left">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path
+                                    d="M15 5l-7 7 7 7" /></svg>
+                        </button>
+                        <button type="button" class="tbtn t-soft"
+                            data-action="soft" aria-label="Soft drop">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path
+                                    d="M5 9l7 7 7-7" /></svg>
+                        </button>
+                        <button type="button" class="tbtn t-right"
+                            data-action="right" aria-label="Move right">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path
+                                    d="M9 5l7 7-7 7" /></svg>
+                        </button>
+                    </div>
+                    <div class="touch-cluster touch-act" id="touch-act"
+                        role="group" aria-label="Actions">
+                        <button type="button" class="tbtn t-hold"
+                            data-action="hold" aria-label="Hold piece">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path
+                                    d="M6 8h12l-3-3M18 16H6l3 3" /></svg>
+                            <span>Hold</span>
+                        </button>
+                        <button type="button" class="tbtn t-ccw"
+                            data-action="ccw"
+                            aria-label="Rotate counterclockwise">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path
+                                    d="M4 12a8 8 0 1 0 2.34-5.66" /><path
+                                    d="M4 4v5h5" /></svg>
+                        </button>
+                        <button type="button" class="tbtn t-cw"
+                            data-action="cw" aria-label="Rotate clockwise">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path
+                                    d="M20 12a8 8 0 1 1-2.34-5.66" /><path
+                                    d="M20 4v5h-5" /></svg>
+                        </button>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Full-screen overlays -->
+        <section id="overlay-menu" class="overlay" aria-labelledby="menu-title">
+            <div class="card menu-card">
+                <h2 id="menu-title" class="menu-logo"><span>Stack</span>
+                    <span>Attack</span></h2>
+                <p class="tagline">Stack. Clear. Survive.</p>
+                <fieldset class="diff-group">
+                    <legend>Difficulty</legend>
+                    <div class="diff-options" id="menu-diff-options"></div>
+                </fieldset>
+                <canvas id="gallery-canvas" class="gallery" role="img"
+                    aria-label="Pieces in this difficulty"></canvas>
+                <button type="button" id="btn-play" class="btn btn-primary">Play</button>
+                <div class="menu-row">
+                    <button type="button" class="btn" data-open="theme">Theme</button>
+                    <button type="button" class="btn" data-open="settings">Settings</button>
+                </div>
+                <dl class="best-list" id="best-list"></dl>
+                <p class="hint keys-hint">← → move · ↓ soft drop · Space hard
+                    drop · ↑/X rotate · Z rotate back · C hold · P pause</p>
+            </div>
+        </section>
+
+        <section id="overlay-pause" class="overlay" hidden
+            aria-labelledby="pause-title">
+            <div class="card">
+                <h2 id="pause-title" class="card-title">Paused</h2>
+                <button type="button" id="btn-resume" class="btn btn-primary">Resume</button>
+                <button type="button" id="btn-pause-restart" class="btn">Restart</button>
+                <button type="button" id="btn-pause-menu" class="btn">Main
+                    Menu</button>
+            </div>
+        </section>
+
+        <section id="overlay-gameover" class="overlay" hidden
+            aria-labelledby="over-title">
+            <div class="card">
+                <h2 id="over-title" class="card-title">Game Over</h2>
+                <p class="new-best" id="over-newbest" hidden>New best!</p>
+                <dl class="over-stats">
+                    <div><dt>Score</dt><dd id="over-score">0</dd></div>
+                    <div><dt>Level</dt><dd id="over-level">1</dd></div>
+                    <div><dt>Lines</dt><dd id="over-lines">0</dd></div>
+                    <div><dt>Best</dt><dd id="over-best">0</dd></div>
+                </dl>
+                <button type="button" id="btn-again" class="btn btn-primary">Play
+                    Again</button>
+                <button type="button" id="btn-over-menu" class="btn">Main
+                    Menu</button>
+            </div>
+        </section>
+
+        <!-- Dialogs -->
+        <dialog id="dlg-theme" class="dlg" aria-labelledby="theme-title">
+            <form method="dialog" class="dlg-body">
+                <h2 id="theme-title" class="card-title">Theme</h2>
+                <div class="theme-grid" id="theme-grid"></div>
+                <button type="submit" class="btn btn-primary" value="close">Done</button>
+            </form>
+        </dialog>
+
+        <dialog id="dlg-difficulty" class="dlg" aria-labelledby="diff-title">
+            <form method="dialog" class="dlg-body">
+                <h2 id="diff-title" class="card-title">Difficulty</h2>
+                <fieldset class="diff-group">
+                    <legend class="sr-only">Choose difficulty</legend>
+                    <div class="diff-options" id="dlg-diff-options"></div>
+                </fieldset>
+                <p class="hint" id="diff-note"></p>
+                <div class="menu-row">
+                    <button type="submit" class="btn" value="cancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary" value="ok"
+                        id="btn-diff-apply">Apply</button>
+                </div>
+            </form>
+        </dialog>
+
+        <dialog id="dlg-settings" class="dlg" aria-labelledby="settings-title">
+            <form method="dialog" class="dlg-body settings">
+                <h2 id="settings-title" class="card-title">Settings</h2>
+                <label class="field">
+                    <span>Auto-shift delay (DAS) <output
+                            id="out-das"></output></span>
+                    <input type="range" id="set-das" min="50" max="300"
+                        step="1">
+                </label>
+                <label class="field">
+                    <span>Auto-repeat rate (ARR) <output
+                            id="out-arr"></output></span>
+                    <input type="range" id="set-arr" min="0" max="100"
+                        step="1">
+                </label>
+                <label class="field">
+                    <span>Soft drop speed</span>
+                    <select id="set-sdf">
+                        <option value="10">10× gravity</option>
+                        <option value="20">20× gravity</option>
+                        <option value="40">40× gravity</option>
+                        <option value="1000">Instant</option>
+                    </select>
+                </label>
+                <label class="field">
+                    <span>Touch controls</span>
+                    <select id="set-touch">
+                        <option value="auto">Automatic</option>
+                        <option value="on">Always show</option>
+                        <option value="off">Hide</option>
+                    </select>
+                </label>
+                <label class="check"><input type="checkbox" id="set-ghost">
+                    Ghost piece</label>
+                <label class="check"><input type="checkbox" id="set-letters">
+                    Piece letters (shape markers)</label>
+                <div class="menu-row">
+                    <button type="button" class="btn" id="btn-settings-reset">Defaults</button>
+                    <button type="submit" class="btn btn-primary" value="close">Done</button>
+                </div>
+            </form>
+        </dialog>
+
+        <dialog id="dlg-confirm" class="dlg" aria-labelledby="confirm-msg">
+            <form method="dialog" class="dlg-body">
+                <p id="confirm-msg" class="confirm-msg"></p>
+                <div class="menu-row">
+                    <button type="submit" class="btn" value="cancel"
+                        autofocus>Cancel</button>
+                    <button type="submit" class="btn btn-primary" value="ok"
+                        id="confirm-ok">OK</button>
+                </div>
+            </form>
+        </dialog>
+
+        <script src="game.js"></script>
+    </body>
+</html>

@@ -11,7 +11,7 @@ import { Path, TAU, clamp, lerp, rand, pick, easeOutCubic, hexToRgba } from './u
 
 const { W, H } = WORLD;
 
-const NAMES = ['VORAX CARRIER', 'THRESHER DREADNOUGHT', 'OBLIVION FLAGSHIP'];
+const NAMES = ['STAR SHIP', 'STAR DREADNOUGHT', 'SUPER STAR SHIP'];
 const ACCENTS = ['#ff3b4e', '#b26bff', '#ff8a2a'];
 const CORE_COLORS = ['#5ad1ff', '#ffb02e', '#ff3b4e'];
 const ROMAN = ['', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];

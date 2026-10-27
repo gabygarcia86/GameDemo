@@ -216,13 +216,13 @@ h3 {
 }
 
 .logo .w1 {
-  font-size: 2.1em;
-  font-size: 8.6cqw;
+  font-size: 3.8em;
+  font-size: 16cqw;
 }
 
 .logo .w2 {
-  font-size: 2em;
-  font-size: 8.2cqw;
+  font-size: 3.7em;
+  font-size: 15.5cqw;
   background: linear-gradient(180deg, #ffe2b0 0%, #ff9a2e 50%, #ff3b4e 100%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -292,6 +292,29 @@ h3 {
 .btn.small {
   min-height: max(40px, calc(var(--s) * 42px));
   font-size: 0.82em;
+}
+
+.back-link {
+  position: absolute;
+  left: calc(var(--s) * 14px);
+  bottom: calc(var(--s) * 14px);
+  padding: 0.45em 0.9em;
+  border: 1px solid rgba(56, 214, 255, 0.35);
+  border-radius: calc(var(--s) * 8px);
+  background: rgba(10, 20, 50, 0.7);
+  color: var(--muted);
+  font: 800 0.75em var(--ui-font);
+  letter-spacing: 0.14em;
+  text-decoration: none;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.back-link:hover,
+.back-link:focus-visible {
+  outline: none;
+  color: var(--text);
+  background: rgba(30, 60, 130, 0.85);
+  box-shadow: 0 0 0 2px var(--cyan);
 }
 
 .btn.danger {

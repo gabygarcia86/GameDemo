@@ -42,10 +42,10 @@ Touch movement is a relative drag, so your finger never covers the ship. In port
 
 | Enemy | Behaviour | Points |
 | --- | --- | --- |
-| Crescent Interceptor | Fast, fragile, flies in packs, swooping dives | 100 |
-| Bulwark Heavy Fighter | 3 hits, slow plasma shots, loops back to formation | 200 |
-| Talon Dive Bomber | Long sweeping dives, spread shots | 300 |
-| Phantom Elite Ace | Fast zig-zag or boomerang dives, burst fire, brings wingmen | 500 |
+| T-Fighter | Fast, fragile, flies in packs, swooping dives | 100 |
+| T-Interceptor | 3 hits, slow plasma shots, loops back to formation | 200 |
+| T-Bomber | Long sweeping dives, spread shots | 300 |
+| Probe-Fighter | Fast zig-zag or boomerang dives, burst fire, brings wingmen | 500 |
 | Capital ship (boss) | 3 damage phases: fans, aimed bursts, bullet rain, rings, a tracking laser, fighter launches | 2,500 + 5,000 bonus |
 
 - **Scoring:** ships destroyed mid-dive are worth ×2. Chaining kills builds a streak that raises a multiplier from ×1 up to ×4. Finishing a stage without losing a ship earns a no-damage bonus. You get an extra life every 30,000 points.

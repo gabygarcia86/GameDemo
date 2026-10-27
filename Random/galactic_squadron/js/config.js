@@ -36,10 +36,10 @@ export const CONFIG = {
   },
 
   enemies: {
-    interceptor: { hp: 1, score: 100, radius: 15, speed: 1.0, diveWeight: 1.0, name: 'Crescent Interceptor' },
-    heavy:       { hp: 3, score: 200, radius: 19, speed: 0.8, diveWeight: 0.55, name: 'Bulwark Heavy Fighter' },
-    bomber:      { hp: 1, score: 300, radius: 16, speed: 1.1, diveWeight: 2.0, name: 'Talon Dive Bomber' },
-    ace:         { hp: 2, score: 500, radius: 16, speed: 1.3, diveWeight: 1.8, name: 'Phantom Elite Ace' },
+    interceptor: { hp: 1, score: 100, radius: 15, speed: 1.0, diveWeight: 1.0, name: 'T-Fighter' },
+    heavy:       { hp: 3, score: 200, radius: 19, speed: 0.8, diveWeight: 0.55, name: 'T-Interceptor' },
+    bomber:      { hp: 1, score: 300, radius: 16, speed: 1.1, diveWeight: 2.0, name: 'T-Bomber' },
+    ace:         { hp: 2, score: 500, radius: 16, speed: 1.3, diveWeight: 1.8, name: 'Probe-Fighter' },
   },
 
   formation: {

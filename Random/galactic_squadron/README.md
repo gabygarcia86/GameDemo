@@ -54,6 +54,12 @@ Touch movement is a relative drag, so your finger never covers the ship. In port
 - **Power-ups:** Rapid Fire (10 s), Spread Shot (12 s), Shield (8 s), Extra Life, Score Bonus. Each has its own shape and colour, and the timers show at the bottom right.
 - **The Falcon:** every 50 kills in one streak, an allied freighter drops out of hyperspace above you and fires red lasers at the nearest enemies (or the boss's core) for 10 seconds. Its kills count toward your score and streak, and it can't be hit. Hitting another 50 while it's still around resets its 10 seconds.
 
+## Choose your ship
+
+**CHOOSE YOUR SHIP** on the title screen opens the hangar. There are 14 ships: X-Ship (the default), A-Ship, Boba-Ship, Gauntlet-Ship, G-Ship, J-Ship, Land-Ship, N1-Ship, N1-Ship-Modified, Pod-Ship, Razor-Ship, Snow-Ship, Yo-Ship and Y-Ship. Ships are cosmetic and all handle the same. Your choice is saved with your settings and is also used for the lives icons.
+
+To add a ship, write a draw function in `js/ships.js` and add an entry to `SHIPS` with its sprite size, flame color and engine positions.
+
 ## Settings
 
 Master, music and effects volume; mute; difficulty (Easy / Normal / Hard); starting lives (1–5); movement (*Direct* or *Inertia*); auto-fire; reduced screen shake; reduced effects. Settings and the high score are saved in `localStorage`. If storage is blocked, the game still runs and simply doesn't remember anything.
@@ -77,6 +83,7 @@ galactic_squadron/
     boss.js         capital ship: phases, attack patterns, laser, defeat sequence
     falcon.js       the allied Falcon: arrival, targeting, firing, departure
     player.js       movement modes, firing, shield, respawn
+    ships.js        player ship roster and artwork for the ship select screen
     projectile.js   pooled player/enemy bullets
     collision.js    per-step collision pass
     powerups.js     drops, pickups and active timers

@@ -17,7 +17,7 @@ function layer(w, h) {
 }
 
 /** Builds a centered sprite plus a white silhouette used for hit flashes. */
-function makeSprite(w, h, draw) {
+export function makeSprite(w, h, draw) {
   const { c, g } = layer(w, h);
   draw(g);
   const f = document.createElement('canvas');
@@ -31,19 +31,19 @@ function makeSprite(w, h, draw) {
   return { canvas: c, flash: f, w, h };
 }
 
-function poly(g, pts) {
+export function poly(g, pts) {
   g.beginPath();
   g.moveTo(pts[0], pts[1]);
   for (let i = 2; i < pts.length; i += 2) g.lineTo(pts[i], pts[i + 1]);
   g.closePath();
 }
 
-function circle(g, x, y, r) {
+export function circle(g, x, y, r) {
   g.beginPath();
   g.arc(x, y, r, 0, TAU);
 }
 
-function rrect(g, x, y, w, h, r) {
+export function rrect(g, x, y, w, h, r) {
   g.beginPath();
   g.moveTo(x + r, y);
   g.arcTo(x + w, y, x + w, y + h, r);
@@ -53,14 +53,14 @@ function rrect(g, x, y, w, h, r) {
   g.closePath();
 }
 
-function linear(g, x0, y0, x1, y1, stops) {
+export function linear(g, x0, y0, x1, y1, stops) {
   const gr = g.createLinearGradient(x0, y0, x1, y1);
   for (const [o, c] of stops) gr.addColorStop(o, c);
   return gr;
 }
 
 /** Runs `fn` twice: once as authored, once mirrored across the y axis. */
-function mirrored(g, fn) {
+export function mirrored(g, fn) {
   fn();
   g.save();
   g.scale(-1, 1);
@@ -111,7 +111,7 @@ const P_WING = [205, 800, 500, 800, 500, 995, 390, 1000, 205, 925];
 const P_BODY = [580, 102, 620, 102, 636, 128, 697, 715, 697, 995, 652, 1045, 548, 1045, 503, 995, 503, 715, 564, 128];
 const P_GLOW = 'rgba(90,200,255,0.55)';
 
-function drawPlayer(g) {
+export function drawPlayer(g) {
   const o = (v) => v - 600;
   const path = (pts) => poly(g, pts.map(o));
   const box = (x0, y0, x1, y1, r) => rrect(g, o(x0), o(y0), x1 - x0, y1 - y0, r);

@@ -1,6 +1,7 @@
 /** Entry point: loads settings, wires the modules together and starts the loop. */
 import { CONFIG, DEFAULT_SETTINGS } from './config.js';
 import { storage } from './storage.js';
+import { SHIPS } from './ships.js';
 import { AudioEngine } from './audio.js';
 import { Input } from './input.js';
 import { UI } from './ui.js';
@@ -15,6 +16,7 @@ function loadSettings() {
   for (const k of ['master', 'music', 'sfx']) s[k] = Math.min(1, Math.max(0, s[k]));
   if (!CONFIG.difficultyPresets[s.difficulty]) s.difficulty = DEFAULT_SETTINGS.difficulty;
   if (s.movement !== 'direct' && s.movement !== 'inertia') s.movement = DEFAULT_SETTINGS.movement;
+  if (!SHIPS.some((ship) => ship.id === s.ship)) s.ship = DEFAULT_SETTINGS.ship;
   s.startLives = Math.min(CONFIG.player.maxLives, Math.max(1, Math.round(s.startLives)));
   return s;
 }

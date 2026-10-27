@@ -145,6 +145,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
   autoFire: false,
   reducedShake: false,
   reducedEffects: false,
+  ship: 'x-ship',          // id from SHIPS in ships.js
 });
 
 /**

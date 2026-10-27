@@ -1,12 +1,13 @@
 /**
- * User interface: responsive layout, DOM menus (title, settings, help, pause,
- * game over), touch controls, and the canvas-drawn HUD and banners.
+ * User interface: responsive layout, DOM menus (title, ship select, settings,
+ * help, pause, game over), touch controls, and the canvas-drawn HUD and banners.
  * DOM is only touched on state changes — never every frame.
  */
 import { CONFIG, WORLD, DEFAULT_SETTINGS } from './config.js';
 import { storage } from './storage.js';
 import { getSprites, drawPowerIcon, POWERUP_COLORS } from './sprites.js';
 import { POWERUP_INFO } from './powerups.js';
+import { SHIPS, getShip, getShipSprite } from './ships.js';
 
 const { W, H } = WORLD;
 
@@ -14,6 +15,32 @@ const NUM_FONT = (px) => `800 ${px}px ui-monospace, "Cascadia Mono", Consolas, "
 const UI_FONT = (px, w = 800) => `${w} ${px}px "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif`;
 
 const pad = (n, len = 7) => String(Math.floor(n)).padStart(len, '0');
+
+const SUB_SCREENS = new Set(['settings', 'help', 'ships']);
+
+/** Draws a ship centered and fitted into a square canvas of `size` CSS px. */
+function paintShip(canvas, id, size, withFlames) {
+  const ship = getShip(id);
+  const s = getShipSprite(id);
+  canvas.width = size * 2;
+  canvas.height = size * 2;
+  const g = canvas.getContext('2d');
+  g.setTransform(2, 0, 0, 2, 0, 0);
+  g.clearRect(0, 0, size, size);
+  const top = -s.h / 2;
+  let bottom = s.h / 2;
+  if (withFlames) for (const [, ey, ew] of ship.engines) bottom = Math.max(bottom, ey + ew * 2);
+  const k = Math.min(1.8, (size - 4) / Math.max(s.w, bottom - top));
+  g.translate(size / 2, size / 2 - ((top + bottom) / 2) * k);
+  g.scale(k, k);
+  if (withFlames) {
+    const flame = getSprites().flames[ship.flame];
+    g.globalCompositeOperation = 'lighter';
+    for (const [ex, ey, ew] of ship.engines) g.drawImage(flame, ex - ew / 2, ey, ew, ew * 2);
+    g.globalCompositeOperation = 'source-over';
+  }
+  g.drawImage(s.canvas, -s.w / 2, -s.h / 2, s.w, s.h);
+}
 
 export class UI {
   constructor(settings, audio) {
@@ -35,6 +62,7 @@ export class UI {
       title: this.$('#screen-title'),
       settings: this.$('#screen-settings'),
       help: this.$('#screen-help'),
+      ships: this.$('#screen-ships'),
       pause: this.$('#screen-pause'),
       over: this.$('#screen-over'),
     };
@@ -79,6 +107,7 @@ export class UI {
     this.setTouchMode(coarse || 'ontouchstart' in window);
 
     this.buildHelpIcons();
+    this.buildShipPicker();
     this.syncSettingsForm();
     this.updateHighScore(game.highScore);
     this.layout();
@@ -105,6 +134,12 @@ export class UI {
         break;
       case 'help':
         this.openSub('help');
+        break;
+      case 'ships':
+        this.openSub('ships');
+        break;
+      case 'pick-ship':
+        this.pickShip(btn.dataset.ship);
         break;
       case 'back':
         this.back();
@@ -153,9 +188,13 @@ export class UI {
     this.show(name);
   }
 
-  /** Leaves Settings/Help. Returns true if a sub-screen was closed. */
+  inSubScreen() {
+    return SUB_SCREENS.has(this.current);
+  }
+
+  /** Leaves Settings/Help/ship select. Returns true if a sub-screen was closed. */
   back() {
-    if (this.current !== 'settings' && this.current !== 'help') return false;
+    if (!this.inSubScreen()) return false;
     this.show(this.returnTo || 'title');
     this.returnTo = null;
     return true;
@@ -187,7 +226,7 @@ export class UI {
   updateChrome() {
     const playing = this.game ? this.game.isActivePlay() : false;
     const paused = this.current === 'pause' || (this.game && this.game.state === 'PAUSED');
-    this.hudButtons.hidden = !(playing || paused) || this.current === 'settings' || this.current === 'help';
+    this.hudButtons.hidden = !(playing || paused) || this.inSubScreen();
     this.touchControls.classList.toggle('live', this.touchMode && playing);
   }
 
@@ -270,6 +309,46 @@ export class UI {
       if (name !== 'player' && name !== 'falcon') g.rotate(Math.PI); // enemies face down
       g.drawImage(s.canvas, (-s.w * k) / 2, (-s.h * k) / 2, s.w * k, s.h * k);
     });
+  }
+
+  /* ------------------------------------------------------------ ship select */
+
+  buildShipPicker() {
+    const grid = this.$('#ship-grid');
+    for (const ship of SHIPS) {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'ship-card';
+      card.dataset.action = 'pick-ship';
+      card.dataset.ship = ship.id;
+      card.setAttribute('role', 'radio');
+      const c = document.createElement('canvas');
+      c.setAttribute('aria-hidden', 'true');
+      paintShip(c, ship.id, 72, false);
+      const label = document.createElement('span');
+      label.textContent = ship.name;
+      card.append(c, label);
+      grid.append(card);
+    }
+    this.updateShipChoice();
+  }
+
+  pickShip(id) {
+    this.settings.ship = getShip(id).id;
+    this.saveSettings();
+    this.updateShipChoice();
+  }
+
+  /** Syncs the selected card, the big preview and the title-screen button. */
+  updateShipChoice() {
+    const ship = getShip(this.settings.ship);
+    document.querySelectorAll('.ship-card').forEach((card) => {
+      card.setAttribute('aria-checked', String(card.dataset.ship === ship.id));
+    });
+    paintShip(this.$('#ship-preview'), ship.id, 120, true);
+    paintShip(this.$('#title-ship-icon'), ship.id, 32, false);
+    this.$('#ship-preview-name').textContent = ship.name.toUpperCase();
+    this.$('#title-ship-name').textContent = ship.name.toUpperCase();
   }
 
   /* ----------------------------------------------------------------- layout */
@@ -434,11 +513,12 @@ export class UI {
   }
 
   drawLives(ctx, game) {
-    const s = getSprites().player;
+    const s = getShipSprite(this.settings.ship);
+    const k = 26 / Math.max(s.w, s.h);
     const n = Math.max(0, game.lives);
     const shown = Math.min(n, 5);
     for (let i = 0; i < shown; i++) {
-      ctx.drawImage(s.canvas, 14 + i * 26, H - 40, s.w * 0.4, s.h * 0.4);
+      ctx.drawImage(s.canvas, 14 + i * 26 + (26 - s.w * k) / 2, H - 40, s.w * k, s.h * k);
     }
     if (n > 5) {
       ctx.textAlign = 'left';

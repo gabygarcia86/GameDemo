@@ -68,6 +68,12 @@
                                     id="title-hiscore">0</strong></p>
                             <button class="btn primary big"
                                 data-action="start">PLAY</button>
+                            <button class="btn ship-btn" data-action="ships">
+                                <canvas id="title-ship-icon"
+                                    aria-hidden="true"></canvas>
+                                <span>CHOOSE YOUR SHIP<small
+                                        id="title-ship-name">X-SHIP</small></span>
+                            </button>
                             <div class="btn-row">
                                 <button class="btn" data-action="help">HOW TO
                                     PLAY</button>
@@ -94,6 +100,25 @@
                                 <li class="touch-only">Drag anywhere to fly ·
                                     hold <b>FIRE</b> · tap <b>SHIELD</b></li>
                             </ul>
+                        </div>
+                    </section>
+
+                    <!-- ============================== SHIP SELECT -->
+                    <section id="screen-ships" class="screen"
+                        aria-label="Choose your ship" hidden>
+                        <div class="panel">
+                            <h2>CHOOSE YOUR SHIP</h2>
+                            <div class="ship-preview">
+                                <canvas id="ship-preview"
+                                    aria-hidden="true"></canvas>
+                                <p id="ship-preview-name">X-SHIP</p>
+                            </div>
+                            <div id="ship-grid" class="ship-grid"
+                                role="radiogroup" aria-label="Ships"></div>
+                            <p class="note">Every ship flies and fires the
+                                same, so pick your favorite.</p>
+                            <button class="btn primary"
+                                data-action="back">DONE</button>
                         </div>
                     </section>
 

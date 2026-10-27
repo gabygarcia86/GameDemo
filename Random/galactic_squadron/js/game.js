@@ -186,7 +186,7 @@ export class Game {
           else if (s === STATE.PAUSED) this.resume();
           break;
         case 'confirm':
-          if (this.ui.current === 'settings' || this.ui.current === 'help') break;
+          if (this.ui.inSubScreen()) break;
           if (s === STATE.TITLE) this.newGame();
           else if (s === STATE.GAME_OVER && this.stateTime > 1) this.newGame();
           else if (s === STATE.PAUSED) this.resume();

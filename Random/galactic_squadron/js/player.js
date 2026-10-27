@@ -1,6 +1,7 @@
 /** The player's starfighter: movement, firing, shield and respawn handling. */
 import { CONFIG, WORLD } from './config.js';
 import { getSprites, getGlow } from './sprites.js';
+import { getShip, getShipSprite } from './ships.js';
 import { TAU, clamp } from './utils.js';
 
 const { W } = WORLD;
@@ -147,7 +148,8 @@ export class Player {
 
   draw(ctx) {
     if (!this.alive) return;
-    const s = this.sprites.player;
+    const ship = getShip(this.game.settings.ship);
+    const s = getShipSprite(ship.id);
     const blink = this.invuln > 0 && Math.floor(this.invuln * 14) % 2 === 0;
 
     ctx.save();
@@ -156,9 +158,8 @@ export class Player {
 
     ctx.globalCompositeOperation = 'lighter';
     const fl = 0.85 + 0.15 * Math.sin(this.t * 41) + 0.1 * Math.sin(this.t * 67);
-    const flame = this.sprites.flames.cyan;
-    ctx.drawImage(flame, -14, 26, 8, 16 * fl);
-    ctx.drawImage(flame, 6, 26, 8, 16 * fl);
+    const flame = this.sprites.flames[ship.flame];
+    for (const [ex, ey, ew] of ship.engines) ctx.drawImage(flame, ex - ew / 2, ey, ew, ew * 2 * fl);
     if (this.muzzle > 0) ctx.drawImage(getGlow('#4fe3ff'), -10, -36, 20, 20);
     ctx.globalCompositeOperation = 'source-over';
 

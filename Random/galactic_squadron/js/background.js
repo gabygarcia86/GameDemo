@@ -13,6 +13,9 @@ const STAR_LAYERS = [
   { count: 22, speed: 72, size: 2.2, alpha: 0.95, color: '#ffffff' },
 ];
 
+// streak length per unit of star speed at full warp (stage clear)
+const WARP_STREAK = 5;
+
 const PLANET_PALETTES = [
   ['#4f86ff', '#0b1740', '#9cc4ff'],
   ['#d0673f', '#2a0c12', '#ffb08a'],
@@ -285,10 +288,12 @@ export class Background {
 
     for (const l of this.layers) {
       const v = l.speed * mul * dt;
+      // wrap only once the whole streak tail has left the screen
+      const tail = this.streakLength(l);
       for (let i = 0; i < l.count; i++) {
         l.y[i] += v;
-        if (l.y[i] > H + 6) {
-          l.y[i] -= H + 12;
+        if (l.y[i] > H + 6 + tail) {
+          l.y[i] -= H + 12 + tail;
           l.x[i] = rand(0, W);
         }
       }
@@ -331,9 +336,14 @@ export class Background {
     }
   }
 
+  /** Length of a star's warp streak (stage-clear jump); 0 when not warping. */
+  streakLength(l) {
+    return this.warp > 0.05 ? this.warp * l.speed * WARP_STREAK : 0;
+  }
+
   drawStars(ctx, l) {
     ctx.fillStyle = l.color;
-    const streak = this.warp > 0.05 ? this.warp * l.speed * 0.5 : 0;
+    const streak = this.streakLength(l);
     for (let i = 0; i < l.count; i++) {
       const tw = l.speed < 20 ? 0.6 + 0.4 * Math.sin(this.time * 2 + l.p[i]) : 1;
       ctx.globalAlpha = l.alpha * tw;

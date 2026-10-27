@@ -248,50 +248,133 @@ function drawPlayer(g) {
   g.restore();
 }
 
-function drawInterceptor(g) {
-  g.shadowColor = 'rgba(255,60,90,0.45)';
-  g.shadowBlur = 6;
-  g.fillStyle = '#353c4c';
-  g.fillRect(-13, -1, 26, 5);
-  g.shadowBlur = 0;
+/*
+ * Interceptor: ball cockpit with a hexagonal viewport, two struts and tall
+ * wing panels. Authored in reference-image space (cockpit at 333,307), with
+ * the twin guns at the image bottom; the y flip puts them at the nose (-y).
+ */
+const INT_SCALE = 0.085;
+const INT_OUTLINE = '#14171c';
+// (panels are wider than the reference so they stay visible at sprite size)
+const INT_WING = [133, 50, 144, 55, 153, 300, 144, 558, 133, 564, 122, 558, 113, 300, 122, 55];
+const INT_STRUT = [150, 288, 198, 276, 214, 262, 268, 262, 268, 352, 218, 352, 198, 332, 150, 322];
 
-  const wing = linear(g, -22, 0, -6, 0, [[0, '#4a5266'], [0.6, '#a3adc2'], [1, '#69728a']]);
+function drawInterceptor(g) {
+  const ox = (x) => x - 333;
+  const oy = (y) => y - 307;
+  const path = (pts) => poly(g, pts.map((v, i) => (i % 2 ? oy(v) : ox(v))));
+
+  g.save();
+  g.scale(INT_SCALE, -INT_SCALE);
+  g.lineJoin = 'round';
+  g.strokeStyle = INT_OUTLINE;
+  g.lineWidth = 6;
+
   mirrored(g, () => {
-    g.fillStyle = wing;
-    g.beginPath();
-    g.moveTo(-8, -15);
-    g.quadraticCurveTo(-23, -6, -19, 13);
-    g.lineTo(-13, 15);
-    g.quadraticCurveTo(-15, -2, -6, -8);
-    g.closePath();
+    // strut and wing-mount cylinder
+    path(INT_STRUT);
+    g.fillStyle = linear(g, 0, oy(262), 0, oy(352), [[0, '#a7acb4'], [0.5, '#7b8089'], [1, '#4f545c']]);
     g.fill();
-    g.strokeStyle = '#151a26';
-    g.lineWidth = 1;
     g.stroke();
-    g.fillStyle = '#ff3d55';
-    circle(g, -18.2, 12, 1.6);
+    g.fillStyle = '#585d66';
+    g.fillRect(ox(150), oy(283), 44, 40);
+    g.strokeRect(ox(150), oy(283), 44, 40);
+    g.beginPath();
+    for (const x of [163, 176, 189]) {
+      g.moveTo(ox(x), oy(285));
+      g.lineTo(ox(x), oy(321));
+    }
+    g.moveTo(ox(222), oy(275));
+    g.lineTo(ox(262), oy(275));
+    g.moveTo(ox(222), oy(340));
+    g.lineTo(ox(262), oy(340));
+    g.lineWidth = 3;
+    g.stroke();
+    g.lineWidth = 6;
+
+    // wing panel: dark solar panel with a light rim so it reads against space
+    g.shadowColor = 'rgba(255,60,90,0.4)';
+    g.shadowBlur = 5;
+    path(INT_WING);
+    g.fillStyle = linear(g, ox(113), 0, ox(153), 0, [[0, '#3a3f47'], [0.5, '#6b717b'], [1, '#3a3f47']]);
     g.fill();
+    g.shadowBlur = 0;
+    g.strokeStyle = '#8d939c';
+    g.stroke();
+    g.lineWidth = 4;
+    g.strokeStyle = '#b4bac3';
+    g.beginPath();
+    g.moveTo(ox(133), oy(60));
+    g.lineTo(ox(133), oy(554));
+    g.stroke();
+    g.strokeStyle = INT_OUTLINE;
+    g.lineWidth = 6;
+    g.fillStyle = '#6a707a';
+    g.fillRect(ox(115), oy(288), 36, 34);
+    g.strokeRect(ox(115), oy(288), 36, 34);
   });
 
-  const pod = g.createRadialGradient(-2, -2, 1, 0, 1, 9);
-  pod.addColorStop(0, '#8a93a8');
-  pod.addColorStop(1, '#262c3a');
-  g.fillStyle = pod;
-  circle(g, 0, 1, 8);
+  // cockpit ball
+  const ball = g.createRadialGradient(ox(305), oy(260), 10, 0, 0, 80);
+  ball.addColorStop(0, '#d4d7dc');
+  ball.addColorStop(0.55, '#8e939b');
+  ball.addColorStop(1, '#4c5058');
+  g.fillStyle = ball;
+  circle(g, ox(333), oy(300), 72);
   g.fill();
-  g.strokeStyle = '#121620';
-  g.lineWidth = 1;
+  g.stroke();
+  g.beginPath();
+  g.arc(ox(333), oy(300), 62, Math.PI * 1.25, Math.PI * 1.75);
+  g.lineWidth = 3;
   g.stroke();
 
-  g.shadowColor = '#ff2a44';
-  g.shadowBlur = 8;
-  g.fillStyle = '#ff3a50';
-  circle(g, 0, -2.5, 3);
+  // hexagonal viewport with spokes
+  const cx = ox(333);
+  const cy = oy(308);
+  g.lineWidth = 6;
+  g.fillStyle = '#1b1e23';
+  circle(g, cx, cy, 46);
   g.fill();
-  g.shadowBlur = 0;
-  g.fillStyle = '#ffd0d6';
-  circle(g, -0.8, -3.3, 1);
+  g.stroke();
+  const hex = [];
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * TAU - Math.PI / 2;
+    hex.push(cx + Math.cos(a) * 22, cy + Math.sin(a) * 22);
+  }
+  g.strokeStyle = '#5d636d';
+  g.lineWidth = 4;
+  g.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * TAU - Math.PI / 2;
+    g.moveTo(hex[i * 2], hex[i * 2 + 1]);
+    g.lineTo(cx + Math.cos(a) * 42, cy + Math.sin(a) * 42);
+  }
+  g.stroke();
+  poly(g, hex);
+  g.fillStyle = '#2c3038';
   g.fill();
+  g.stroke();
+  g.fillStyle = 'rgba(190,210,255,0.18)';
+  poly(g, [cx - 30, cy - 26, cx - 6, cy - 38, cx - 10, cy - 24, cx - 22, cy - 18]);
+  g.fill();
+
+  // twin guns (glow red)
+  g.strokeStyle = INT_OUTLINE;
+  g.lineWidth = 4;
+  for (const gx of [310, 357]) {
+    g.fillStyle = '#2a2d33';
+    circle(g, ox(gx), oy(371), 9);
+    g.fill();
+    g.stroke();
+    g.shadowColor = '#ff2a44';
+    g.shadowBlur = 6;
+    g.fillStyle = '#ff3a50';
+    circle(g, ox(gx), oy(371), 4.5);
+    g.fill();
+    g.shadowBlur = 0;
+  }
+
+  g.restore();
 }
 
 const HEAVY_HULL = [0, -19, 13, -11, 15, 9, 8, 18, -8, 18, -15, 9, -13, -11];
@@ -817,7 +900,7 @@ export function getSprites() {
   if (cache) return cache;
   cache = {
     player: makeSprite(62, 66, drawPlayer),
-    interceptor: makeSprite(48, 42, drawInterceptor),
+    interceptor: makeSprite(46, 52, drawInterceptor),
     heavy: makeSprite(62, 56, (g) => drawHeavy(g, false)),
     heavyDamaged: makeSprite(62, 56, (g) => drawHeavy(g, true)),
     bomber: makeSprite(54, 52, drawBomber),

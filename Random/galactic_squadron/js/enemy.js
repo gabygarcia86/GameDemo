@@ -10,7 +10,7 @@ import { turnToward } from './utils.js';
 const tmp = { x: 0, y: 0, dx: 0, dy: 1 };
 
 const LOOK = {
-  interceptor: { flame: 'red', flames: [[0, 12]], fw: 6, fl: 10 },
+  interceptor: { flame: 'red', flames: [[0, 3]], fw: 6, fl: 7 },
   heavy: { flame: 'orange', flames: [[-8, 17], [8, 17]], fw: 7, fl: 11 },
   bomber: { flame: 'violet', flames: [[0, 17]], fw: 7, fl: 13 },
   ace: { flame: 'gold', flames: [[0, 19]], fw: 6, fl: 14 },

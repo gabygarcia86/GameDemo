@@ -9,66 +9,112 @@
             content="Galactic Squadron — an arcade space shooter with formation attacks, dive bombers and capital-ship bosses.">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="mobile-web-app-capable" content="yes">
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="apple-mobile-web-app-status-bar-style"
+            content="black-translucent">
         <meta name="format-detection" content="telephone=no">
         <title>Galactic Squadron</title>
-        <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2303050d'/%3E%3Cpath d='M32 6l5 14 1 10 17 10 1 8-13-2-3 8h-16l-3-8-13 2 1-8 17-10 1-10z' fill='%23e8eef8' stroke='%2338d6ff' stroke-width='2'/%3E%3C/svg%3E">
+        <link rel="icon" href="icon/favicon.ico" type="image/x-icon">
+        <link rel="icon" type="image/png" sizes="16x16" href="icon/icon-16.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="icon/icon-32.png">
+        <link rel="icon" type="image/png" sizes="128x128"
+            href="icon/icon-128.png">
+        <link rel="icon" type="image/png" sizes="256x256"
+            href="icon/icon-256.png">
+        <link rel="apple-touch-icon" sizes="256x256" href="icon/icon-256.png">
         <link rel="stylesheet" href="styles.css">
     </head>
     <body>
         <div id="app">
             <div id="viewport">
                 <div id="frame">
-                    <canvas id="game" role="img" aria-label="Galactic Squadron play area"></canvas>
+                    <canvas id="game" role="img"
+                        aria-label="Galactic Squadron play area"></canvas>
 
                     <div id="hud-buttons" hidden>
-                        <button class="hud-btn" data-action="mute" aria-label="Mute sound" aria-pressed="false">
-                            <svg class="icon-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                            <svg class="icon-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 9l6 6M22 9l-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        <button class="hud-btn" data-action="mute"
+                            aria-label="Mute sound" aria-pressed="false">
+                            <svg class="icon-on" viewBox="0 0 24 24"
+                                aria-hidden="true"><path
+                                    d="M4 9v6h4l5 4V5L8 9H4z" /><path
+                                    d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"
+                                    fill="none" stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round" /></svg>
+                            <svg class="icon-off" viewBox="0 0 24 24"
+                                aria-hidden="true"><path
+                                    d="M4 9v6h4l5 4V5L8 9H4z" /><path
+                                    d="M16 9l6 6M22 9l-6 6" fill="none"
+                                    stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" /></svg>
                         </button>
-                        <button class="hud-btn" data-action="pause" aria-label="Pause game">
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+                        <button class="hud-btn" data-action="pause"
+                            aria-label="Pause game">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><rect
+                                    x="6" y="5" width="4" height="14"
+                                    rx="1" /><rect x="14" y="5" width="4"
+                                    height="14" rx="1" /></svg>
                         </button>
                     </div>
 
                     <!-- ============================== TITLE -->
-                    <section id="screen-title" class="screen" aria-label="Title screen" hidden>
+                    <section id="screen-title" class="screen"
+                        aria-label="Title screen" hidden>
                         <div class="panel title-panel">
                             <p class="kicker">ARCADE SPACE SHOOTER</p>
-                            <h1 class="logo"><span class="w1">GALACTIC</span><span class="w2">SQUADRON</span></h1>
-                            <p class="hiscore">HIGH SCORE <strong id="title-hiscore">0</strong></p>
-                            <button class="btn primary big" data-action="start">PLAY</button>
+                            <h1 class="logo"><span
+                                    class="w1">GALACTIC</span><span
+                                    class="w2">SQUADRON</span></h1>
+                            <p class="hiscore">HIGH SCORE <strong
+                                    id="title-hiscore">0</strong></p>
+                            <button class="btn primary big"
+                                data-action="start">PLAY</button>
                             <div class="btn-row">
-                                <button class="btn" data-action="help">HOW TO PLAY</button>
-                                <button class="btn" data-action="settings">SETTINGS</button>
+                                <button class="btn" data-action="help">HOW TO
+                                    PLAY</button>
+                                <button class="btn"
+                                    data-action="settings">SETTINGS</button>
                             </div>
                             <div class="quick-audio">
-                                <button class="btn small toggle-btn" data-action="mute" aria-pressed="false"><span class="label">SOUND ON</span></button>
+                                <button class="btn small toggle-btn"
+                                    data-action="mute"
+                                    aria-pressed="false"><span
+                                        class="label">SOUND ON</span></button>
                                 <label class="vol">VOLUME
-                                    <input type="range" data-setting="master" min="0" max="1" step="0.05" aria-label="Master volume">
+                                    <input type="range" data-setting="master"
+                                        min="0" max="1" step="0.05"
+                                        aria-label="Master volume">
                                 </label>
                             </div>
                             <ul class="controls-hint">
-                                <li class="kb-only"><kbd>←</kbd><kbd>→</kbd> or <kbd>A</kbd><kbd>D</kbd> move · <kbd>Space</kbd> fire</li>
-                                <li class="kb-only"><kbd>Shift</kbd> shield · <kbd>P</kbd> pause · <kbd>M</kbd> mute</li>
-                                <li class="touch-only">Drag anywhere to fly · hold <b>FIRE</b> · tap <b>SHIELD</b></li>
+                                <li class="kb-only"><kbd>←</kbd><kbd>→</kbd> or
+                                    <kbd>A</kbd><kbd>D</kbd> move ·
+                                    <kbd>Space</kbd> fire</li>
+                                <li class="kb-only"><kbd>Shift</kbd> shield ·
+                                    <kbd>P</kbd> pause · <kbd>M</kbd> mute</li>
+                                <li class="touch-only">Drag anywhere to fly ·
+                                    hold <b>FIRE</b> · tap <b>SHIELD</b></li>
                             </ul>
                         </div>
                     </section>
 
                     <!-- ============================== SETTINGS -->
-                    <section id="screen-settings" class="screen" aria-label="Settings" hidden>
+                    <section id="screen-settings" class="screen"
+                        aria-label="Settings" hidden>
                         <div class="panel">
                             <h2>SETTINGS</h2>
                             <h3>AUDIO</h3>
                             <label class="row"><span>Master volume</span>
-                                <input type="range" data-setting="master" min="0" max="1" step="0.05"></label>
+                                <input type="range" data-setting="master"
+                                    min="0" max="1" step="0.05"></label>
                             <label class="row"><span>Music</span>
-                                <input type="range" data-setting="music" min="0" max="1" step="0.05"></label>
+                                <input type="range" data-setting="music" min="0"
+                                    max="1" step="0.05"></label>
                             <label class="row"><span>Sound effects</span>
-                                <input type="range" data-setting="sfx" min="0" max="1" step="0.05"></label>
+                                <input type="range" data-setting="sfx" min="0"
+                                    max="1" step="0.05"></label>
                             <label class="row"><span>Mute all</span>
-                                <input type="checkbox" class="switch" data-setting="muted"></label>
+                                <input type="checkbox" class="switch"
+                                    data-setting="muted"></label>
 
                             <h3>GAMEPLAY</h3>
                             <label class="row"><span>Difficulty</span>
@@ -91,101 +137,167 @@
                                     <option value="inertia">Inertia</option>
                                 </select></label>
                             <label class="row"><span>Auto-fire</span>
-                                <input type="checkbox" class="switch" data-setting="autoFire"></label>
+                                <input type="checkbox" class="switch"
+                                    data-setting="autoFire"></label>
 
                             <h3>ACCESSIBILITY</h3>
                             <label class="row"><span>Reduced screen shake</span>
-                                <input type="checkbox" class="switch" data-setting="reducedShake"></label>
+                                <input type="checkbox" class="switch"
+                                    data-setting="reducedShake"></label>
                             <label class="row"><span>Reduced effects</span>
-                                <input type="checkbox" class="switch" data-setting="reducedEffects"></label>
+                                <input type="checkbox" class="switch"
+                                    data-setting="reducedEffects"></label>
 
-                            <p class="note">Difficulty and starting lives apply to the next run.</p>
-                            <button class="btn small danger" data-action="reset-hiscore">RESET HIGH SCORE</button>
-                            <button class="btn primary" data-action="back">BACK</button>
+                            <p class="note">Difficulty and starting lives apply
+                                to the next run.</p>
+                            <button class="btn small danger"
+                                data-action="reset-hiscore">RESET HIGH
+                                SCORE</button>
+                            <button class="btn primary"
+                                data-action="back">BACK</button>
                         </div>
                     </section>
 
                     <!-- ============================== HOW TO PLAY -->
-                    <section id="screen-help" class="screen" aria-label="How to play" hidden>
+                    <section id="screen-help" class="screen"
+                        aria-label="How to play" hidden>
                         <div class="panel">
                             <h2>HOW TO PLAY</h2>
-                            <p class="lead">Destroy every ship in each wave. Enemies arrive in formation, then break off to dive at you.
-                                Every 7th stage a capital ship attacks — aim for its glowing core for double damage.</p>
+                            <p class="lead">Destroy every ship in each wave.
+                                Enemies arrive in formation, then break off to
+                                dive at you.
+                                Every 7th stage a capital ship attacks — aim for
+                                its glowing core for double damage.</p>
 
                             <h3>CONTROLS</h3>
                             <dl class="keys">
-                                <dt><kbd>←</kbd> <kbd>→</kbd> / <kbd>A</kbd> <kbd>D</kbd></dt><dd>Move</dd>
+                                <dt><kbd>←</kbd> <kbd>→</kbd> / <kbd>A</kbd>
+                                    <kbd>D</kbd></dt><dd>Move</dd>
                                 <dt><kbd>Space</kbd> (hold)</dt><dd>Fire</dd>
-                                <dt><kbd>Shift</kbd> / <kbd>S</kbd></dt><dd>Shield (short, cooldown)</dd>
-                                <dt><kbd>P</kbd> / <kbd>Esc</kbd></dt><dd>Pause</dd>
+                                <dt><kbd>Shift</kbd> /
+                                    <kbd>S</kbd></dt><dd>Shield (short,
+                                    cooldown)</dd>
+                                <dt><kbd>P</kbd> /
+                                    <kbd>Esc</kbd></dt><dd>Pause</dd>
                                 <dt><kbd>M</kbd></dt><dd>Mute</dd>
-                                <dt>Touch</dt><dd>Drag anywhere to fly, hold FIRE, tap SHIELD</dd>
+                                <dt>Touch</dt><dd>Drag anywhere to fly, hold
+                                    FIRE, tap SHIELD</dd>
                             </dl>
 
                             <h3>ENEMIES</h3>
                             <ul class="roster">
-                                <li><canvas data-icon="interceptor"></canvas><div><b>Crescent Interceptor</b><span>Fast, fragile, flies in packs.</span></div><em>100</em></li>
-                                <li><canvas data-icon="heavy"></canvas><div><b>Bulwark Heavy Fighter</b><span>Takes 3 hits. Lobs slow plasma.</span></div><em>200</em></li>
-                                <li><canvas data-icon="bomber"></canvas><div><b>Talon Dive Bomber</b><span>Sweeping dives, spread shots.</span></div><em>300</em></li>
-                                <li><canvas data-icon="ace"></canvas><div><b>Phantom Elite Ace</b><span>Fast, aggressive, burst fire.</span></div><em>500</em></li>
+                                <li><canvas
+                                        data-icon="interceptor"></canvas><div><b>Crescent
+                                            Interceptor</b><span>Fast, fragile,
+                                            flies in
+                                            packs.</span></div><em>100</em></li>
+                                <li><canvas
+                                        data-icon="heavy"></canvas><div><b>Bulwark
+                                            Heavy Fighter</b><span>Takes 3 hits.
+                                            Lobs slow
+                                            plasma.</span></div><em>200</em></li>
+                                <li><canvas
+                                        data-icon="bomber"></canvas><div><b>Talon
+                                            Dive Bomber</b><span>Sweeping dives,
+                                            spread
+                                            shots.</span></div><em>300</em></li>
+                                <li><canvas
+                                        data-icon="ace"></canvas><div><b>Phantom
+                                            Elite Ace</b><span>Fast, aggressive,
+                                            burst
+                                            fire.</span></div><em>500</em></li>
                             </ul>
-                            <p class="note">Ships shot mid-dive score double. Chain kills to raise your multiplier up to x4.
+                            <p class="note">Ships shot mid-dive score double.
+                                Chain kills to raise your multiplier up to x4.
                                 A shaking ship is about to dive.</p>
 
                             <h3>POWER-UPS</h3>
                             <ul class="roster">
-                                <li><canvas data-icon="rapid"></canvas><div><b>Rapid Fire</b><span>Doubles fire rate for 10s.</span></div></li>
-                                <li><canvas data-icon="spread"></canvas><div><b>Spread Shot</b><span>Three-way fire for 12s.</span></div></li>
-                                <li><canvas data-icon="shield"></canvas><div><b>Shield</b><span>Absorbs all damage for 8s.</span></div></li>
-                                <li><canvas data-icon="life"></canvas><div><b>Extra Life</b><span>One more ship. Also every 30,000 pts.</span></div></li>
-                                <li><canvas data-icon="score"></canvas><div><b>Score Bonus</b><span>Instant points.</span></div></li>
+                                <li><canvas
+                                        data-icon="rapid"></canvas><div><b>Rapid
+                                            Fire</b><span>Doubles fire rate for
+                                            10s.</span></div></li>
+                                <li><canvas
+                                        data-icon="spread"></canvas><div><b>Spread
+                                            Shot</b><span>Three-way fire for
+                                            12s.</span></div></li>
+                                <li><canvas
+                                        data-icon="shield"></canvas><div><b>Shield</b><span>Absorbs
+                                            all damage for 8s.</span></div></li>
+                                <li><canvas
+                                        data-icon="life"></canvas><div><b>Extra
+                                            Life</b><span>One more ship. Also
+                                            every 30,000 pts.</span></div></li>
+                                <li><canvas
+                                        data-icon="score"></canvas><div><b>Score
+                                            Bonus</b><span>Instant
+                                            points.</span></div></li>
                             </ul>
 
                             <h3>ALLY</h3>
                             <ul class="roster">
-                                <li><canvas data-icon="falcon"></canvas><div><b>The Falcon</b><span>Every 50-kill streak it flies in for 10s and blasts enemies for you.</span></div></li>
+                                <li><canvas
+                                        data-icon="falcon"></canvas><div><b>The
+                                            Falcon</b><span>Every 50-kill streak
+                                            it flies in for 10s and blasts
+                                            enemies for you.</span></div></li>
                             </ul>
-                            <button class="btn primary" data-action="back">BACK</button>
+                            <button class="btn primary"
+                                data-action="back">BACK</button>
                         </div>
                     </section>
 
                     <!-- ============================== PAUSE -->
-                    <section id="screen-pause" class="screen" aria-label="Paused" hidden>
+                    <section id="screen-pause" class="screen"
+                        aria-label="Paused" hidden>
                         <div class="panel narrow">
                             <h2>PAUSED</h2>
-                            <button class="btn primary" data-action="resume">RESUME</button>
-                            <button class="btn" data-action="restart">RESTART</button>
-                            <button class="btn" data-action="settings">SETTINGS</button>
-                            <button class="btn small toggle-btn" data-action="mute" aria-pressed="false"><span class="label">SOUND ON</span></button>
-                            <button class="btn" data-action="title">QUIT TO TITLE</button>
+                            <button class="btn primary"
+                                data-action="resume">RESUME</button>
+                            <button class="btn"
+                                data-action="restart">RESTART</button>
+                            <button class="btn"
+                                data-action="settings">SETTINGS</button>
+                            <button class="btn small toggle-btn"
+                                data-action="mute" aria-pressed="false"><span
+                                    class="label">SOUND ON</span></button>
+                            <button class="btn" data-action="title">QUIT TO
+                                TITLE</button>
                         </div>
                     </section>
 
                     <!-- ============================== GAME OVER -->
-                    <section id="screen-over" class="screen" aria-label="Game over" hidden>
+                    <section id="screen-over" class="screen"
+                        aria-label="Game over" hidden>
                         <div class="panel narrow">
                             <h2 class="over-title">GAME OVER</h2>
-                            <p id="over-new" class="new-best" hidden>NEW HIGH SCORE!</p>
+                            <p id="over-new" class="new-best" hidden>NEW HIGH
+                                SCORE!</p>
                             <dl class="stats">
                                 <dt>SCORE</dt><dd id="over-score">0</dd>
                                 <dt>BEST</dt><dd id="over-best">0</dd>
                                 <dt>STAGE</dt><dd id="over-stage">1</dd>
                                 <dt>KILLS</dt><dd id="over-kills">0</dd>
                             </dl>
-                            <button class="btn primary" data-action="restart">PLAY AGAIN</button>
-                            <button class="btn" data-action="title">MAIN MENU</button>
+                            <button class="btn primary"
+                                data-action="restart">PLAY AGAIN</button>
+                            <button class="btn" data-action="title">MAIN
+                                MENU</button>
                         </div>
                     </section>
                 </div>
 
                 <div id="touch-controls" data-mode="none" aria-hidden="true">
                     <div id="move-pad"><span>◀ DRAG TO FLY ▶</span></div>
-                    <button id="btn-shield" type="button" tabindex="-1">SHIELD</button>
-                    <button id="btn-fire" type="button" tabindex="-1">FIRE</button>
+                    <button id="btn-shield" type="button"
+                        tabindex="-1">SHIELD</button>
+                    <button id="btn-fire" type="button"
+                        tabindex="-1">FIRE</button>
                 </div>
             </div>
         </div>
-        <noscript><p class="noscript">Galactic Squadron needs JavaScript enabled.</p></noscript>
+        <noscript><p class="noscript">Galactic Squadron needs JavaScript
+                enabled.</p></noscript>
         <script type="module" src="js/main.js"></script>
     </body>
 </html>

@@ -276,3 +276,4 @@ licensed (`vendor/LICENSE-three.txt`). Music is from `assets/music/`.
 - Game over screen, fix text on buttons to be centered
 - Purchased customization be more patterns and fun designs, stickers fun emojis added to gear to back
 - Hover board neon lights be more dynamic or cooler lighting
+- Drag preview ninja not working

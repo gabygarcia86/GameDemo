@@ -41,16 +41,16 @@ songs are about 0.5 MB each.
 
 ## Controls
 
-| Action | Keyboard / mouse | Touch |
-| --- | --- | --- |
-| Change lanes | A / D or ← / → | Swipe left / right |
-| Jump | W, ↑ or Space | Swipe up |
-| Air trick | Jump again while in the air | Swipe up again in the air |
-| Slide (in the air: slam down) | S or ↓ | Swipe down |
-| Throw a ninja star | J (or E / K), or left click | Star button (bottom right) |
-| Pause | Esc or P, or the ❚❚ button | ❚❚ button |
-| Mute | M | Settings |
-| Start / restart | Enter | Buttons |
+| Action                        | Keyboard / mouse            | Touch                      |
+| ----------------------------- | --------------------------- | -------------------------- |
+| Change lanes                  | A / D or ← / →              | Swipe left / right         |
+| Jump                          | W, ↑ or Space               | Swipe up                   |
+| Air trick                     | Jump again while in the air | Swipe up again in the air  |
+| Slide (in the air: slam down) | S or ↓                      | Swipe down                 |
+| Throw a ninja star            | J (or E / K), or left click | Star button (bottom right) |
+| Pause                         | Esc or P, or the ❚❚ button  | ❚❚ button                  |
+| Mute                          | M                           | Settings                   |
+| Start / restart               | Enter                       | Buttons                    |
 
 Controls are forgiving:
 
@@ -113,14 +113,14 @@ Controls are forgiving:
 
 ### Environments
 
-| Environment | Gimmick | Challenge |
-| --- | --- | --- |
-| Sunset (Sunset Ridge) | Tumbleweeds roll across the road | Jump 6 tumbleweeds |
-| Daytime (Sunny Hills) | Hay bales | Hop 8 hay bales |
-| Nighttime (Midnight Descent) | Glowing road, neon signs, street lamps | Knock out 5 enemies |
-| Snowy Mountains (Frostbite Pass) | Icy patches make lane changes slippery | Cross 6 icy patches |
-| Beach (Coconut Coast) | Bouncing beach balls (pop them with stars) | Pop 4 beach balls |
-| Forest (Whispering Woods) | Fallen branches, sunbeams | Slide under 5 branches |
+| Environment                      | Gimmick                                    | Challenge              |
+| -------------------------------- | ------------------------------------------ | ---------------------- |
+| Sunset (Sunset Ridge)            | Tumbleweeds roll across the road           | Jump 6 tumbleweeds     |
+| Daytime (Sunny Hills)            | Hay bales                                  | Hop 8 hay bales        |
+| Nighttime (Midnight Descent)     | Glowing road, neon signs, street lamps     | Knock out 5 enemies    |
+| Snowy Mountains (Frostbite Pass) | Icy patches make lane changes slippery     | Cross 6 icy patches    |
+| Beach (Coconut Coast)            | Bouncing beach balls (pop them with stars) | Pop 4 beach balls      |
+| Forest (Whispering Woods)        | Fallen branches, sunbeams                  | Slide under 5 branches |
 
 Each environment has its own sky, lighting, fog, terrain, roadside props,
 weather particles, obstacle set and ambient soundscape. The same environment
@@ -273,3 +273,6 @@ licensed (`vendor/LICENSE-three.txt`). Music is from `assets/music/`.
 - increase difficulty
 - Fix feet so there on top of the board
 - Music working?
+- Game over screen, fix text on buttons to be centered
+- Purchased customization be more patterns and fun designs, stickers fun emojis added to gear to back
+- Hover board neon lights be more dynamic or cooler lighting

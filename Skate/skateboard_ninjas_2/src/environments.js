@@ -5,6 +5,7 @@
 // Obstacle lists name prefabs from models/props.js:
 //   block - tall, must change lanes      low  - knee high, jump it
 //   high  - overhead bar, slide under    special - the environment's gimmick
+// beast (optional) names a local enemy that only shows up there (Enemies.js).
 
 export const ENVIRONMENTS = {
   sunset: {
@@ -114,6 +115,7 @@ export const ENVIRONMENTS = {
       high: ['snowArch', 'sign'],
     },
     special: 'ice',
+    beast: 'yeti',
     ambience: 'wind',
     challenge: { stat: 'ice', target: 6, text: 'Cross 6 icy patches' },
     lamps: false,
@@ -171,6 +173,7 @@ export const ENVIRONMENTS = {
       high: ['branch', 'sign'],
     },
     special: 'branch',
+    beast: 'bear',
     ambience: 'forest',
     challenge: { stat: 'branches', target: 5, text: 'Slide under 5 fallen branches' },
     lamps: false,

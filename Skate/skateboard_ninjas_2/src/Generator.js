@@ -36,6 +36,8 @@ const CHUNKS = [
   ['ninjaJump', 600, (k) => 0.3 + k * 0.6],
   ['ninjaDrop', 800, (k) => 0.3 + k * 0.4],
   ['ninjaGuard', 500, () => 0.45],
+  ['beastBlock', 150, () => 0.8], // only where env.beast is set
+  ['beastMove', 400, (k) => 0.5 + k * 0.5],
   ['special', 200, () => 1.0],
 ];
 
@@ -61,7 +63,7 @@ export class Generator {
     while (this.nextDist < playerDist + G.spawnAhead) {
       const d = this.nextDist;
       const k = difficultyAt(d);
-      const options = CHUNKS.filter(([name, min]) => d >= min && name !== this.last);
+      const options = CHUNKS.filter(([name, min]) => d >= min && name !== this.last && (this.env.beast || !name.startsWith('beast')));
       const [name] = this.rng.weighted(options, ([, , w]) => w(k));
       this.last = name;
       this.extra = 0;
@@ -409,6 +411,38 @@ export class Generator {
     this.world.spawnChest(lane, d + 3.5);
     for (const l of free) this.coinLine(l, d - 4, d);
     return d + 4;
+  }
+
+  beastBlock(d, k) {
+    // The local beast roaring in a lane (a pair, later on).
+    const n = k > 0.5 && this.rng.chance(0.35) ? 2 : 1;
+    const specs = [null, null, null];
+    for (const l of this.pickLanes(n)) specs[l] = { enemy: this.env.beast, behavior: 'block' };
+    const free = this.row(d, specs);
+    this.rewardFree(free, d);
+    return d;
+  }
+
+  beastMove(d, k) {
+    // Bears wander out of the trees or charge down the lane; yetis leap off
+    // the snowbank. Either way they finish in the lane reserved here.
+    const lane = this.rng.int(0, 2);
+    const near = lane === 0 ? -1 : lane === 2 ? 1 : this.rng.chance(0.5) ? -1 : 1;
+    let behavior = 'leap';
+    let side = near;
+    if (this.env.beast === 'bear') {
+      behavior = this.rng.chance(0.5) ? 'cross' : 'charge';
+      side = -near; // cross from the far side so it's in view
+    }
+    const specs = [null, null, null];
+    specs[lane] = { enemy: this.env.beast, behavior, extra: { side } };
+    if (k > 0.4 && this.rng.chance(0.5)) {
+      const other = this.rng.pick(LANES.filter((l) => l !== lane));
+      specs[other] = 'low';
+    }
+    const free = this.row(d, specs);
+    this.rewardFree(free, d);
+    return d;
   }
 
   special(d, k) {

@@ -8,6 +8,7 @@ import { THREE, prefabMesh, bubbleTexture } from './gfx.js';
 import { CONFIG, laneX } from './config.js';
 import { KarenRig } from './models/karen.js';
 import { NinjaRig, EVIL_PALETTES } from './models/ninja.js';
+import { BeastRig } from './models/beasts.js';
 import { obstaclePrefab } from './models/props.js';
 import { smoothstep, lerp } from './utils.js';
 
@@ -20,6 +21,11 @@ export const KAREN_CHASE_LINES = ['GET BACK HERE!', 'I WANT TO SPEAK TO YOUR SEN
 export const NINJA_LINES = ['HYAAA!', 'YOU SHALL NOT PASS!', 'PREPARE YOURSELF!', 'TOO SLOW!', 'HAI-YA!', 'EN GARDE!', 'FACE ME!'];
 export const KAREN_KO = ['POOF!', 'REFUND!', 'BYE KAREN!', 'DENIED!'];
 export const NINJA_KO = ['BAM!', 'KO!', 'WHAM!', 'POW!'];
+export const BEAR_LINES = ['ROAR!', 'GRRRRR!', 'MY WOODS!', 'GOT HONEY?!', 'UNBEARABLE!', 'BEAR WITH ME!'];
+export const YETI_LINES = ['RAAAWR!', 'HUNGRY!', 'SNOW WAY!', 'YETI OR NOT!', 'ABOMINABLE!', 'COLD FEET?!'];
+export const BEAR_KO = ['TIMBER!', 'BEAR-LY!', 'GRR-BONK!', 'HIBERNATE!'];
+export const YETI_KO = ['BRRR!', 'CHILLED!', 'SNOW-KO!', 'MELTED!'];
+const KO_WORDS = { karen: KAREN_KO, ninja: NINJA_KO, bear: BEAR_KO, yeti: YETI_KO };
 
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
@@ -63,6 +69,7 @@ class EnemyBase {
     this.saidLine = false;
     this.voiced = false;
     this.targeted = false;
+    this.bubbleY = 2.75;
   }
 
   say(text, time = 1.6) {
@@ -81,7 +88,7 @@ class EnemyBase {
     }
     this.saying -= dt;
     this.bubble.visible = this.saying > 0 && this.alive && !this.dying;
-    this.bubble.position.set(0, 2.75, 0);
+    this.bubble.position.set(0, this.bubbleY, 0);
   }
 
   // Cartoon pop: squash, stretch, spin, then the caller spawns the burst.
@@ -282,6 +289,76 @@ export class EvilNinja extends EnemyBase {
   }
 }
 
+// The forest bear and the snowy yeti. Big, so they take a whole lane, and a
+// single ninja star still drops them.
+const CHARGE_RUN = 26; // how far up the road a charging bear starts
+
+export class Beast extends EnemyBase {
+  constructor(scene, outline, kind) {
+    super(scene);
+    this.kind = kind;
+    this.rig = new BeastRig({ kind, outline });
+    this.body = this.rig.root;
+    this.group.add(this.rig.root);
+    this.poofColors = this.rig.poofColors;
+    this.koColors = kind === 'yeti' ? ['#e8f6ff', '#2f6fd8'] : ['#ffb347', '#5a2f12'];
+  }
+
+  setup(spec) {
+    this.reset(spec);
+    this.halfW = 0.68;
+    this.halfD = 0.55;
+    this.top = this.kind === 'yeti' ? 2.5 : 2.35;
+    this.bubbleY = this.top + 0.8;
+    this.line = pick(this.kind === 'yeti' ? YETI_LINES : BEAR_LINES);
+    this.saidLine = false;
+    this.side = spec.side || (this.lane === 0 ? -1 : this.lane === 2 ? 1 : Math.random() < 0.5 ? -1 : 1);
+    if (this.behavior === 'cross') this.x = this.side * (CONFIG.road.halfWidth + 2.4);
+    if (this.behavior === 'leap') this.x = this.side * (CONFIG.road.halfWidth + 2.6);
+    if (this.behavior === 'charge') this.dist = spec.dist + CHARGE_RUN;
+  }
+
+  update(dt, pDist) {
+    const dRem = this.baseDist - pDist;
+    this.t += dt;
+    this.active = dRem < CONFIG.road.ahead;
+    let mode = 'roar';
+    let speedMul = 1;
+    this.yaw = 0;
+    const tx = laneX(this.lane);
+    if (this.behavior === 'cross') {
+      // Lumbers out of the trees into its lane.
+      const p = smoothstep(60, 16, dRem);
+      this.x = lerp(this.side * (CONFIG.road.halfWidth + 2.4), tx, p);
+      if (p > 0 && p < 1) {
+        mode = 'walk';
+        this.yaw = -this.side * Math.PI / 2;
+      }
+    } else if (this.behavior === 'charge') {
+      // Stands roaring up the road, then charges down the lane at you and
+      // plants itself in the reserved spot.
+      const p = smoothstep(72, 24, dRem);
+      this.dist = this.baseDist + (1 - p) * CHARGE_RUN;
+      if (p > 0 && p < 1) {
+        mode = 'run';
+        speedMul = 1.3;
+      }
+    } else if (this.behavior === 'leap') {
+      // Leaps off the snowbank in a big arc and lands in its lane.
+      const p = smoothstep(46, 30, dRem);
+      this.x = lerp(this.side * (CONFIG.road.halfWidth + 2.6), tx, p);
+      this.y = Math.sin(p * Math.PI) * 3.2;
+      if (p > 0 && p < 1) {
+        mode = 'leap';
+        this.yaw = -this.side * Math.PI / 2 * Math.sin(p * Math.PI);
+      }
+      this.collidable = this.y < 1.2;
+    }
+    this.rig.animate(dt, mode, speedMul);
+    this.updateBubble(dt, dRem);
+  }
+}
+
 export function enemyKoWord(kind) {
-  return kind === 'karen' ? pick(KAREN_KO) : pick(NINJA_KO);
+  return pick(KO_WORDS[kind] || NINJA_KO);
 }

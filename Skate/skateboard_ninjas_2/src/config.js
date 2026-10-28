@@ -63,6 +63,8 @@ export const CONFIG = {
     coin: 10,
     karen: 150,
     ninja: 200,
+    bear: 250,
+    yeti: 250,
     ball: 80,
     nearMiss: 60,
     jumpOver: 25,

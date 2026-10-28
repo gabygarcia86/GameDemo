@@ -8,7 +8,7 @@ import { CONFIG, laneX } from './config.js';
 import {
   OBSTACLE_INFO, obstaclePrefab, piecePrefab, RAMP, RAIL, GAP, ICE, coinGeometry, powerupBuilder,
 } from './models/props.js';
-import { Karen, EvilNinja, enemyKoWord } from './Enemies.js';
+import { Karen, EvilNinja, Beast, enemyKoWord } from './Enemies.js';
 import { lerp } from './utils.js';
 
 const LANE = CONFIG.lanes.width;
@@ -68,6 +68,7 @@ export class World {
     this.karenPool = [];
     this.ninjaPool = [];
     this.ninjaCount = 0;
+    this.beastPools = { bear: [], yeti: [] };
     this.outlines = true;
     this.events = [];
     this._surf = { ramp: null, gap: false, ice: false, rail: null, railAhead: null };
@@ -153,8 +154,11 @@ export class World {
     if (kind === 'karen') {
       enemy = this.karenPool.pop() || new Karen(this.root, true);
       enemy.setup({ behavior, lane, dist, ...extra }, this.env);
-    } else {
+    } else if (kind === 'ninja') {
       enemy = this.ninjaPool.pop() || new EvilNinja(this.root, true, this.ninjaCount++);
+      enemy.setup({ behavior, lane, dist, ...extra });
+    } else {
+      enemy = this.beastPools[kind].pop() || new Beast(this.root, true, kind);
       enemy.setup({ behavior, lane, dist, ...extra });
     }
     setOutlinesVisible(enemy.group, this.outlines);
@@ -165,7 +169,7 @@ export class World {
   releaseEnemy(e) {
     e.group.visible = false;
     e.alive = false;
-    (e.kind === 'karen' ? this.karenPool : this.ninjaPool).push(e);
+    (e.kind === 'karen' ? this.karenPool : e.kind === 'ninja' ? this.ninjaPool : this.beastPools[e.kind]).push(e);
   }
 
   spawnCoin(x, y, dist) {
@@ -414,9 +418,10 @@ export class World {
       const e = this.enemies[i];
       if (e.dying) {
         if (e.updateDying(dt)) {
-          const pal = e.kind === 'ninja' ? [e.palette.band, e.palette.accent, '#ffffff', '#140c2b', '#ffe066'] : undefined;
+          const pal = e.kind === 'ninja' ? [e.palette.band, e.palette.accent, '#ffffff', '#140c2b', '#ffe066'] : e.poofColors;
           this.fx.poof(e.x, e.y, e.dist, speed * 0.4, pal);
-          this.fx.word(enemyKoWord(e.kind), e.x, 2.2, e.dist, e.kind === 'karen' ? '#ffe066' : '#ff2e55', e.kind === 'karen' ? '#ff2e55' : '#ffffff');
+          const [fill, ink] = e.koColors || (e.kind === 'karen' ? ['#ffe066', '#ff2e55'] : ['#ff2e55', '#ffffff']);
+          this.fx.word(enemyKoWord(e.kind), e.x, 2.2, e.dist, fill, ink);
           this.enemies.splice(i, 1);
           this.releaseEnemy(e);
           continue;

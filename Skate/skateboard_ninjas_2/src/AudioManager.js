@@ -18,7 +18,7 @@ export const SOUND_FILES = {
   karen: null, ninja: null, crash: null, gameover: null, powerup: null, shieldBreak: null,
   ramp: null, grindStart: null, trick: null, whoosh: null, splat: null, beep: null, go: null,
   mission: null, buy: null, bump: null, pop: null, chest: null, slide: null, combo: null,
-  error: null, enemyThrow: null, fall: null, nearMiss: null,
+  error: null, enemyThrow: null, fall: null, nearMiss: null, bear: null, yeti: null,
 };
 
 // Browsers can't list a folder, so the songs are named here.
@@ -456,6 +456,17 @@ const SYNTH = {
   ninja: (a) => {
     a.noise({ dur: 0.08, gain: 0.12, freq: 1300, q: 3 });
     a.tone({ type: 'sawtooth', freq: 280, end: 170, dur: 0.22, gain: 0.06, delay: 0.04, filter: { type: 'bandpass', freq: 800, q: 3 } });
+  },
+  bear: (a) => {
+    // A deep, rumbling growl.
+    a.noise({ dur: 0.6, gain: 0.2, type: 'lowpass', freq: 500, end: 150 });
+    a.tone({ type: 'sawtooth', freq: 120, end: 75, dur: 0.6, gain: 0.09, filter: { type: 'lowpass', freq: 600 }, vibrato: 25 });
+  },
+  yeti: (a) => {
+    // A long howling roar that rises then falls.
+    a.noise({ dur: 0.7, gain: 0.14, type: 'bandpass', freq: 700, end: 300, q: 2 });
+    a.tone({ type: 'sawtooth', freq: 160, end: 260, dur: 0.3, gain: 0.08, filter: { type: 'bandpass', freq: 700, q: 3 }, vibrato: 20 });
+    a.tone({ type: 'sawtooth', freq: 260, end: 110, dur: 0.5, gain: 0.08, delay: 0.28, filter: { type: 'bandpass', freq: 600, q: 3 }, vibrato: 30 });
   },
   enemyThrow: (a) => a.tone({ freq: 1300, end: 600, dur: 0.3, gain: 0.04 }),
   splat: (a) => {

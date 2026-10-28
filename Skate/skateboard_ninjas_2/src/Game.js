@@ -33,6 +33,8 @@ const MENU_ORBIT = 2.35;
 const CRASH_REASONS = {
   karen: ['A Karen demanded to speak to your face.', 'Karen 1, Ninja 0.', 'She did ask for the manager...'],
   ninja: ['The rival ninja had the high ground.', 'Ambushed by a rival clan!', 'Ninja vs ninja: the other one won.'],
+  bear: ['The bear did not want a hug.', 'Un-bear-ably close.', 'Only you can prevent bear crashes.'],
+  yeti: ['Turns out the yeti is real.', 'Abominable driving.', 'The yeti got a selfie. And you.'],
   gap: ['The road ended. You did not.', 'Mind the gap!', 'Into the abyss!'],
   default: ['Face, meet obstacle.', 'That one came out of nowhere.', 'Ouch. Right in the board.', 'Bonk.'],
 };
@@ -44,6 +46,7 @@ const OBSTACLE_NAMES = {
   beachBall: 'a beach ball', sign: 'a road sign', pipeBar: 'a pipe', banner: 'a banner', branch: 'a branch', surfRack: 'a surf rack',
   snowArch: 'a snowy log', neonSign: 'a neon sign',
 };
+const KO_CALLOUTS = { karen: 'KAREN POPPED!', ninja: 'NINJA DOWN!', bear: 'BEAR DOWN!', yeti: 'YETI TAMED!' };
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
 export class Game {
@@ -130,7 +133,7 @@ export class Game {
     const outlines = q !== 'low';
     this.player.setOutlines(outlines);
     this.world.outlines = outlines;
-    for (const e of [...this.world.enemies, ...this.world.karenPool, ...this.world.ninjaPool]) setOutlinesVisible(e.group, outlines);
+    for (const e of [...this.world.enemies, ...this.world.karenPool, ...this.world.ninjaPool, ...Object.values(this.world.beastPools).flat()]) setOutlinesVisible(e.group, outlines);
     if (rebuild) {
       this.track.setEnvironment(this.env, q);
       this.resize();
@@ -662,13 +665,14 @@ export class Game {
         case 'ko':
           st.kos++;
           if (e.kind === 'karen') st.karens++;
-          else st.ninjas++;
+          else if (e.kind === 'ninja') st.ninjas++;
+          else st.beasts++;
           sc.bonusCoins += 2;
           this.audio.play('hit');
           this.audio.play('poof');
           this.audio.play(e.kind);
           if (this.settings.shake) this.cam.shake(0.08);
-          this.award(e.kind === 'karen' ? S.karen : S.ninja, e.kind === 'karen' ? 'KAREN POPPED!' : 'NINJA DOWN!', 'good');
+          this.award(S[e.kind], KO_CALLOUTS[e.kind], 'good');
           break;
         case 'pop':
           st.balls++;
@@ -710,7 +714,7 @@ export class Game {
     if (this.settings.shake) this.cam.shake(0.6);
     this.cam.crashT = 0;
     const cause = this.player.crashCause;
-    this.crashReason = cause === 'karen' || cause === 'ninja' || cause === 'gap'
+    this.crashReason = cause !== 'default' && CRASH_REASONS[cause]
       ? pick(CRASH_REASONS[cause])
       : `You hit ${OBSTACLE_NAMES[cause] || 'something'}. ${pick(CRASH_REASONS.default)}`;
     this.particles.poof(this.player.x, 0, this.dist + 1, this.speed * 0.2, ['#ffffff', '#ffe066', '#ff2e55']);

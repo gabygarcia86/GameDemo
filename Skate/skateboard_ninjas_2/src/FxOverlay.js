@@ -26,17 +26,14 @@ export class FxOverlay {
   }
 
   splat(color = '#c04dff') {
-    // Somewhere near an edge so it never blocks the middle of the road.
-    const side = Math.floor(Math.random() * 4);
-    // Top/bottom splats go in the outer corners, clear of the road ahead.
-    const u = Math.random() < 0.5 ? 0.06 + Math.random() * 0.2 : 0.74 + Math.random() * 0.2;
-    const x = side === 0 ? 0.08 : side === 1 ? 0.92 : u;
-    const y = side === 2 ? 0.1 : side === 3 ? 0.85 : 0.2 + Math.random() * 0.5;
+    // Right in the middle of the screen, a little off-centre each time.
+    const x = 0.5 + (Math.random() - 0.5) * 0.12;
+    const y = 0.45 + (Math.random() - 0.5) * 0.12;
     const blobs = [];
     for (let i = 0; i < 9; i++) blobs.push({ a: Math.random() * Math.PI * 2, d: Math.random() * 0.8, r: 0.25 + Math.random() * 0.35 });
     const drips = [];
     for (let i = 0; i < 3; i++) drips.push({ x: (Math.random() - 0.5) * 1.2, len: 0.6 + Math.random() * 1.2, w: 0.12 + Math.random() * 0.1 });
-    this.splats.push({ x, y, size: 0.09 + Math.random() * 0.05, color, t: 0, life: 1.8, blobs, drips });
+    this.splats.push({ x, y, size: 0.25 + Math.random() * 0.2, color, t: 0, life: 2.5, blobs, drips });
   }
 
   flash(color, strength = 0.5) {

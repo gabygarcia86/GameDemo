@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+    <meta name="theme-color" content="#1a1033">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="description"
+      content="Skateboard Ninjas 2 - Downhill Jam: an endless 3D downhill runner. Dodge Karens and evil ninjas, throw ninja stars, grind rails and customize your ninja and board.">
+    <title>Skateboard Ninjas 2 : Downhill Jam</title>
+    <link rel="icon" href="icon/favicon.ico" type="image/x-icon">
+    <link rel="icon" type="image/png" sizes="16x16" href="icon/icon-16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icon/icon-32.png">
+    <link rel="icon" type="image/png" sizes="128x128"
+      href="icon/icon-128.png">
+    <link rel="icon" type="image/png" sizes="256x256"
+      href="icon/icon-256.png">
+    <link rel="apple-touch-icon" sizes="256x256" href="icon/icon-256.png">
+    <link rel="stylesheet" href="styles.css">
+    <script type="module" src="src/main.js"></script>
+  </head>
+  <body>
+    <main id="app">
+      <canvas id="game-canvas" aria-label="Skateboard Ninjas 2 game view"></canvas>
+      <canvas id="fx-canvas" aria-hidden="true"></canvas>
+
+      <!-- Loading -->
+      <div id="loading" class="loading">
+        <div class="loading-star" aria-hidden="true"></div>
+        <p>LOADING...</p>
+      </div>
+
+      <!-- In-run HUD -->
+      <div id="hud" class="hud" hidden>
+        <div class="hud-top">
+          <div class="hud-box hud-score">
+            <span class="hud-label">SCORE</span>
+            <span id="hud-score" class="hud-value">0</span>
+            <span class="hud-sub"><b id="hud-dist">0</b> m</span>
+          </div>
+          <div id="hud-combo" class="hud-combo" data-on="false">
+            <span class="combo-count">COMBO <b id="hud-combo-n">0</b></span>
+            <span class="combo-mult">&times;<b id="hud-mult">1</b></span>
+            <span class="combo-bar"><i id="hud-combo-bar"></i></span>
+          </div>
+          <div class="hud-right">
+            <div class="hud-box hud-coins">
+              <span class="coin-icon" aria-hidden="true"></span>
+              <span id="hud-coins" class="hud-value">0</span>
+            </div>
+            <button id="pause-btn" class="icon-btn" type="button" aria-label="Pause">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+            </button>
+          </div>
+        </div>
+        <div id="hud-powerups" class="hud-powerups"></div>
+        <div id="callouts" class="callouts" aria-live="polite"></div>
+        <div id="toasts" class="toasts" aria-live="polite"></div>
+        <button id="star-btn" class="star-btn" type="button" aria-label="Throw ninja star">
+          <svg class="star-ring" viewBox="0 0 100 100" aria-hidden="true">
+            <circle cx="50" cy="50" r="45" class="ring-bg"/>
+            <circle cx="50" cy="50" r="45" class="ring-fill" id="star-ring"/>
+          </svg>
+          <svg class="star-icon" viewBox="-50 -50 100 100" aria-hidden="true">
+            <path d="M0-44 11-11 44 0 11 11 0 44-11 11-44 0-11-11Z" fill="#e4e7f5" stroke="#140c2b" stroke-width="5" stroke-linejoin="round"/>
+            <circle r="9" fill="#ff2e55" stroke="#140c2b" stroke-width="4"/>
+          </svg>
+          <span id="star-count" class="star-count">5</span>
+          <span class="key-hint">J / CLICK</span>
+        </button>
+      </div>
+
+      <!-- Environment intro + countdown -->
+      <section id="intro" class="intro" hidden aria-live="assertive">
+        <div class="intro-card">
+          <span class="intro-kicker">NOW ENTERING</span>
+          <h2 id="intro-name" class="intro-name">SUNSET</h2>
+          <p id="intro-title" class="intro-title">Sunset Ridge</p>
+          <p id="intro-blurb" class="intro-blurb"></p>
+          <p class="intro-challenge"><span>CHALLENGE</span> <b id="intro-challenge"></b></p>
+        </div>
+        <div id="countdown" class="countdown">3</div>
+      </section>
+
+      <!-- Main menu -->
+      <section id="menu" class="screen" hidden>
+        <div class="panel menu-panel">
+          <h1 class="logo">
+            <span class="logo-top">SKATEBOARD</span>
+            <span class="logo-mid">NINJAS <em>2</em></span>
+            <span class="logo-sub">DOWNHILL JAM</span>
+          </h1>
+          <div class="wallet"><span class="coin-icon" aria-hidden="true"></span><b id="menu-coins">0</b></div>
+          <div class="menu-buttons">
+            <button id="play-btn" class="btn btn-primary" type="button">PLAY</button>
+            <button id="customize-btn" class="btn btn-pink" type="button">CUSTOMIZE</button>
+            <div class="btn-row">
+              <button id="stats-btn" class="btn btn-secondary" type="button">STATS</button>
+              <button id="settings-btn" class="btn btn-secondary" type="button">SETTINGS</button>
+            </div>
+          </div>
+          <p class="best-row">BEST <b id="menu-best">0</b> <span class="dot">&bull;</span> <b id="menu-best-dist">0</b> m</p>
+          <div class="missions">
+            <h3>MISSIONS</h3>
+            <ul id="mission-list"></ul>
+          </div>
+          <details class="howto">
+            <summary>HOW TO PLAY</summary>
+            <div class="howto-grid">
+              <div>
+                <h4>Keyboard &amp; mouse</h4>
+                <ul>
+                  <li><b>A / &larr;</b> and <b>D / &rarr;</b>: change lanes</li>
+                  <li><b>W / &uarr; / Space</b>: jump (again in the air for a trick)</li>
+                  <li><b>S / &darr;</b>: slide (in the air: slam down)</li>
+                  <li><b>J / left click</b>: throw a ninja star</li>
+                  <li><b>Esc / P</b>: pause &nbsp; <b>M</b>: mute</li>
+                </ul>
+              </div>
+              <div>
+                <h4>Touch</h4>
+                <ul>
+                  <li>Swipe <b>left / right</b>: change lanes</li>
+                  <li>Swipe <b>up</b>: jump (again in the air for a trick)</li>
+                  <li>Swipe <b>down</b>: slide</li>
+                  <li>Tap the <b>ninja star</b> button to throw</li>
+                </ul>
+              </div>
+            </div>
+            <ul class="tips">
+              <li>Tall things: go around. Knee-high things: jump. Overhead bars: slide under.</li>
+              <li>Stars lock on to Karens and evil ninjas in your lane, or the next lane over if yours is clear. You carry 5 and they recharge.</li>
+              <li>Ride onto rails to grind, hit ramps to launch, and chain actions to grow your combo multiplier up to &times;5.</li>
+              <li>Clip the side of something mid lane-change and you just bounce off. Hit it head-on and it's game over.</li>
+              <li>Power-ups: magnet (coins), shield (survive one hit), star frenzy (unlimited stars).</li>
+            </ul>
+          </details>
+          <a class="menu-back" href="../../index.html">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+            Back
+          </a>
+        </div>
+      </section>
+
+      <!-- Customize -->
+      <section id="customize" class="screen customize" hidden>
+        <div class="panel custom-panel">
+          <div class="custom-head">
+            <h2>CUSTOMIZE</h2>
+            <div class="wallet"><span class="coin-icon" aria-hidden="true"></span><b id="cz-coins">0</b></div>
+          </div>
+          <div class="tabs" role="tablist">
+            <button id="tab-ninja" class="tab" type="button" role="tab" aria-selected="true" aria-controls="cz-ninja">NINJA</button>
+            <button id="tab-board" class="tab" type="button" role="tab" aria-selected="false" aria-controls="cz-board">BOARD</button>
+          </div>
+          <div id="cz-ninja" class="cz-group" role="tabpanel" aria-labelledby="tab-ninja"></div>
+          <div id="cz-board" class="cz-group" role="tabpanel" aria-labelledby="tab-board" hidden>
+            <div class="cz-row">
+              <span class="cz-label">Type</span>
+              <div class="cz-options">
+                <button class="chip" type="button" data-board="longboard" aria-pressed="false">LONGBOARD</button>
+                <button class="chip" type="button" data-board="hoverboard" aria-pressed="false">HOVERBOARD</button>
+              </div>
+            </div>
+            <div id="cz-board-rows"></div>
+            <div class="cz-row" id="cz-neon-row">
+              <span class="cz-label">Neon lights</span>
+              <div class="cz-options">
+                <button id="cz-neon" class="chip" type="button" aria-pressed="true">ON</button>
+              </div>
+            </div>
+          </div>
+          <p class="cz-hint">Drag the preview to spin your ninja. Locked colours cost coins.</p>
+          <div class="menu-buttons btn-row">
+            <button id="cz-random" class="btn btn-secondary" type="button">RANDOMIZE</button>
+            <button id="cz-back" class="btn btn-ghost" type="button">BACK</button>
+            <button id="cz-start" class="btn btn-primary" type="button">START GAME</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Pause -->
+      <section id="pause" class="screen" hidden>
+        <div class="panel small-panel">
+          <h2>PAUSED</h2>
+          <div class="menu-buttons">
+            <button id="resume-btn" class="btn btn-primary" type="button">RESUME</button>
+            <button id="restart-btn" class="btn btn-secondary" type="button">RESTART</button>
+            <button id="pause-settings-btn" class="btn btn-secondary" type="button">SETTINGS</button>
+            <button id="pause-menu-btn" class="btn btn-ghost" type="button">MAIN MENU</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Game over -->
+      <section id="gameover" class="screen" hidden>
+        <div class="panel results-panel">
+          <h2 id="go-title">WIPEOUT!</h2>
+          <p id="go-reason" class="go-reason"></p>
+          <div id="go-newbest" class="new-best" hidden>NEW PERSONAL BEST!</div>
+          <div class="final-score">
+            <span>SCORE</span>
+            <strong id="go-score">0</strong>
+          </div>
+          <dl class="stats">
+            <div><dt>Distance</dt><dd id="go-dist">0 m</dd></div>
+            <div><dt>Coins</dt><dd id="go-coins">0</dd></div>
+            <div><dt>Karens popped</dt><dd id="go-karens">0</dd></div>
+            <div><dt>Ninjas defeated</dt><dd id="go-ninjas">0</dd></div>
+            <div><dt>Obstacles avoided</dt><dd id="go-avoided">0</dd></div>
+            <div><dt>Best combo</dt><dd id="go-combo">0</dd></div>
+            <div><dt>Top multiplier</dt><dd id="go-mult">&times;1</dd></div>
+            <div><dt>Tricks landed</dt><dd id="go-tricks">0</dd></div>
+          </dl>
+          <div class="rewards">
+            <h3>REWARDS</h3>
+            <ul id="go-rewards"></ul>
+            <p class="reward-total"><span class="coin-icon" aria-hidden="true"></span> +<b id="go-reward-total">0</b></p>
+          </div>
+          <p class="best-row">BEST <b id="go-best">0</b> <span class="dot">&bull;</span> <b id="go-best-dist">0</b> m</p>
+          <div class="menu-buttons btn-row">
+            <button id="go-restart" class="btn btn-primary" type="button">RESTART</button>
+            <button id="go-customize" class="btn btn-pink" type="button">CUSTOMIZE</button>
+            <button id="go-menu" class="btn btn-secondary" type="button">MAIN MENU</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Stats -->
+      <section id="stats" class="screen" hidden>
+        <div class="panel stats-panel">
+          <h2>HIGH SCORES &amp; STATS</h2>
+          <dl id="stats-list" class="stats stats-big"></dl>
+          <h3>ENVIRONMENTS</h3>
+          <table class="env-table">
+            <thead><tr><th>Environment</th><th>Runs</th><th>Best</th></tr></thead>
+            <tbody id="env-stats"></tbody>
+          </table>
+          <div class="menu-buttons">
+            <button id="stats-back" class="btn btn-primary" type="button">BACK</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Settings -->
+      <section id="settings" class="screen" hidden>
+        <div class="panel settings-panel">
+          <h2>SETTINGS</h2>
+          <div class="set-row">
+            <label for="set-music">Music</label>
+            <input id="set-music" type="range" min="0" max="100" step="5">
+            <output id="set-music-out">60</output>
+          </div>
+          <div class="set-row">
+            <label for="set-sfx">Sound effects</label>
+            <input id="set-sfx" type="range" min="0" max="100" step="5">
+            <output id="set-sfx-out">80</output>
+          </div>
+          <div class="set-row">
+            <span class="set-label">Ambience</span>
+            <button id="set-ambience" class="chip" type="button" aria-pressed="true">ON</button>
+          </div>
+          <div class="set-row">
+            <span class="set-label">Graphics</span>
+            <div class="seg" id="set-quality" role="radiogroup" aria-label="Graphics quality">
+              <button class="chip" type="button" data-value="auto">AUTO</button>
+              <button class="chip" type="button" data-value="low">LOW</button>
+              <button class="chip" type="button" data-value="medium">MED</button>
+              <button class="chip" type="button" data-value="high">HIGH</button>
+            </div>
+          </div>
+          <div class="set-row">
+            <span class="set-label">Camera shake</span>
+            <button id="set-shake" class="chip" type="button" aria-pressed="true">ON</button>
+          </div>
+          <div class="set-row">
+            <span class="set-label">Speed lines</span>
+            <button id="set-lines" class="chip" type="button" aria-pressed="true">ON</button>
+          </div>
+          <div class="set-row">
+            <span class="set-label">Touch buttons</span>
+            <div class="seg" id="set-touch" role="radiogroup" aria-label="Touch buttons">
+              <button class="chip" type="button" data-value="auto">AUTO</button>
+              <button class="chip" type="button" data-value="on">ON</button>
+              <button class="chip" type="button" data-value="off">OFF</button>
+            </div>
+          </div>
+          <div class="set-row">
+            <span class="set-label">Show FPS</span>
+            <button id="set-fps" class="chip" type="button" aria-pressed="false">OFF</button>
+          </div>
+          <div class="menu-buttons">
+            <button id="settings-done" class="btn btn-primary" type="button">DONE</button>
+            <button id="reset-progress" class="btn btn-danger" type="button">RESET PROGRESS</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Confirm dialog -->
+      <section id="confirm" class="screen confirm" hidden>
+        <div class="panel small-panel">
+          <p id="confirm-text" class="confirm-text"></p>
+          <div class="menu-buttons btn-row">
+            <button id="confirm-no" class="btn btn-ghost" type="button">CANCEL</button>
+            <button id="confirm-yes" class="btn btn-primary" type="button">OK</button>
+          </div>
+        </div>
+      </section>
+
+      <div id="fps" class="fps" hidden></div>
+      <div id="error" class="error-box" hidden></div>
+      <noscript><p class="noscript">Skateboard Ninjas 2 needs JavaScript enabled.</p></noscript>
+    </main>
+  </body>
+</html>

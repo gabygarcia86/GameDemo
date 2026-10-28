@@ -1,0 +1,287 @@
+// Enemy behaviours. Every moving enemy is driven by dRem (distance left until
+// the player reaches its spot) rather than by time, so wherever it ends up when
+// the player arrives is fixed in advance. That's what lets the generator keep
+// every encounter fair: a crossing Karen always finishes in the lane the
+// generator reserved for her, however fast you're going.
+
+import { THREE, prefabMesh, bubbleTexture } from './gfx.js';
+import { CONFIG, laneX } from './config.js';
+import { KarenRig } from './models/karen.js';
+import { NinjaRig, EVIL_PALETTES } from './models/ninja.js';
+import { obstaclePrefab } from './models/props.js';
+import { smoothstep, lerp } from './utils.js';
+
+export const KAREN_LINES = [
+  'MANAGER!', 'EXCUSE ME?!', 'SLOW DOWN!', "I'M CALLING THE HOA!", 'NO SKATING!', 'UNBELIEVABLE!',
+  'I KNOW THE OWNER!', '1 STAR REVIEW!', 'HELMET?!', 'NO NINJAS ALLOWED!', 'I HAVE A COUPON!',
+  'THIS IS MY LANE!', 'WHO RAISED YOU?!', "I'M FILMING THIS!",
+];
+export const KAREN_CHASE_LINES = ['GET BACK HERE!', 'I WANT TO SPEAK TO YOUR SENSEI!', 'COME BACK!', "YOU'RE ON CAMERA!"];
+export const NINJA_LINES = ['HYAAA!', 'YOU SHALL NOT PASS!', 'PREPARE YOURSELF!', 'TOO SLOW!', 'HAI-YA!', 'EN GARDE!', 'FACE ME!'];
+export const KAREN_KO = ['POOF!', 'REFUND!', 'BYE KAREN!', 'DENIED!'];
+export const NINJA_KO = ['BAM!', 'KO!', 'WHAM!', 'POW!'];
+
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+
+class EnemyBase {
+  constructor(scene) {
+    this.group = new THREE.Group();
+    this.group.visible = false;
+    scene.add(this.group);
+    this.bubble = new THREE.Sprite(new THREE.SpriteMaterial({ depthWrite: false, transparent: true }));
+    this.bubble.visible = false;
+    this.bubble.renderOrder = 15;
+    this.group.add(this.bubble);
+  }
+
+  reset(spec) {
+    this.spec = spec;
+    this.behavior = spec.behavior;
+    this.lane = spec.lane;
+    this.dist = spec.dist;
+    this.baseDist = spec.dist;
+    this.x = laneX(spec.lane);
+    this.y = 0;
+    this.yaw = 0;
+    this.alive = true;
+    this.dying = 0;
+    this.passed = false;
+    this.hit = false;
+    this.active = false;
+    this.collidable = true;
+    this.halfW = 0.55;
+    this.halfD = 0.4;
+    this.top = 1.95;
+    this.bottom = 0;
+    this.cat = 'block';
+    this.t = Math.random() * 5;
+    this.group.visible = false;
+    this.group.scale.set(1, 1, 1);
+    this.body.rotation.set(0, 0, 0);
+    this.line = null;
+    this.saying = 0;
+    this.saidLine = false;
+    this.voiced = false;
+    this.targeted = false;
+  }
+
+  say(text, time = 1.6) {
+    const { tex, aspect } = bubbleTexture(text);
+    this.bubble.material.map = tex;
+    this.bubble.material.needsUpdate = true;
+    const h = 0.62;
+    this.bubble.scale.set(h * aspect, h, 1);
+    this.saying = time;
+  }
+
+  updateBubble(dt, dRem) {
+    if (this.line && dRem < 52 && dRem > 9 && !this.saidLine) {
+      this.say(this.line, 2.2);
+      this.saidLine = true;
+    }
+    this.saying -= dt;
+    this.bubble.visible = this.saying > 0 && this.alive && !this.dying;
+    this.bubble.position.set(0, 2.75, 0);
+  }
+
+  // Cartoon pop: squash, stretch, spin, then the caller spawns the burst.
+  updateDying(dt) {
+    this.dying += dt;
+    const k = this.dying / 0.28;
+    const sx = k < 0.4 ? 1 + k * 0.9 : 1.36 - (k - 0.4) * 1.8;
+    const sy = k < 0.4 ? 1 - k * 0.9 : 0.64 + (k - 0.4) * 2.4;
+    this.group.scale.set(Math.max(0.01, sx), Math.max(0.01, sy), Math.max(0.01, sx));
+    this.body.rotation.y += dt * 25;
+    return k >= 1;
+  }
+}
+
+export class Karen extends EnemyBase {
+  constructor(scene, outline) {
+    super(scene);
+    this.kind = 'karen';
+    this.rig = new KarenRig({ outline });
+    this.rig.root.scale.setScalar(0.86);
+    this.body = this.rig.root;
+    this.group.add(this.rig.root);
+    this.cart = null;
+    this.env = null;
+  }
+
+  setup(spec, env) {
+    this.reset(spec);
+    this.line = this.behavior === 'chase' ? pick(KAREN_CHASE_LINES) : pick(KAREN_LINES);
+    this.saidLine = false;
+    if (this.behavior === 'cart') {
+      if (!this.cart || this.cartEnv !== env.id) {
+        if (this.cart) this.group.remove(this.cart);
+        this.cart = prefabMesh(obstaclePrefab('cart', 1, env));
+        this.cartEnv = env.id;
+        this.group.add(this.cart);
+      }
+      this.cart.visible = true;
+      this.cart.position.set(0, 0, 0.95);
+      this.halfD = 1.0;
+      this.dist = spec.dist + 0.5;
+    } else if (this.cart) {
+      this.cart.visible = false;
+    }
+    if (this.behavior === 'cross') {
+      this.side = spec.side || (Math.random() < 0.5 ? -1 : 1);
+      this.x = this.side * (CONFIG.road.halfWidth + 2.2);
+    }
+    if (this.behavior === 'chase') {
+      this.side = this.lane === 0 ? -1 : 1;
+      this.x = this.side * (CONFIG.road.halfWidth + 1.1);
+      this.collidable = false;
+    }
+  }
+
+  update(dt, pDist, speed) {
+    const dRem = this.baseDist - pDist;
+    this.t += dt;
+    let mode = 'angry';
+    let speedMul = 1;
+    this.yaw = 0;
+    const tx = laneX(this.lane);
+    if (this.behavior === 'cross') {
+      const p = smoothstep(58, 12, dRem);
+      this.x = lerp(this.side * (CONFIG.road.halfWidth + 2.2), tx, p);
+      if (p > 0 && p < 1) {
+        mode = 'walk';
+        this.yaw = -this.side * Math.PI / 2;
+      }
+    } else if (this.behavior === 'chase') {
+      // Sprint up from behind along the shoulder, then cut into the lane.
+      const R0 = 95;
+      const catchUp = smoothstep(R0, 34, dRem);
+      const off = lerp(-9, dRem, catchUp);
+      this.dist = pDist + off;
+      if (dRem <= 34) this.dist = this.baseDist;
+      const step = smoothstep(32, 18, dRem);
+      this.x = lerp(this.side * (CONFIG.road.halfWidth + 1.1), tx, step);
+      this.collidable = Math.abs(this.x) < CONFIG.road.halfWidth - 0.6;
+      if (catchUp < 1) {
+        mode = 'run';
+        this.yaw = Math.PI; // facing away from us, running downhill
+        speedMul = 1.2;
+      } else if (step < 1) {
+        mode = 'walk';
+        this.yaw = -this.side * Math.PI / 2;
+      }
+      this.active = dRem < R0;
+    } else if (this.behavior === 'cart') {
+      mode = 'push';
+      speedMul = 0.6;
+    }
+    if (this.behavior !== 'chase') this.active = dRem < CONFIG.road.ahead;
+    this.rig.animate(dt, mode, speedMul);
+    this.updateBubble(dt, dRem);
+  }
+}
+
+export class EvilNinja extends EnemyBase {
+  constructor(scene, outline, paletteIndex) {
+    super(scene);
+    this.kind = 'ninja';
+    this.palette = EVIL_PALETTES[paletteIndex % EVIL_PALETTES.length];
+    this.rig = new NinjaRig({ evil: true, palette: this.palette, outline });
+    this.rig.root.scale.setScalar(0.92);
+    this.body = this.rig.root;
+    this.group.add(this.rig.root);
+  }
+
+  setup(spec) {
+    this.reset(spec);
+    this.top = 1.85;
+    this.halfW = 0.5;
+    this.line = Math.random() < 0.7 ? pick(NINJA_LINES) : null;
+    this.saidLine = false;
+    this.throws = 0;
+    this.throwCd = 0.6 + Math.random() * 0.6;
+    this.throwAnim = 0;
+    this.hops = spec.hops || null; // [laneA, laneB, ..., finalLane]
+    if (this.hops) this.x = laneX(this.hops[0]);
+    this.lane = this.hops ? this.hops[this.hops.length - 1] : spec.lane;
+  }
+
+  update(dt, pDist, speed, world) {
+    const dRem = this.dist - pDist;
+    this.t += dt;
+    this.active = dRem < CONFIG.road.ahead;
+    const rig = this.rig;
+    let airborne = 0;
+    this.yaw = 0;
+    if (this.behavior === 'jump' && this.hops) {
+      // Hop between lanes at fixed dRem marks; settled in the final lane by
+      // dRem 28 at the latest.
+      const marks = [52, 38];
+      let x = laneX(this.hops[0]);
+      let y = 0;
+      for (let i = 1; i < this.hops.length; i++) {
+        const start = marks[i - 1] ?? 38;
+        const end = start - 10;
+        const p = smoothstep(start, end, dRem);
+        if (p > 0) {
+          x = lerp(laneX(this.hops[i - 1]), laneX(this.hops[i]), p);
+          y = Math.sin(p * Math.PI) * 1.9;
+          if (p > 0 && p < 1) airborne = p;
+        }
+      }
+      this.x = x;
+      this.y = y;
+    } else if (this.behavior === 'drop') {
+      // Falls out of the sky (or the trees) into the lane.
+      const p = smoothstep(48, 30, dRem);
+      this.y = (1 - p) * (1 - p) * 9;
+      airborne = p < 1 ? 0.5 : 0;
+      this.group.visible = this.active;
+    }
+
+    // Fighting stance / mid-air tuck.
+    if (airborne) {
+      rig.hips.position.y = 0.55;
+      rig.setLeg(0, 0.3, -0.1, 0.2);
+      rig.setLeg(1, 0.3, 0.1, 0.2);
+      rig.setArm(0, 2.4, 0, 0.6);
+      rig.setArm(1, 2.4, 0, 0.6);
+      rig.body.rotation.x = this.behavior === 'jump' ? -airborne * Math.PI * 2 : 0;
+      rig.torso.rotation.set(0.3, 0, 0);
+    } else {
+      rig.body.rotation.x = 0;
+      const b = Math.sin(this.t * 6) * 0.025;
+      rig.hips.position.y = 0.52 + b;
+      rig.setLeg(0, 0.52 + b, -0.2, 0.12);
+      rig.setLeg(1, 0.52 + b, 0.2, -0.12);
+      rig.torso.rotation.set(0.15, Math.sin(this.t * 2) * 0.2, 0);
+      rig.head.rotation.set(0, 0, Math.sin(this.t * 3) * 0.05);
+      if (this.throwAnim > 0) {
+        const p = 1 - this.throwAnim / 0.3;
+        rig.setArm(1, 1.2, lerp(-1.2, 1.6, p), 0.1);
+        rig.setArm(0, 0.8, -0.5, 1.2);
+      } else {
+        rig.setArm(0, 0.9, 0.9, 1.6 + Math.sin(this.t * 5) * 0.1);
+        rig.setArm(1, 0.7, 1.1, 1.4 - Math.sin(this.t * 5) * 0.1);
+      }
+    }
+    rig.updateTails(dt, 6);
+
+    // Throw harmless paint balls while we approach.
+    this.throwAnim = Math.max(0, this.throwAnim - dt);
+    if (!airborne && dRem < 46 && dRem > 17 && this.throws < 2 && this.alive && !this.dying) {
+      this.throwCd -= dt;
+      if (this.throwCd <= 0) {
+        this.throwCd = 1.1;
+        this.throws++;
+        this.throwAnim = 0.3;
+        world.enemyThrow(this);
+      }
+    }
+    this.collidable = this.y < 1.2;
+    this.updateBubble(dt, dRem);
+  }
+}
+
+export function enemyKoWord(kind) {
+  return kind === 'karen' ? pick(KAREN_KO) : pick(NINJA_KO);
+}

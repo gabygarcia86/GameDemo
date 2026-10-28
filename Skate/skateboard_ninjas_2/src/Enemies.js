@@ -8,7 +8,7 @@ import { THREE, prefabMesh, bubbleTexture } from './gfx.js';
 import { CONFIG, laneX } from './config.js';
 import { KarenRig } from './models/karen.js';
 import { NinjaRig, EVIL_PALETTES } from './models/ninja.js';
-import { BeastRig } from './models/beasts.js';
+import { BeastRig, buildUfo } from './models/beasts.js';
 import { obstaclePrefab } from './models/props.js';
 import { smoothstep, lerp } from './utils.js';
 
@@ -25,7 +25,11 @@ export const BEAR_LINES = ['ROAR!', 'GRRRRR!', 'MY WOODS!', 'GOT HONEY?!', 'UNBE
 export const YETI_LINES = ['RAAAWR!', 'HUNGRY!', 'SNOW WAY!', 'YETI OR NOT!', 'ABOMINABLE!', 'COLD FEET?!'];
 export const BEAR_KO = ['TIMBER!', 'BEAR-LY!', 'GRR-BONK!', 'HIBERNATE!'];
 export const YETI_KO = ['BRRR!', 'CHILLED!', 'SNOW-KO!', 'MELTED!'];
-const KO_WORDS = { karen: KAREN_KO, ninja: NINJA_KO, bear: BEAR_KO, yeti: YETI_KO };
+export const ROCK_ALIEN_LINES = ['RUMBLE!', 'MY CRATER!', 'ROCK ON!', 'YOU SHALL NOT PASS!', 'GRAVEL GRRR!', 'BOULDER DASH!'];
+export const ALIEN_LINES = ['ACK ACK!', 'TAKE ME TO YOUR LEADER!', 'EARTHLING!', 'ZORP!', 'PROBE TIME!', 'NICE BOARD, HUMAN!'];
+export const ROCK_ALIEN_KO = ['CRUMBLE!', 'ROCKED!', 'GRAVEL!', 'SMASH!'];
+export const ALIEN_KO = ['ZAPPED!', 'BEAM ME UP!', 'ACK!', 'ZORP-KO!'];
+const KO_WORDS = { karen: KAREN_KO, ninja: NINJA_KO, bear: BEAR_KO, yeti: YETI_KO, rockAlien: ROCK_ALIEN_KO, alien: ALIEN_KO };
 
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
@@ -289,36 +293,53 @@ export class EvilNinja extends EnemyBase {
   }
 }
 
-// The forest bear and the snowy yeti. Big, so they take a whole lane, and a
-// single ninja star still drops them.
+// The local beasts: forest bear, snowy yeti, moon rock alien, Mars alien. Big,
+// so they take a whole lane, and a single ninja star still drops them.
 const CHARGE_RUN = 26; // how far up the road a charging bear starts
+const UFO_HEIGHT = 7.5; // saucer height while a Mars alien beams down
+
+const BEASTS = {
+  bear: { top: 2.35, lines: BEAR_LINES, ko: ['#ffb347', '#5a2f12'] },
+  yeti: { top: 2.5, lines: YETI_LINES, ko: ['#e8f6ff', '#2f6fd8'] },
+  rockAlien: { top: 2.5, lines: ROCK_ALIEN_LINES, ko: ['#5ff0ff', '#33364a'] },
+  alien: { top: 2.3, lines: ALIEN_LINES, ko: ['#7dffb0', '#3a0a5a'] },
+};
 
 export class Beast extends EnemyBase {
   constructor(scene, outline, kind) {
     super(scene);
     this.kind = kind;
+    this.outline = outline;
     this.rig = new BeastRig({ kind, outline });
     this.body = this.rig.root;
     this.group.add(this.rig.root);
     this.poofColors = this.rig.poofColors;
-    this.koColors = kind === 'yeti' ? ['#e8f6ff', '#2f6fd8'] : ['#ffb347', '#5a2f12'];
+    this.koColors = BEASTS[kind].ko;
+    this.ufo = null;
   }
 
   setup(spec) {
     this.reset(spec);
+    const info = BEASTS[this.kind];
     this.halfW = 0.68;
     this.halfD = 0.55;
-    this.top = this.kind === 'yeti' ? 2.5 : 2.35;
+    this.top = info.top;
     this.bubbleY = this.top + 0.8;
-    this.line = pick(this.kind === 'yeti' ? YETI_LINES : BEAR_LINES);
+    this.line = pick(info.lines);
     this.saidLine = false;
+    this.burst = false;
     this.side = spec.side || (this.lane === 0 ? -1 : this.lane === 2 ? 1 : Math.random() < 0.5 ? -1 : 1);
     if (this.behavior === 'cross') this.x = this.side * (CONFIG.road.halfWidth + 2.4);
     if (this.behavior === 'leap') this.x = this.side * (CONFIG.road.halfWidth + 2.6);
     if (this.behavior === 'charge') this.dist = spec.dist + CHARGE_RUN;
+    if (this.behavior === 'beam' && !this.ufo) {
+      this.ufo = buildUfo(this.outline);
+      this.group.add(this.ufo.group);
+    }
+    if (this.ufo) this.ufo.group.visible = this.behavior === 'beam';
   }
 
-  update(dt, pDist) {
+  update(dt, pDist, speed, world) {
     const dRem = this.baseDist - pDist;
     this.t += dt;
     this.active = dRem < CONFIG.road.ahead;
@@ -327,7 +348,7 @@ export class Beast extends EnemyBase {
     this.yaw = 0;
     const tx = laneX(this.lane);
     if (this.behavior === 'cross') {
-      // Lumbers out of the trees into its lane.
+      // Lumbers in from the roadside into its lane.
       const p = smoothstep(60, 16, dRem);
       this.x = lerp(this.side * (CONFIG.road.halfWidth + 2.4), tx, p);
       if (p > 0 && p < 1) {
@@ -344,7 +365,7 @@ export class Beast extends EnemyBase {
         speedMul = 1.3;
       }
     } else if (this.behavior === 'leap') {
-      // Leaps off the snowbank in a big arc and lands in its lane.
+      // Leaps off the roadside in a big arc and lands in its lane.
       const p = smoothstep(46, 30, dRem);
       this.x = lerp(this.side * (CONFIG.road.halfWidth + 2.6), tx, p);
       this.y = Math.sin(p * Math.PI) * 3.2;
@@ -353,9 +374,38 @@ export class Beast extends EnemyBase {
         this.yaw = -this.side * Math.PI / 2 * Math.sin(p * Math.PI);
       }
       this.collidable = this.y < 1.2;
+    } else if (this.behavior === 'rise') {
+      // Bursts up out of the ground in a cloud of moon dust.
+      const p = smoothstep(54, 38, dRem);
+      this.y = -(1 - p) * 2.9;
+      if (p > 0 && !this.burst) {
+        this.burst = true;
+        world.fx.poof(this.x, 0, this.dist, speed * 0.3, ['#d8dce8', '#9a9ca6', '#ffffff', this.poofColors[2]]);
+      }
+      if (p > 0 && p < 1) mode = 'leap';
+      this.collidable = this.y > -1;
+    } else if (this.behavior === 'beam') {
+      // Floats down a tractor beam, then the saucer zooms off.
+      const p = smoothstep(62, 36, dRem);
+      const q = smoothstep(34, 16, dRem);
+      this.y = (1 - p) * (UFO_HEIGHT - 2.6);
+      const ufo = this.ufo;
+      ufo.group.visible = q < 1 && !this.dying;
+      ufo.group.position.set(q * this.side * 8, UFO_HEIGHT + q * 16 - this.y, -q * 6);
+      ufo.group.rotation.y = this.t * 2;
+      ufo.beam.visible = p < 1;
+      ufo.beam.scale.y = UFO_HEIGHT - 0.3;
+      ufo.beam.material.opacity = 0.22 + Math.sin(this.t * 14) * 0.06;
+      if (p < 1) mode = 'leap';
+      this.collidable = this.y < 1.2;
     }
     this.rig.animate(dt, mode, speedMul);
     this.updateBubble(dt, dRem);
+  }
+
+  updateDying(dt) {
+    if (this.ufo) this.ufo.group.visible = false;
+    return super.updateDying(dt);
   }
 }
 

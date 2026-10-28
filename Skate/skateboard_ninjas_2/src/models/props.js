@@ -23,7 +23,7 @@ const tor = (r, t, rs = 6, ts = 14, arc = Math.PI * 2) => new THREE.TorusGeometr
 // Low-poly rock: an icosahedron with every corner pushed in or out a little.
 // The displacement is hashed from the vertex position so shared corners move
 // together and the faces stay closed.
-function rockGeo(r, seed = 1, detail = 0) {
+export function rockGeo(r, seed = 1, detail = 0) {
   const g = new THREE.IcosahedronGeometry(r, detail);
   const p = g.attributes.position;
   for (let i = 0; i < p.count; i++) {
@@ -75,13 +75,17 @@ export const OBSTACLE_INFO = {
   surfRack: { cat: 'high', bottom: 1.25, top: 1.9, halfD: 0.4 },
   snowArch: { cat: 'high', bottom: 1.2, top: 2.1, halfD: 0.4 },
   neonSign: { cat: 'high', bottom: 1.25, top: 2.6, halfD: 0.12 },
+  satellite: { cat: 'high', bottom: 1.2, top: 2.2, halfD: 0.45 },
+  rover: { cat: 'low', top: 0.95, halfD: 0.5, halfW: 0.6, moving: true },
+  // Falls from the sky and leaves a burning crater (World.moveObstacle).
+  fireball: { cat: 'block', top: 2.2, halfD: 0.8, halfW: 0.85, moving: true },
 };
 
 // Spans each obstacle can be built at (lanes wide).
 export const OBSTACLE_SPANS = {
   barrier: [1, 2], lowBar: [1, 2, 3], log: [1, 3], snowdrift: [1, 3], roots: [1, 3],
   sign: [1, 3], pipeBar: [1, 3], banner: [1, 3], branch: [1, 3], surfRack: [1, 3],
-  snowArch: [1, 3], neonSign: [1, 3], rocks: [1], crates: [1], hay: [1],
+  snowArch: [1, 3], neonSign: [1, 3], satellite: [1, 3], rocks: [1], crates: [1], hay: [1],
 };
 export const spansFor = (type) => OBSTACLE_SPANS[type] || [1];
 
@@ -107,6 +111,36 @@ function stripedBar(b, w, h, y, z, c1, c2, seg = 0.42, glow = false) {
 function surfboardInto(b, color, stripe, pos, rot, len = 2.1) {
   b.add(sph(0.5, 10, 8), color, { pos, rot, scale: [0.55, len / 1, 0.09] });
   b.add(box(0.06, len * 0.85, 0.12), stripe, { pos, rot });
+}
+
+// Glowing orange cracks over a rock of radius r centred at height y.
+function lavaCracksInto(b, r, y, zScale = 1) {
+  for (let i = 0; i < 7; i++) {
+    const a = hash2(i, 31) * Math.PI * 2;
+    const t = (hash2(i, 32) - 0.5) * 1.2;
+    b.add(box(0.07, 0.5 + hash2(i, 33) * 0.5, 0.07), i % 2 ? '#ff6a1a' : '#ffb020', {
+      pos: [Math.cos(a) * r * 0.92, y + t * r * 0.7, Math.sin(a) * r * 0.92 * zScale],
+      rot: [hash2(i, 34) * 2, -a, hash2(i, 35) - 0.5],
+      glow: true,
+    });
+  }
+}
+
+// A small six-wheeled rover facing +X.
+function roverInto(b, s = 1) {
+  b.add(box(1.1 * s, 0.32 * s, 0.75 * s), '#e9ecf2', { pos: [0, 0.55 * s, 0] });
+  b.add(box(1.25 * s, 0.05 * s, 0.95 * s), '#2a4fa8', { pos: [0, 0.74 * s, 0] });
+  for (let i = 0; i < 4; i++) b.add(box(0.02 * s, 0.06 * s, 0.95 * s), '#9fd3ff', { pos: [(-0.45 + i * 0.3) * s, 0.75 * s, 0] });
+  b.add(box(0.36 * s, 0.22 * s, 0.4 * s), '#e8b84a', { pos: [-0.2 * s, 0.38 * s, 0] });
+  for (const x of [-0.42, 0, 0.42]) {
+    for (const z of [-0.45, 0.45]) {
+      b.add(cyl(0.17 * s, 0.17 * s, 0.14 * s, 10), '#3a3a44', { pos: [x * s, 0.17 * s, z * s], rot: [Math.PI / 2, 0, 0] });
+      b.add(cyl(0.07 * s, 0.07 * s, 0.15 * s, 8), '#c9ccd6', { pos: [x * s, 0.17 * s, z * s], rot: [Math.PI / 2, 0, 0] });
+    }
+  }
+  b.add(cyl(0.03 * s, 0.03 * s, 0.6 * s, 5), '#c9ccd6', { pos: [0.4 * s, 1.05 * s, 0] });
+  b.add(box(0.2 * s, 0.14 * s, 0.26 * s), '#e9ecf2', { pos: [0.42 * s, 1.38 * s, 0] });
+  for (const z of [-0.06, 0.06]) b.add(sph(0.035 * s, 6, 4), '#3de1ff', { pos: [0.53 * s, 1.39 * s, z * s], glow: true });
 }
 
 const OBSTACLE_BUILDERS = {
@@ -139,12 +173,13 @@ const OBSTACLE_BUILDERS = {
 
   boulder(span, env, snowy = false) {
     const b = new GeoBuilder();
-    const rock = env.id === 'sunset' ? '#a0523a' : env.id === 'beach' ? '#b39b7a' : '#80828c';
+    const rock = env.rock || (env.id === 'sunset' ? '#a0523a' : env.id === 'beach' ? '#b39b7a' : '#80828c');
     b.add(rockGeo(1.15, 3), rock, { pos: [0, 1.05, 0], scale: [1, 1.05, 0.85] });
     b.add(rockGeo(0.5, 7), rock, { pos: [0.8, 0.3, 0.3] });
     b.add(rockGeo(0.4, 9), rock, { pos: [-0.85, 0.25, 0.25] });
     if (snowy) b.add(sph(0.95, 10, 6), '#ffffff', { pos: [0, 1.85, 0], scale: [1, 0.35, 0.85] });
     else if (env.id === 'forest') b.add(sph(0.5, 8, 5), '#4f9e3c', { pos: [-0.3, 1.9, 0.2], scale: [1.2, 0.35, 1] });
+    else if (env.id === 'volcano') lavaCracksInto(b, 1.0, 1.05, 0.8);
     return b;
   },
 
@@ -264,7 +299,7 @@ const OBSTACLE_BUILDERS = {
 
   rocks(span, env) {
     const b = new GeoBuilder();
-    const rock = env.id === 'sunset' ? '#a8603f' : env.id === 'snow' ? '#9fb0c6' : '#8a8c95';
+    const rock = env.rock || (env.id === 'sunset' ? '#a8603f' : env.id === 'snow' ? '#9fb0c6' : '#8a8c95');
     b.add(rockGeo(0.5, 2), rock, { pos: [-0.45, 0.35, 0] });
     b.add(rockGeo(0.42, 5), rock, { pos: [0.4, 0.3, 0.1] });
     b.add(rockGeo(0.3, 8), rock, { pos: [0.05, 0.2, 0.35] });
@@ -510,6 +545,50 @@ const OBSTACLE_BUILDERS = {
     }
     return b;
   },
+
+  // A crashed satellite propped up on rubble across the lanes: slide under.
+  satellite(span, env) {
+    const b = new GeoBuilder();
+    const w = spanWidth(span, 0.3);
+    for (const sd of [-1, 1]) {
+      b.add(rockGeo(0.5, 3 + sd), env.rock || '#8a8c95', { pos: [sd * w / 2, 0.45, 0], scale: [0.9, 1.7, 0.9] });
+      b.add(box(0.12, 1.3, 0.12), '#c9ccd6', { pos: [sd * (w / 2 - 0.05), 0.65, 0.2], rot: [0, 0, sd * 0.1] });
+    }
+    b.add(box(w, 0.06, 0.85), '#1f3a8a', { pos: [0, 1.5, 0] });
+    const n = Math.max(3, Math.round(w / 0.45));
+    for (let i = 0; i <= n; i++) b.add(box(0.03, 0.07, 0.87), '#9fd3ff', { pos: [-w / 2 + (i * w) / n, 1.5, 0] });
+    b.add(box(w, 0.07, 0.03), '#9fd3ff', { pos: [0, 1.5, 0] });
+    b.add(box(0.95, 0.75, 0.8), '#e8b84a', { pos: [0, 1.75, 0] });
+    for (let i = 0; i < 4; i++) b.add(box(0.96, 0.03, 0.81), '#b8863a', { pos: [0, 1.48 + i * 0.18, 0] });
+    b.add(cyl(0.38, 0.08, 0.18, 14), '#e9ecf2', { pos: [0.1, 2.25, 0], rot: [0.5, 0, 0.3] });
+    b.add(cyl(0.02, 0.02, 0.5, 4), '#c9ccd6', { pos: [-0.3, 2.3, 0] });
+    b.add(sph(0.06, 6, 4), '#ff2e55', { pos: [-0.3, 2.56, 0], glow: true });
+    return b;
+  },
+
+  rover() {
+    const b = new GeoBuilder();
+    roverInto(b, 1);
+    return b;
+  },
+
+  // The burning crater a fireball leaves behind. The ball and the warning ring
+  // are separate pieces (piecePrefab) so they can move on their own.
+  fireball() {
+    const b = new GeoBuilder();
+    b.add(cyl(1.15, 1.25, 0.06, 14), '#140c0c', { pos: [0, 0.03, 0] });
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      b.add(rockGeo(0.28, i + 3), '#2a2024', { pos: [Math.cos(a) * 1.05, 0.12, Math.sin(a) * 1.05] });
+      b.add(box(0.06, 0.02, 0.9), '#ff6a1a', { pos: [Math.cos(a) * 0.55, 0.065, Math.sin(a) * 0.55], rot: [0, -a + Math.PI / 2, 0], glow: true });
+    }
+    b.add(rockGeo(0.5, 7), '#2e2226', { pos: [0, 0.35, 0] });
+    lavaCracksInto(b, 0.5, 0.35);
+    const flames = [[0, 0, 1.9, 0.5, '#ff6a1a'], [0.45, 0.2, 1.3, 0.35, '#ff8a1a'], [-0.4, 0.25, 1.5, 0.38, '#ff4a1a'],
+      [0.1, -0.45, 1.2, 0.3, '#ffb020'], [-0.2, -0.1, 1.0, 0.28, '#ffd23f'], [0.25, 0.4, 0.9, 0.25, '#ffd23f']];
+    for (const [x, z, h, r, c] of flames) b.add(cone(r, h, 7), c, { pos: [x, 0.3 + h / 2, z], glow: true });
+    return b;
+  },
 };
 
 // ---------------------------------------------------------- course pieces
@@ -602,6 +681,36 @@ function iceBuilder(span) {
   return b;
 }
 
+// A falling fireball: molten core, burning shell, flame trail pointing up.
+function fireballBallBuilder() {
+  const b = new GeoBuilder();
+  b.add(sph(0.85, 12, 9), '#ff4a1a', { glow: true });
+  b.add(sph(0.62, 12, 9), '#ffd23f', { pos: [0, -0.15, 0.25], glow: true });
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2;
+    b.add(rockGeo(0.32, i + 1), '#2a2024', { pos: [Math.cos(a) * 0.62, -0.25 + (i % 2) * 0.3, Math.sin(a) * 0.62] });
+  }
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2;
+    const h = 1.6 + (i % 3) * 0.7;
+    b.add(cone(0.32, h, 7), i % 2 ? '#ff8a1a' : '#ffb020', { pos: [Math.cos(a) * 0.35, 0.5 + h / 2, Math.sin(a) * 0.35], glow: true });
+  }
+  b.add(cone(0.5, 3.4, 8), '#ff5a1a', { pos: [0, 2.2, 0], glow: true });
+  return b;
+}
+
+// Glowing target ring on the road where a fireball is about to land.
+function fireMarkerBuilder() {
+  const b = new GeoBuilder();
+  b.add(tor(1.05, 0.08, 4, 28), '#ff3d1a', { pos: [0, 0.04, 0], rot: [Math.PI / 2, 0, 0], glow: true });
+  b.add(tor(0.6, 0.05, 4, 20), '#ffb020', { pos: [0, 0.04, 0], rot: [Math.PI / 2, 0, 0], glow: true });
+  for (let i = 0; i < 4; i++) {
+    const a = (i / 4) * Math.PI * 2 + Math.PI / 4;
+    b.add(box(0.5, 0.02, 0.1), '#ff3d1a', { pos: [Math.cos(a) * 0.35, 0.045, Math.sin(a) * 0.35], rot: [0, -a, 0], glow: true });
+  }
+  return b;
+}
+
 function chestBuilder() {
   const b = new GeoBuilder();
   b.add(box(1.0, 0.55, 0.65), '#8b3a2b', { pos: [0, 0.28, 0] });
@@ -663,7 +772,8 @@ export const SCENERY_INFO = {
   barn: { r: 4 }, windmill: { r: 5 }, lamp: { r: 0.3 }, house: { r: 3.5 }, tower: { r: 4 },
   pineSnow: { r: 1.6 }, snowMound: { r: 1.2 }, rockSnow: { r: 1.2 }, cabin: { r: 3 }, palm: { r: 1.5 },
   umbrellaProp: { r: 1.2 }, shell: { r: 0.3 }, hutProp: { r: 2.5 }, pineTall: { r: 1.8 }, oak: { r: 2.6 },
-  fern: { r: 0.7 }, mushroom: { r: 0.4 },
+  fern: { r: 0.7 }, mushroom: { r: 0.4 }, moonFlag: { r: 0.5 }, moonDish: { r: 1.4 }, lander: { r: 3 },
+  marsSpire: { r: 1.5 }, roverProp: { r: 1 }, habitat: { r: 4.5 }, lavaRock: { r: 1.4 }, deadTree: { r: 1.2 }, lavaVent: { r: 1.2 },
 };
 
 function pineInto(b, h, green, cap) {
@@ -697,14 +807,14 @@ const SCENERY_BUILDERS = {
   },
   rockSmall(env) {
     const b = new GeoBuilder();
-    const c = env.id === 'sunset' ? '#b0633f' : env.id === 'snow' ? '#9fb0c6' : '#8a8c95';
+    const c = env.rock || (env.id === 'sunset' ? '#b0633f' : env.id === 'snow' ? '#9fb0c6' : '#8a8c95');
     b.add(rockGeo(0.45, 4), c, { pos: [0, 0.2, 0] });
     b.add(rockGeo(0.28, 6), c, { pos: [0.45, 0.1, 0.2] });
     return b;
   },
   rockBig(env) {
     const b = new GeoBuilder();
-    const c = env.id === 'sunset' ? '#b0583c' : env.id === 'beach' ? '#9c8a74' : '#7c7f8a';
+    const c = env.rock || (env.id === 'sunset' ? '#b0583c' : env.id === 'beach' ? '#9c8a74' : '#7c7f8a');
     b.add(rockGeo(2.2, 11, 1), c, { pos: [0, 1.2, 0], scale: [1, 0.9, 0.9] });
     b.add(rockGeo(1.1, 12), c, { pos: [1.9, 0.5, 0.6] });
     return b;
@@ -918,6 +1028,101 @@ const SCENERY_BUILDERS = {
     b.add(sph(0.14, 8, 5), '#ff8c1a', { pos: [0.3, 0.24, 0.1], scale: [1, 0.6, 1] });
     return b;
   },
+
+  // --- the moon
+  moonFlag() {
+    const b = new GeoBuilder();
+    b.add(cyl(0.035, 0.035, 2.4, 6), '#e9ecf2', { pos: [0, 1.2, 0] });
+    b.add(cyl(0.02, 0.02, 1.0, 4), '#e9ecf2', { pos: [0.5, 2.35, 0], rot: [0, 0, Math.PI / 2] });
+    b.add(box(1.0, 0.62, 0.02), '#ffffff', { pos: [0.5, 2.03, 0] });
+    b.add(box(0.98, 0.12, 0.025), '#3d7bff', { pos: [0.5, 1.82, 0] });
+    b.add(cyl(0.12, 0.12, 0.03, 5), '#ffcc33', { pos: [0.5, 2.1, 0.01], rot: [Math.PI / 2, 0, 0] });
+    for (let i = 0; i < 5; i++) b.add(box(0.12, 0.02, 0.28), '#6e707c', { pos: [(hash2(i, 61) - 0.3) * 1.4, 0.01, (hash2(i, 62) - 0.5) * 1.2], rot: [0, hash2(i, 63) * 3, 0] });
+    return b;
+  },
+  moonDish() {
+    const b = new GeoBuilder();
+    b.add(cyl(0.12, 0.2, 1.6, 8), '#c9ccd6', { pos: [0, 0.8, 0] });
+    b.add(box(0.6, 0.12, 0.6), '#8a8c95', { pos: [0, 0.06, 0] });
+    b.add(new THREE.SphereGeometry(1.0, 14, 6, 0, Math.PI * 2, 0, 1.1), '#e9ecf2', { pos: [0, 2.2, 0], rot: [Math.PI - 0.6, 0, 0] });
+    b.add(cyl(0.03, 0.03, 0.9, 4), '#c9ccd6', { pos: [0, 2.0, 0.3], rot: [0.6, 0, 0] });
+    b.add(sph(0.08, 6, 4), '#ff2e55', { pos: [0, 2.4, 0.6], glow: true });
+    return b;
+  },
+  lander() {
+    const b = new GeoBuilder();
+    b.add(box(2.2, 1.2, 2.2), '#e8b84a', { pos: [0, 1.4, 0], rot: [0, Math.PI / 4, 0] });
+    for (let i = 0; i < 4; i++) b.add(box(2.25, 0.04, 0.05), '#b8863a', { pos: [0, 1.0 + i * 0.27, 0], rot: [0, Math.PI / 4 + (i % 2) * Math.PI / 2, 0] });
+    b.add(new THREE.CylinderGeometry(1.1, 1.3, 1.4, 8), '#d8dce4', { pos: [0, 2.7, 0] });
+    b.add(box(0.5, 0.5, 0.06), '#1a1c2a', { pos: [0, 2.8, 1.12] });
+    b.add(cone(0.5, 0.6, 8), '#6e707c', { pos: [0, 0.65, 0], rot: [Math.PI, 0, 0] });
+    for (let i = 0; i < 4; i++) {
+      const a = (i / 4) * Math.PI * 2;
+      b.add(cyl(0.06, 0.06, 2.0, 5), '#c9ccd6', { pos: [Math.cos(a) * 1.5, 0.8, Math.sin(a) * 1.5], rot: [Math.sin(a) * 0.5, 0, -Math.cos(a) * 0.5] });
+      b.add(cyl(0.28, 0.32, 0.08, 10), '#c9ccd6', { pos: [Math.cos(a) * 1.95, 0.04, Math.sin(a) * 1.95] });
+    }
+    b.add(cyl(0.03, 0.03, 1.0, 4), '#c9ccd6', { pos: [0.5, 3.8, 0] });
+    b.add(new THREE.SphereGeometry(0.4, 10, 5, 0, Math.PI * 2, 0, 1.2), '#e9ecf2', { pos: [0.5, 4.3, 0], rot: [Math.PI, 0, 0] });
+    return b;
+  },
+
+  // --- mars
+  marsSpire(env) {
+    const b = new GeoBuilder();
+    const c = env.rock || '#a8482a';
+    b.add(cyl(0.5, 1.1, 3.2, 7), c, { pos: [0, 1.6, 0] });
+    b.add(cyl(0.9, 0.55, 0.9, 7), '#c4572f', { pos: [0.1, 3.6, 0], rot: [0, 0.4, 0.1] });
+    b.add(rockGeo(0.6, 4), '#8a3a22', { pos: [0.9, 0.3, 0.4] });
+    b.add(rockGeo(0.4, 6), c, { pos: [-0.8, 0.2, -0.3] });
+    return b;
+  },
+  roverProp() {
+    const b = new GeoBuilder();
+    roverInto(b, 1.2);
+    return b;
+  },
+  habitat() {
+    const b = new GeoBuilder();
+    b.add(new THREE.SphereGeometry(3.4, 18, 8, 0, Math.PI * 2, 0, Math.PI / 2), '#e9ecf2', {});
+    b.add(cyl(3.5, 3.6, 0.4, 18), '#8a8c95', { pos: [0, 0.2, 0] });
+    for (let i = 0; i < 3; i++) b.add(tor(3.4, 0.06, 4, 24, Math.PI), '#b8bcc8', { rot: [0, (i / 3) * Math.PI, 0] });
+    b.add(box(1.4, 1.6, 1.8), '#d8dce4', { pos: [0, 0.8, 3.4] });
+    b.add(box(0.7, 1.0, 0.06), '#3de1ff', { pos: [0, 0.75, 4.31], glow: true });
+    b.add(cyl(1.2, 1.2, 2.2, 12), '#d8dce4', { pos: [4.6, 1.1, -1] });
+    b.add(new THREE.SphereGeometry(1.2, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), '#e9ecf2', { pos: [4.6, 2.2, -1] });
+    b.add(cyl(0.05, 0.05, 2.6, 4), '#c9ccd6', { pos: [-2, 4.2, 0] });
+    b.add(sph(0.1, 6, 4), '#ff2e55', { pos: [-2, 5.5, 0], glow: true });
+    for (let i = 0; i < 3; i++) b.add(box(1.6, 0.05, 1.0), '#2a4fa8', { pos: [-5.2, 0.9, -1.5 + i * 1.2], rot: [0.5, 0, 0] });
+    return b;
+  },
+
+  // --- volcano
+  lavaRock(env) {
+    const b = new GeoBuilder();
+    const c = env.rock || '#3a3034';
+    b.add(rockGeo(1.2, 21, 1), c, { pos: [0, 0.8, 0], scale: [1, 0.8, 1] });
+    b.add(rockGeo(0.6, 22), c, { pos: [1.1, 0.3, 0.3] });
+    lavaCracksInto(b, 1.15, 0.8);
+    return b;
+  },
+  deadTree() {
+    const b = new GeoBuilder();
+    const wood = '#1e1416';
+    b.add(cyl(0.14, 0.26, 3.2, 6), wood, { pos: [0, 1.6, 0], rot: [0, 0, 0.08] });
+    b.add(cyl(0.06, 0.1, 1.5, 5), wood, { pos: [0.45, 2.6, 0], rot: [0, 0, -0.8] });
+    b.add(cyl(0.05, 0.09, 1.2, 5), wood, { pos: [-0.4, 2.2, 0.1], rot: [0.2, 0, 0.9] });
+    b.add(cyl(0.04, 0.07, 0.9, 5), wood, { pos: [0.1, 3.4, -0.2], rot: [-0.5, 0, 0.3] });
+    b.add(box(0.05, 0.6, 0.05), '#ff6a1a', { pos: [0.05, 0.6, 0.2], glow: true });
+    return b;
+  },
+  lavaVent() {
+    const b = new GeoBuilder();
+    b.add(cyl(0.45, 1.2, 1.1, 8), '#2a2024', { pos: [0, 0.55, 0] });
+    b.add(cyl(0.42, 0.42, 0.06, 8), '#ffb020', { pos: [0, 1.1, 0], glow: true });
+    b.add(sph(0.35, 8, 5), '#ff6a1a', { pos: [0.6, 0.05, 0.5], scale: [2.2, 0.2, 1.4], glow: true });
+    for (let i = 0; i < 3; i++) b.add(sph(0.35 + i * 0.12, 8, 6), '#5a4a4c', { pos: [0.1 * i, 1.6 + i * 0.7, -0.1 * i], scale: [1, 0.8, 1] });
+    return b;
+  },
 };
 
 // ------------------------------------------------------------------ cache
@@ -943,6 +1148,8 @@ export function piecePrefab(kind, span, env) {
       : kind === 'rail' ? railSegBuilder(env)
       : kind === 'gap' ? gapBuilder(span, env)
       : kind === 'ice' ? iceBuilder(span)
+      : kind === 'fireballBall' ? fireballBallBuilder()
+      : kind === 'fireMarker' ? fireMarkerBuilder()
       : chestBuilder();
     cache.set(key, b.build());
   }

@@ -65,6 +65,8 @@ export const CONFIG = {
     ninja: 200,
     bear: 250,
     yeti: 250,
+    rockAlien: 250,
+    alien: 250,
     ball: 80,
     nearMiss: 60,
     jumpOver: 25,

@@ -3,7 +3,7 @@
 An endless 3D downhill runner for desktop and mobile browsers. Your ninja
 bombs down a winding mountain road on a longboard or hoverboard: switch
 lanes, jump, slide, grind rails, hit ramps, and throw ninja stars at Angry
-Karens and rival ninjas. Every run picks one of six environments at random.
+Karens and rival ninjas. Every run picks one of nine environments at random.
 
 Built with HTML, CSS, JavaScript ES modules and [Three.js](https://threejs.org)
 r170, which is included in `vendor/`. There's no build step and nothing to
@@ -113,18 +113,22 @@ Controls are forgiving:
 
 ### Environments
 
-| Environment                      | Gimmick                                    | Challenge              |
-| -------------------------------- | ------------------------------------------ | ---------------------- |
-| Sunset (Sunset Ridge)            | Tumbleweeds roll across the road           | Jump 6 tumbleweeds     |
-| Daytime (Sunny Hills)            | Hay bales                                  | Hop 8 hay bales        |
-| Nighttime (Midnight Descent)     | Glowing road, neon signs, street lamps     | Knock out 5 enemies    |
-| Snowy Mountains (Frostbite Pass) | Icy patches make lane changes slippery     | Cross 6 icy patches    |
-| Beach (Coconut Coast)            | Bouncing beach balls (pop them with stars) | Pop 4 beach balls      |
-| Forest (Whispering Woods)        | Fallen branches, sunbeams                  | Slide under 5 branches |
+| Environment                      | Gimmick                                    | Local enemy                | Challenge                |
+| -------------------------------- | ------------------------------------------ | -------------------------- | ------------------------ |
+| Sunset (Sunset Ridge)            | Tumbleweeds roll across the road           |                            | Jump 6 tumbleweeds       |
+| Daytime (Sunny Hills)            | Hay bales                                  |                            | Hop 8 hay bales          |
+| Nighttime (Midnight Descent)     | Glowing road, neon signs, street lamps     |                            | Knock out 5 enemies      |
+| Snowy Mountains (Frostbite Pass) | Icy patches make lane changes slippery     | Yeti (leaps off the bank)  | Cross 6 icy patches      |
+| Beach (Coconut Coast)            | Bouncing beach balls (pop them with stars) |                            | Pop 4 beach balls        |
+| Forest (Whispering Woods)        | Fallen branches, sunbeams                  | Bear (wanders out, charges)| Slide under 5 branches   |
+| The Moon (Tranquility Drop)      | Craters, Earth in the sky, crashed satellites | Moon rock alien (bursts out of the ground) | Slide under 5 satellites |
+| Mars (Red Planet Rush)           | Red dunes, two moons, runaway rovers       | Green alien (beams down from a UFO) | Jump 5 rovers   |
+| Volcano (Magma Mountain)         | Lava river, embers, fireballs crash into lanes (a glowing ring marks the spot) | | Dodge 8 fireballs |
 
 Each environment has its own sky, lighting, fog, terrain, roadside props,
 weather particles, obstacle set and ambient soundscape. The same environment
-never comes up twice in a row.
+never comes up twice in a row. Local enemies only appear in their own
+environment and go down to a single ninja star like everyone else.
 
 ### Missions
 
@@ -185,13 +189,13 @@ skateboard_ninjas_2/
     ├── main.js           entry point (WebGL check)
     ├── Game.js           state machine, main loop, scoring events, saving
     ├── config.js         every tuning number (speeds, physics, scoring…)
-    ├── environments.js   the six environments
+    ├── environments.js   the nine environments
     ├── cosmetics.js      colour swatches, unlock costs, default look
     ├── storage.js        save data + validation
     ├── Track.js          road, terrain, sky, mountains, scenery, weather, the road bend
     ├── World.js          obstacles, enemies, coins, power-ups, collisions, projectiles
     ├── Generator.js      procedural, always-fair course patterns
-    ├── Enemies.js        Karen and evil ninja behaviours
+    ├── Enemies.js        Karen, evil ninja and local beast behaviours
     ├── Player.js         movement, tricks, crash, procedural animation
     ├── CameraRig.js      chase cam, showroom orbit, intro swoop, crash cam
     ├── Particles.js      bursts, sparks, trails, comic words
@@ -235,7 +239,8 @@ the player, which keeps numbers small on very long runs.
 
 ### Testing helpers
 
-- `?env=snow` (or `sunset`, `daytime`, `night`, `beach`, `forest`) forces that
+- `?env=snow` (or `sunset`, `daytime`, `night`, `beach`, `forest`, `moon`,
+  `mars`, `volcano`) forces that
   environment for every run.
 - `?debug=1` draws collision boxes: yellow = jump, cyan = slide, magenta = go
   around, red = enemies.
@@ -282,3 +287,4 @@ licensed (`vendor/LICENSE-three.txt`). Music is from `assets/music/`.
 - Back flip button for extra points
 - Don't auto grind, make them have to jump on it or they bail if they hit it
 - Multiplier can get up to 10x
+- In pause menu, add missions to the menu for visibility 

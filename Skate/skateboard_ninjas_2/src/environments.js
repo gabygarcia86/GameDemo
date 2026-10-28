@@ -1,11 +1,13 @@
-// The six environments. Each run picks one at random (never the same one twice
+// The nine environments. Each run picks one at random (never the same one twice
 // in a row). Everything that makes an environment look, sound and play
-// differently lives here so it's easy to tweak or add a seventh.
+// differently lives here so it's easy to tweak or add a tenth.
 //
 // Obstacle lists name prefabs from models/props.js:
 //   block - tall, must change lanes      low  - knee high, jump it
 //   high  - overhead bar, slide under    special - the environment's gimmick
 // beast (optional) names a local enemy that only shows up there (Enemies.js).
+// rock / dust (optional) colour the rocks and landing dust; planets hang extra
+// worlds in the sky; specialWeight makes the gimmick chunk come up more often.
 
 export const ENVIRONMENTS = {
   sunset: {
@@ -178,6 +180,102 @@ export const ENVIRONMENTS = {
     challenge: { stat: 'branches', target: 5, text: 'Slide under 5 fallen branches' },
     lamps: false,
     sunbeams: true,
+  },
+
+  moon: {
+    id: 'moon',
+    name: 'THE MOON',
+    title: 'Tranquility Drop',
+    blurb: 'Craters, moon dust and a great view of home.',
+    sky: { top: '#000003', mid: '#03040c', horizon: '#141726', bottom: '#1c1f2c' },
+    sun: { color: '#ffffff', glow: '#9fb4ff', dir: [-0.45, 0.4, -1], size: 0.035 },
+    fog: { color: '#141726', near: 75, far: 240 },
+    hemi: { sky: '#d6dbe8', ground: '#383a46', intensity: 1.15 },
+    light: { color: '#ffffff', intensity: 2.7, dir: [-0.5, 0.6, -0.4] },
+    road: { base: '#5e606b', speck: '#72747f', line: '#ffffff', edge: '#9fd3ff', curb: ['#ffffff', '#3d7bff'], glow: false, craters: 'rgba(30,32,44,0.35)' },
+    terrain: { profile: 'craters', low: '#9a9ca6', mid: '#b2b4be', high: '#6e707c', hill: 7, shoulder: '#83858f' },
+    mountains: { far: '#4a4d5c', near: '#33364a', snow: false, scale: 0.8 },
+    clouds: { color: '#ffffff', count: 0 },
+    stars: true,
+    planets: [{ kind: 'earth', dir: [0.35, 0.3, -1], size: 240 }],
+    weather: { type: 'motes', color: '#d8dce8', count: 50 },
+    scenery: { near: ['rockSmall', 'moonFlag', 'rockSmall', 'moonDish'], far: ['lander', 'rockBig', 'moonDish', 'rockBig'] },
+    obstacles: {
+      block: ['boulder', 'crates', 'barrier'],
+      low: ['rocks', 'crate', 'lowBar'],
+      high: ['satellite', 'pipeBar'],
+    },
+    special: 'satellite',
+    beast: 'rockAlien',
+    rock: '#8c8e9a',
+    dust: '#d8dce8',
+    ambience: 'space',
+    challenge: { stat: 'satellites', target: 5, text: 'Slide under 5 crashed satellites' },
+    lamps: false,
+  },
+
+  mars: {
+    id: 'mars',
+    name: 'MARS',
+    title: 'Red Planet Rush',
+    blurb: 'Rust-red dunes, dust devils and somebody\'s rover.',
+    sky: { top: '#4a2016', mid: '#b4603e', horizon: '#e8a274', bottom: '#d08458' },
+    sun: { color: '#fff4e0', glow: '#ffd0a0', dir: [0.3, 0.42, -1], size: 0.03 },
+    fog: { color: '#cf8058', near: 55, far: 215 },
+    hemi: { sky: '#ffcaa0', ground: '#6b2a18', intensity: 1.25 },
+    light: { color: '#ffdcb8', intensity: 2.2, dir: [0.4, 0.7, -0.5] },
+    road: { base: '#5c3a30', speck: '#73483a', line: '#ffd23f', edge: '#ffd0aa', curb: ['#ffffff', '#ff5e3a'], glow: false, craters: 'rgba(60,20,10,0.3)' },
+    terrain: { profile: 'craters', low: '#c4572f', mid: '#d86c3c', high: '#8a3a22', hill: 11, shoulder: '#a8482a' },
+    mountains: { far: '#a4563c', near: '#7a3424', snow: false, scale: 1.3 },
+    clouds: { color: '#f0b090', count: 5 },
+    stars: false,
+    planets: [{ kind: 'phobos', dir: [-0.5, 0.45, -1], size: 34 }, { kind: 'deimos', dir: [0.62, 0.6, -1], size: 18 }],
+    weather: { type: 'dust', color: '#ffb488', count: 170 },
+    scenery: { near: ['rockSmall', 'marsSpire', 'rockSmall', 'roverProp'], far: ['habitat', 'rockBig', 'marsSpire', 'rockBig'] },
+    obstacles: {
+      block: ['boulder', 'crates', 'barrier'],
+      low: ['rocks', 'crate', 'lowBar'],
+      high: ['sign', 'pipeBar'],
+    },
+    special: 'rover',
+    beast: 'alien',
+    rock: '#a8482a',
+    dust: '#e09060',
+    ambience: 'mars',
+    challenge: { stat: 'rovers', target: 5, text: 'Jump over 5 runaway rovers' },
+    lamps: false,
+  },
+
+  volcano: {
+    id: 'volcano',
+    name: 'VOLCANO',
+    title: 'Magma Mountain',
+    blurb: 'Lava on the left, fire from the sky. Keep moving.',
+    sky: { top: '#140606', mid: '#4a140c', horizon: '#ff6a2a', bottom: '#3a120c' },
+    sun: { color: '#ffb070', glow: '#ff4a1a', dir: [0.1, 0.12, -1], size: 0.06 },
+    fog: { color: '#4a1a12', near: 45, far: 200 },
+    hemi: { sky: '#ff9a6a', ground: '#2a0e0a', intensity: 1.05 },
+    light: { color: '#ffb080', intensity: 1.9, dir: [0.3, 0.7, -0.5] },
+    road: { base: '#2c2428', speck: '#3c3236', line: '#ffb020', edge: '#ff6a1a', curb: ['#ff4a1a', '#1e1618'], glow: true, lava: true },
+    terrain: { profile: 'volcano', low: '#2e2628', mid: '#3c3033', high: '#1c1618', hill: 18, shoulder: '#3a2a26' },
+    mountains: { far: '#3a1612', near: '#200c0a', snow: true, snowColor: '#d8441a', scale: 1.7 },
+    water: { color: '#ff5a14', glow: '#ff3a00', level: -3.2, side: -1 },
+    clouds: { color: '#5a2a22', count: 9 },
+    stars: false,
+    weather: { type: 'embers', color: '#ffa040', count: 160 },
+    scenery: { near: ['lavaRock', 'deadTree', 'rockSmall', 'lavaVent'], far: ['lavaRock', 'rockBig', 'deadTree', 'lavaVent'] },
+    obstacles: {
+      block: ['boulder', 'barrier'],
+      low: ['rocks', 'lowBar', 'crate'],
+      high: ['sign', 'pipeBar'],
+    },
+    special: 'fireball',
+    specialWeight: 2.4,
+    rock: '#3a3034',
+    dust: '#5a4a48',
+    ambience: 'volcano',
+    challenge: { stat: 'fireballs', target: 8, text: 'Dodge 8 falling fireballs' },
+    lamps: false,
   },
 };
 

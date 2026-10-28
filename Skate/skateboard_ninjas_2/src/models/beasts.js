@@ -1,8 +1,10 @@
-// The environment beasts: a big roaring bear for the forest and a shaggy yeti
-// for the snowy mountains. One rig, two looks. Both stand on their hind legs,
-// claws out, mouth wide open. Faces +Z (toward the oncoming player).
+// The environment beasts: a big roaring bear for the forest, a shaggy yeti for
+// the snowy mountains, a moon rock alien with glowing crystals and a little
+// green alien from Mars (who arrives by UFO). One rig, four looks. Faces +Z
+// (toward the oncoming player).
 
 import { THREE, toon, addOutlines, bakeRig } from '../gfx.js';
+import { rockGeo } from './props.js';
 
 const INK = '#140c2b';
 const cap = (r, len, seg = 8) => new THREE.CapsuleGeometry(r, len, 4, seg);
@@ -30,18 +32,44 @@ function mesh(geo, mat, parent, pos = [0, 0, 0], rot = [0, 0, 0], scale = [1, 1,
   return m;
 }
 
+// rock, dark rock, crystal glow, second crystal
+const MOON_ROCKS = [
+  ['#8c8e9a', '#62646e', '#5ff0ff', '#b48cff'],
+  ['#9a948a', '#6e675e', '#7dffb0', '#5ff0ff'],
+  ['#7e8296', '#565a6e', '#ff7ae0', '#5ff0ff'],
+];
+// skin, darker skin, suit, suit trim
+const ALIENS = [
+  ['#7be35a', '#4fb83a', '#c4ccdc', '#7b2ff7'],
+  ['#5fd06a', '#3a9a4a', '#9fa8ff', '#ff3df0'],
+  ['#a4e84a', '#74b82a', '#e0e4ee', '#ff8c1a'],
+];
+
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const plain = (m) => {
   m.userData.noOutline = true;
   return m;
 };
+// Unlit glowing material; bakeRig leaves these meshes alone.
+const glow = (color) => new THREE.MeshBasicMaterial({ color });
 
 export class BeastRig {
   constructor({ kind = 'bear', outline = true } = {}) {
     this.kind = kind;
     this.root = new THREE.Group();
-    const coat = pick(kind === 'yeti' ? YETI_COATS : BEAR_COATS);
-    this.mats = {
+    if (kind === 'rockAlien') this.buildRockAlien();
+    else if (kind === 'alien') this.buildAlien();
+    else this.buildFurry();
+    bakeRig(this.root);
+    if (outline) addOutlines(this.root, 0.025);
+    this.t = Math.random() * 10;
+  }
+
+  // Every look builds the same joints (body, hips, legs, torso, head, mouth,
+  // arms) so animate() drives them all.
+  buildFurry() {
+    const coat = pick(this.kind === 'yeti' ? YETI_COATS : BEAR_COATS);
+    const M = this.mats = {
       fur: toon(coat[0]),
       fur2: toon(coat[1]),
       face: toon(coat[2]),
@@ -51,17 +79,9 @@ export class BeastRig {
       white: toon('#ffffff'),
       mouth: toon('#5a1020'),
       tongue: toon('#e8506a'),
-      eye: toon(kind === 'yeti' ? '#ffe066' : '#ffffff'),
+      eye: toon(this.kind === 'yeti' ? '#ffe066' : '#ffffff'),
     };
     this.poofColors = [coat[0], coat[1], coat[2], '#ffffff', '#ffe066'];
-    this.build();
-    bakeRig(this.root);
-    if (outline) addOutlines(this.root, 0.025);
-    this.t = Math.random() * 10;
-  }
-
-  build() {
-    const M = this.mats;
     const yeti = this.kind === 'yeti';
     this.body = new THREE.Group();
     this.root.add(this.body);
@@ -170,6 +190,155 @@ export class BeastRig {
     }
   }
 
+  // A hulking stack of moon rocks with glowing crystals for eyes and a heart.
+  buildRockAlien() {
+    const [rock, dark, glowA, glowB] = pick(MOON_ROCKS);
+    const R = toon(rock);
+    const D = toon(dark);
+    const G = glow(glowA);
+    const G2 = glow(glowB);
+    this.poofColors = [rock, dark, glowA, glowB, '#ffffff'];
+    this.body = new THREE.Group();
+    this.root.add(this.body);
+
+    this.hips = new THREE.Group();
+    this.hips.position.y = 0.85;
+    this.body.add(this.hips);
+    mesh(rockGeo(0.42, 2), D, this.hips, [0, 0, 0], [0, 0, 0], [1.2, 0.8, 1]);
+
+    this.legs = [];
+    for (const s of [-1, 1]) {
+      const thigh = new THREE.Group();
+      thigh.position.set(s * 0.27, -0.05, 0);
+      this.hips.add(thigh);
+      mesh(rockGeo(0.24, 3 + s), R, thigh, [0, -0.25, 0]);
+      mesh(rockGeo(0.25, 5 + s), D, thigh, [0, -0.52, 0.02]);
+      mesh(rockGeo(0.27, 7 + s), R, thigh, [0, -0.74, 0.1], [0, 0, 0], [1.2, 0.5, 1.5]);
+      this.legs.push({ thigh, side: s });
+    }
+
+    this.torso = new THREE.Group();
+    this.torso.position.y = 0.1;
+    this.hips.add(this.torso);
+    mesh(rockGeo(0.62, 9, 1), R, this.torso, [0, 0.55, 0], [0, 0, 0], [1.15, 1.05, 0.85]);
+    // Craters pocking the chest.
+    for (const [x, y, r] of [[-0.3, 0.75, 0.1], [0.32, 0.4, 0.08], [-0.15, 0.25, 0.07], [0.25, 0.85, 0.06]]) {
+      plain(mesh(sph(r, 8, 6), D, this.torso, [x, y, 0.5], [0, 0, 0], [1, 1, 0.3]));
+    }
+    for (let i = 0; i < 3; i++) {
+      plain(mesh(new THREE.ConeGeometry(0.08, 0.35, 5), G, this.torso, [(i - 1) * 0.12, 0.58 + (i % 2) * 0.1, 0.5], [0.4, 0, (i - 1) * 0.4]));
+    }
+    // Crystal growths along the shoulders and back.
+    for (let i = 0; i < 6; i++) {
+      const a = -1.2 + i * 0.48;
+      plain(mesh(new THREE.ConeGeometry(0.1, 0.5 + (i % 2) * 0.2, 5), i % 2 ? G2 : G, this.torso,
+        [Math.sin(a) * 0.5, 0.95 + Math.cos(a) * 0.1, -0.3], [-0.6, 0, -a * 0.8]));
+    }
+
+    this.head = new THREE.Group();
+    this.head.position.y = 1.15;
+    this.torso.add(this.head);
+    mesh(rockGeo(0.32, 13), R, this.head, [0, 0.25, 0], [0, 0, 0], [1.1, 0.95, 1]);
+    mesh(rockGeo(0.16, 14), D, this.head, [0, 0.38, 0.2], [0, 0, 0], [2.2, 0.6, 1]);
+    for (const s of [-1, 1]) plain(mesh(sph(0.065, 10, 8), G, this.head, [s * 0.12, 0.27, 0.27], [0, 0, 0], [1.2, 0.7, 0.6]));
+    this.mouth = mesh(sph(0.1, 10, 8), G, this.head, [0, 0.1, 0.26], [0, 0, 0], [1.4, 0.6, 0.4]);
+    this.mouth.userData.noOutline = true;
+    this.mouth.userData.keep = true;
+    for (let i = 0; i < 3; i++) {
+      plain(mesh(new THREE.ConeGeometry(0.06, 0.3, 5), G2, this.head, [(i - 1) * 0.13, 0.55, -0.05], [-0.3, 0, (1 - i) * 0.4]));
+    }
+
+    this.arms = [];
+    for (const s of [-1, 1]) {
+      const shoulder = new THREE.Group();
+      shoulder.position.set(s * 0.66, 0.85, 0);
+      this.torso.add(shoulder);
+      mesh(rockGeo(0.24, 15 + s), R, shoulder, [0, -0.18, 0]);
+      const elbow = new THREE.Group();
+      elbow.position.y = -0.45;
+      shoulder.add(elbow);
+      mesh(rockGeo(0.21, 17 + s), D, elbow, [0, -0.12, 0]);
+      mesh(rockGeo(0.3, 19 + s), R, elbow, [0, -0.42, 0.03]);
+      for (let i = -1; i <= 1; i++) plain(mesh(new THREE.ConeGeometry(0.04, 0.16, 4), G, elbow, [i * 0.1, -0.5, 0.26], [Math.PI / 2, 0, 0]));
+      this.arms.push({ shoulder, elbow, side: s });
+    }
+  }
+
+  // Big-headed little green alien in a space suit, ray gun in hand.
+  buildAlien() {
+    const [skin, skin2, suit, trim] = pick(ALIENS);
+    const S = toon(skin);
+    const S2 = toon(skin2);
+    const U = toon(suit);
+    const T = toon(trim);
+    const ink = toon('#0a0a14');
+    const white = toon('#ffffff');
+    this.poofColors = [skin, suit, trim, '#ffffff', '#7dffb0'];
+    this.body = new THREE.Group();
+    this.root.add(this.body);
+
+    this.hips = new THREE.Group();
+    this.hips.position.y = 0.78;
+    this.body.add(this.hips);
+    mesh(sph(0.24), U, this.hips, [0, 0, 0], [0, 0, 0], [1.2, 0.8, 1]);
+    mesh(new THREE.TorusGeometry(0.27, 0.04, 6, 18), T, this.hips, [0, 0.08, 0], [Math.PI / 2, 0, 0]);
+
+    this.legs = [];
+    for (const s of [-1, 1]) {
+      const thigh = new THREE.Group();
+      thigh.position.set(s * 0.13, -0.05, 0);
+      this.hips.add(thigh);
+      mesh(cap(0.08, 0.5), U, thigh, [0, -0.33, 0]);
+      mesh(sph(0.12), T, thigh, [0, -0.68, 0.06], [0, 0, 0], [1, 0.6, 1.5]);
+      this.legs.push({ thigh, side: s });
+    }
+
+    this.torso = new THREE.Group();
+    this.torso.position.y = 0.08;
+    this.hips.add(this.torso);
+    mesh(cap(0.22, 0.3), U, this.torso, [0, 0.35, 0], [0, 0, 0], [1.1, 1, 0.85]);
+    plain(mesh(new THREE.CylinderGeometry(0.08, 0.08, 0.02, 12), glow(trim), this.torso, [0, 0.45, 0.2], [Math.PI / 2, 0, 0]));
+    mesh(new THREE.TorusGeometry(0.15, 0.04, 6, 14), T, this.torso, [0, 0.66, 0], [Math.PI / 2, 0, 0]);
+    mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.18, 8), S, this.torso, [0, 0.74, 0]);
+
+    // The famous big head and huge black eyes.
+    this.head = new THREE.Group();
+    this.head.position.y = 0.78;
+    this.torso.add(this.head);
+    mesh(sph(0.4, 18, 14), S, this.head, [0, 0.42, 0], [0, 0, 0], [1.05, 1.1, 0.95]);
+    mesh(sph(0.22, 14, 10), S, this.head, [0, 0.14, 0.06], [0, 0, 0], [1, 1.1, 1]);
+    for (const s of [-1, 1]) {
+      plain(mesh(sph(0.13, 14, 10), ink, this.head, [s * 0.17, 0.4, 0.3], [0, s * 0.35, s * 0.5], [1.5, 0.78, 0.5]));
+      plain(mesh(sph(0.03, 6, 4), white, this.head, [s * 0.17 + 0.04, 0.45, 0.37]));
+      plain(mesh(new THREE.BoxGeometry(0.14, 0.03, 0.04), S2, this.head, [s * 0.17, 0.55, 0.33], [0, 0, s * 0.4]));
+      mesh(new THREE.CylinderGeometry(0.015, 0.02, 0.35, 5), S2, this.head, [s * 0.15, 0.88, 0], [0, 0, -s * 0.35]);
+      plain(mesh(sph(0.06, 8, 6), glow(trim), this.head, [s * 0.21, 1.04, 0]));
+    }
+    this.mouth = mesh(sph(0.06, 10, 8), ink, this.head, [0, 0.12, 0.26], [0, 0, 0], [1.3, 0.6, 0.4]);
+    this.mouth.userData.noOutline = true;
+    this.mouth.userData.keep = true;
+
+    this.arms = [];
+    for (const s of [-1, 1]) {
+      const shoulder = new THREE.Group();
+      shoulder.position.set(s * 0.3, 0.55, 0);
+      this.torso.add(shoulder);
+      mesh(cap(0.07, 0.22), U, shoulder, [0, -0.16, 0]);
+      const elbow = new THREE.Group();
+      elbow.position.y = -0.36;
+      shoulder.add(elbow);
+      mesh(cap(0.055, 0.24), S, elbow, [0, -0.16, 0]);
+      mesh(sph(0.07, 8, 6), S, elbow, [0, -0.34, 0]);
+      for (let i = -1; i <= 1; i++) mesh(new THREE.ConeGeometry(0.025, 0.16, 5), S2, elbow, [i * 0.04, -0.44, 0.02], [Math.PI, 0, 0]);
+      if (s > 0) {
+        mesh(new THREE.BoxGeometry(0.08, 0.12, 0.3), T, elbow, [0, -0.38, 0.12]);
+        mesh(new THREE.CylinderGeometry(0.035, 0.05, 0.2, 8), U, elbow, [0, -0.36, 0.32], [Math.PI / 2, 0, 0]);
+        plain(mesh(sph(0.045, 6, 4), glow('#7dffb0'), elbow, [0, -0.36, 0.43]));
+      }
+      this.arms.push({ shoulder, elbow, side: s });
+    }
+  }
+
   // mode: 'roar' (default: claws up, mouth wide), 'walk', 'run' (charge), 'leap'
   animate(dt, mode, speedMul = 1) {
     this.t += dt * speedMul;
@@ -234,4 +403,28 @@ export class BeastRig {
       this.mouth.scale.set(1.3, 0.8 + swell * 0.6 + Math.abs(Math.sin(t * 18)) * 0.1, 0.45);
     }
   }
+}
+
+// The flying saucer a Mars alien beams down from. The beam is a cone of light
+// whose top sits under the saucer; scale.y sets how far down it reaches.
+export function buildUfo(outline = true) {
+  const group = new THREE.Group();
+  mesh(sph(1.7, 24, 10), toon('#c9ccd6'), group, [0, 0, 0], [0, 0, 0], [1, 0.22, 1]);
+  mesh(sph(1.2, 20, 8), toon('#8a8fa0'), group, [0, -0.12, 0], [0, 0, 0], [1, 0.25, 1]);
+  plain(mesh(new THREE.SphereGeometry(0.75, 18, 10, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshBasicMaterial({ color: '#9ff3ff', transparent: true, opacity: 0.75 }), group, [0, 0.2, 0]));
+  for (let i = 0; i < 10; i++) {
+    const a = (i / 10) * Math.PI * 2;
+    plain(mesh(sph(0.09, 8, 6), glow(i % 2 ? '#ffe066' : '#ff3df0'), group, [Math.cos(a) * 1.55, 0.02, Math.sin(a) * 1.55]));
+  }
+  plain(mesh(new THREE.CylinderGeometry(0.6, 0.6, 0.05, 18), glow('#9fffb0'), group, [0, -0.32, 0]));
+  bakeRig(group);
+  if (outline) addOutlines(group, 0.03);
+  const geo = new THREE.CylinderGeometry(0.55, 1.5, 1, 20, 1, true);
+  geo.translate(0, -0.5, 0);
+  const beam = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+    color: '#9fffb0', transparent: true, opacity: 0.3, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+  }));
+  beam.position.y = -0.3;
+  group.add(beam);
+  return { group, beam };
 }

@@ -35,6 +35,9 @@ const CRASH_REASONS = {
   ninja: ['The rival ninja had the high ground.', 'Ambushed by a rival clan!', 'Ninja vs ninja: the other one won.'],
   bear: ['The bear did not want a hug.', 'Un-bear-ably close.', 'Only you can prevent bear crashes.'],
   yeti: ['Turns out the yeti is real.', 'Abominable driving.', 'The yeti got a selfie. And you.'],
+  rockAlien: ['That rock had a face.', 'Moon rocks: harder than they look.', 'Houston, we have a problem.'],
+  alien: ['Abducted at full speed.', 'Take me to your leader... ouch.', 'A close encounter of the painful kind.'],
+  fireball: ['Toasted!', 'Well done. Extra crispy.', 'The floor is literally lava.'],
   gap: ['The road ended. You did not.', 'Mind the gap!', 'Into the abyss!'],
   default: ['Face, meet obstacle.', 'That one came out of nowhere.', 'Ouch. Right in the board.', 'Bonk.'],
 };
@@ -44,9 +47,11 @@ const OBSTACLE_NAMES = {
   stump: 'a tree stump', cones: 'traffic cones', lowBar: 'a hurdle', rocks: 'some rocks', cart: 'a shopping cart', hay: 'a hay bale',
   log: 'a log', roots: 'tree roots', snowdrift: 'a snowdrift', sandcastle: 'a sandcastle', cooler: 'a cooler', tumbleweed: 'a tumbleweed',
   beachBall: 'a beach ball', sign: 'a road sign', pipeBar: 'a pipe', banner: 'a banner', branch: 'a branch', surfRack: 'a surf rack',
-  snowArch: 'a snowy log', neonSign: 'a neon sign',
+  snowArch: 'a snowy log', neonSign: 'a neon sign', satellite: 'a crashed satellite', rover: 'a runaway rover',
 };
-const KO_CALLOUTS = { karen: 'KAREN POPPED!', ninja: 'NINJA DOWN!', bear: 'BEAR DOWN!', yeti: 'YETI TAMED!' };
+const KO_CALLOUTS = {
+  karen: 'KAREN POPPED!', ninja: 'NINJA DOWN!', bear: 'BEAR DOWN!', yeti: 'YETI TAMED!', rockAlien: 'ROCK ALIEN SMASHED!', alien: 'ALIEN ZAPPED!',
+};
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
 export class Game {
@@ -565,7 +570,7 @@ export class Game {
           break;
         case 'land': {
           this.audio.play('land', e.air > 0.8);
-          const dust = env.id === 'snow' ? '#ffffff' : env.id === 'beach' ? '#f3dc9e' : '#d8cfc4';
+          const dust = env.dust || (env.id === 'snow' ? '#ffffff' : env.id === 'beach' ? '#f3dc9e' : '#d8cfc4');
           if (!e.onRail) this.particles.landing(p.x, this.dist, this.speed, dust);
           if (e.air > 0.9 && this.settings.shake) this.cam.shake(0.18);
           if (e.trick) {
@@ -621,14 +626,17 @@ export class Game {
         }
         case 'avoid':
           st.avoided++;
+          if (e.objType === 'fireball') st.fireballs++;
           if (e.how === 'jump') {
             st.jumpOvers++;
             if (e.objType === 'hay') st.hay++;
             if (e.objType === 'tumbleweed') st.tumbleweeds++;
+            if (e.objType === 'rover') st.rovers++;
             this.award(S.jumpOver, null);
           } else if (e.how === 'slide') {
             st.slideUnders++;
             if (e.objType === 'branch') st.branches++;
+            if (e.objType === 'satellite') st.satellites++;
             this.award(S.slideUnder, null);
           } else if (e.how === 'near') {
             st.nearMisses++;
@@ -684,6 +692,10 @@ export class Game {
           break;
         case 'enemyThrow':
           this.audio.play('enemyThrow');
+          break;
+        case 'impact':
+          this.audio.play('impact');
+          if (this.settings.shake) this.cam.shake(0.22);
           break;
         case 'splat':
           st.splats++;

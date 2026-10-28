@@ -7,7 +7,7 @@ import { COLOR_KEYS, DEFAULT_LOOK, BOARD_TYPES, isValidSwatch, PREMIUM_SWATCHES 
 const KEY = 'skateboardNinjas2.save';
 const VERSION = 1;
 
-export const ENV_IDS = ['sunset', 'daytime', 'night', 'snow', 'beach', 'forest'];
+export const ENV_IDS = ['sunset', 'daytime', 'night', 'snow', 'beach', 'forest', 'moon', 'mars', 'volcano'];
 
 export const DEFAULT_SETTINGS = {
   music: 60,          // 0..100

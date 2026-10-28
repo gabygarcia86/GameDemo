@@ -26,7 +26,7 @@ export class Scoring {
     this.stats = {
       karens: 0, ninjas: 0, beasts: 0, kos: 0, avoided: 0, jumps: 0, slides: 0, jumpOvers: 0, slideUnders: 0,
       tricks: 0, ramps: 0, grind: 0, nearMisses: 0, starsThrown: 0, splats: 0, chests: 0, powerups: 0,
-      balls: 0, hay: 0, tumbleweeds: 0, ice: 0, branches: 0, bestCombo: 0, maxMult: 1,
+      balls: 0, hay: 0, tumbleweeds: 0, ice: 0, branches: 0, satellites: 0, rovers: 0, fireballs: 0, bestCombo: 0, maxMult: 1,
     };
   }
 

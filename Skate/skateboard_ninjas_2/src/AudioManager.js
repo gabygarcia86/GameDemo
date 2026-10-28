@@ -19,6 +19,7 @@ export const SOUND_FILES = {
   ramp: null, grindStart: null, trick: null, whoosh: null, splat: null, beep: null, go: null,
   mission: null, buy: null, bump: null, pop: null, chest: null, slide: null, combo: null,
   error: null, enemyThrow: null, fall: null, nearMiss: null, bear: null, yeti: null,
+  rockAlien: null, alien: null, impact: null,
 };
 
 // Browsers can't list a folder, so the songs are named here.
@@ -358,6 +359,9 @@ export class AudioManager {
       case 'wind': bed('bandpass', 650, 1.4, 0.09, 0.13, 0.06); break;
       case 'waves': bed('lowpass', 750, 0.6, 0.1, 0.11, 0.09); break;
       case 'forest': bed('bandpass', 1500, 0.6, 0.025, 0.2, 0.015); break;
+      case 'space': bed('lowpass', 180, 0.5, 0.03, 0.05, 0.02); break;
+      case 'mars': bed('bandpass', 380, 1.2, 0.08, 0.09, 0.05); break;
+      case 'volcano': bed('lowpass', 150, 0.8, 0.14, 0.07, 0.07); break;
       default: break;
     }
     this.ambTimer = 1;
@@ -401,6 +405,22 @@ export class AudioManager {
       case 'wind':
         this.noise({ dur: 2.4, gain: 0.06, type: 'bandpass', freq: 400, end: 1100, q: 2, attack: 0.9, dest: A });
         this.ambTimer = 5 + Math.random() * 6;
+        break;
+      case 'space':
+        // Radio chatter blips.
+        for (let i = 0; i < 2 + Math.floor(r * 3); i++) this.tone({ type: 'square', freq: 1250, dur: 0.06, gain: 0.012, delay: i * 0.12, dest: A });
+        if (r < 0.4) this.noise({ dur: 0.5, gain: 0.02, type: 'bandpass', freq: 2200, q: 2, delay: 0.5, dest: A });
+        this.ambTimer = 4 + Math.random() * 6;
+        break;
+      case 'mars':
+        this.noise({ dur: 2.8, gain: 0.07, type: 'bandpass', freq: 300, end: 800, q: 2, attack: 1.1, dest: A });
+        this.ambTimer = 4 + Math.random() * 5;
+        break;
+      case 'volcano':
+        // Crackling lava, now and then a distant eruption.
+        for (let i = 0; i < 6; i++) this.noise({ dur: 0.03, gain: 0.05, type: 'highpass', freq: 2000, delay: Math.random() * 0.8, dest: A });
+        if (r < 0.25) this.noise({ dur: 1.6, gain: 0.12, type: 'lowpass', freq: 220, end: 60, attack: 0.05, dest: A });
+        this.ambTimer = 1 + Math.random() * 2;
         break;
       default:
         this.ambTimer = 5;
@@ -467,6 +487,25 @@ const SYNTH = {
     a.noise({ dur: 0.7, gain: 0.14, type: 'bandpass', freq: 700, end: 300, q: 2 });
     a.tone({ type: 'sawtooth', freq: 160, end: 260, dur: 0.3, gain: 0.08, filter: { type: 'bandpass', freq: 700, q: 3 }, vibrato: 20 });
     a.tone({ type: 'sawtooth', freq: 260, end: 110, dur: 0.5, gain: 0.08, delay: 0.28, filter: { type: 'bandpass', freq: 600, q: 3 }, vibrato: 30 });
+  },
+  rockAlien: (a) => {
+    // Grinding rocks and a deep thud.
+    a.noise({ dur: 0.5, gain: 0.22, type: 'lowpass', freq: 380, end: 120 });
+    for (let i = 0; i < 5; i++) a.noise({ dur: 0.05, gain: 0.12, type: 'bandpass', freq: 600 + Math.random() * 500, q: 3, delay: i * 0.07 });
+    a.tone({ type: 'square', freq: 90, end: 55, dur: 0.4, gain: 0.07, filter: { type: 'lowpass', freq: 400 } });
+  },
+  alien: (a) => {
+    // "Ack ack!": two warbly bleeps.
+    for (let i = 0; i < 2; i++) {
+      a.tone({ type: 'square', freq: 700, end: 1100, dur: 0.11, gain: 0.05, delay: i * 0.16, vibrato: 60, filter: { type: 'bandpass', freq: 1200, q: 2 } });
+    }
+    a.tone({ type: 'sine', freq: 1500, end: 400, dur: 0.35, gain: 0.04, delay: 0.32, vibrato: 30 });
+  },
+  impact: (a) => {
+    // Fireball hitting the road.
+    a.noise({ dur: 0.9, gain: 0.4, type: 'lowpass', freq: 900, end: 90 });
+    a.tone({ freq: 110, end: 35, dur: 0.6, gain: 0.25 });
+    for (let i = 0; i < 6; i++) a.noise({ dur: 0.04, gain: 0.08, type: 'highpass', freq: 2500, delay: 0.15 + Math.random() * 0.5 });
   },
   enemyThrow: (a) => a.tone({ freq: 1300, end: 600, dur: 0.3, gain: 0.04 }),
   splat: (a) => {

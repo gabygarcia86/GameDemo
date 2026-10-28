@@ -9,9 +9,11 @@ import {
   OBSTACLE_INFO, obstaclePrefab, piecePrefab, RAMP, RAIL, GAP, ICE, coinGeometry, powerupBuilder,
 } from './models/props.js';
 import { Karen, EvilNinja, Beast, enemyKoWord } from './Enemies.js';
-import { lerp } from './utils.js';
+import { lerp, clamp } from './utils.js';
 
 const LANE = CONFIG.lanes.width;
+const FIREBALL_START = 85; // dRem where a fireball starts falling
+const FIREBALL_LAND = 22; // ...and where it hits the road
 const VIS_AHEAD = CONFIG.road.ahead - 6;
 const VIS_BEHIND = 14;
 const P = CONFIG.player;
@@ -68,7 +70,7 @@ export class World {
     this.karenPool = [];
     this.ninjaPool = [];
     this.ninjaCount = 0;
-    this.beastPools = { bear: [], yeti: [] };
+    this.beastPools = {}; // by kind
     this.outlines = true;
     this.events = [];
     this._surf = { ramp: null, gap: false, ice: false, rail: null, railAhead: null };
@@ -130,6 +132,11 @@ export class World {
       for (const s of e.segs) this.pool.release(e.key, s);
       e.segs = null;
     }
+    if (e.ball) {
+      this.pool.release('p|fireballBall', e.ball);
+      this.pool.release('p|fireMarker', e.marker);
+      e.ball = e.marker = null;
+    }
   }
 
   // ------------------------------------------------------------ spawning
@@ -158,7 +165,7 @@ export class World {
       enemy = this.ninjaPool.pop() || new EvilNinja(this.root, true, this.ninjaCount++);
       enemy.setup({ behavior, lane, dist, ...extra });
     } else {
-      enemy = this.beastPools[kind].pop() || new Beast(this.root, true, kind);
+      enemy = (this.beastPools[kind] ??= []).pop() || new Beast(this.root, true, kind);
       enemy.setup({ behavior, lane, dist, ...extra });
     }
     setOutlinesVisible(enemy.group, this.outlines);
@@ -467,8 +474,9 @@ export class World {
         if (o.type === 'tumbleweed') o.mesh.rotation.z = o.spin;
         if (o.type === 'beachBall') o.mesh.rotation.x = o.spin;
         o.mesh.position.y += o.type === 'tumbleweed' || o.type === 'beachBall' ? 0.45 : 0;
+        if (o.type === 'fireball') this.placeFireball(o, speed);
       }
-      if (player.crashed || o.hit) continue;
+      if (player.crashed || o.hit || o.landed === false) continue;
       if (Math.abs(o.dist - pDist) < o.halfD + P.halfD && Math.abs(o.x - pX) < o.halfW + P.halfW) {
         const by = o.by || 0;
         let hit;
@@ -563,7 +571,49 @@ export class World {
     } else if (o.type === 'beachBall') {
       o.by = Math.abs(Math.sin(this.track.time * 3.2 + o.phase)) * 0.3;
       o.spin += dt * 2;
+    } else if (o.type === 'rover') {
+      // Trundles across the road like a tumbleweed, nose first.
+      o.x = o.baseX + o.side * dRem * 0.09;
+      o.by = Math.abs(Math.sin(dRem * 0.9 + o.phase)) * 0.05;
+      o.yawExtra = o.side > 0 ? Math.PI : 0;
+    } else if (o.type === 'fireball') {
+      // Falls out of the sky, speeding up, and always lands while you're still
+      // FIREBALL_LAND metres away: it's in its lane long before you get there.
+      o.fall = clamp((FIREBALL_START - dRem) / (FIREBALL_START - FIREBALL_LAND), 0, 1) ** 2;
+      if (o.landed === undefined) o.landed = false;
+      if (o.fall >= 1 && !o.landed) {
+        o.landed = true;
+        this.fx.poof(o.x, 0, o.dist, 0, ['#ff4a1a', '#ffb020', '#ffd23f', '#2a2024', '#5a4a48']);
+        this.fx.word('BOOM!', o.x, 2.4, o.dist, '#ffd23f', '#ff2e00');
+        this.events.push({ type: 'impact', x: o.x, d: o.dist });
+      }
     }
+  }
+
+  // The falling ball, the warning ring under it, and the burning crater.
+  placeFireball(o, speed) {
+    if (!o.ball) {
+      o.ball = this.pool.get('p|fireballBall', () => prefabMesh(piecePrefab('fireballBall', 1, this.env), { cast: false }));
+      o.marker = this.pool.get('p|fireMarker', () => prefabMesh(piecePrefab('fireMarker', 1, this.env), { cast: false }));
+    }
+    const t = this.track.time;
+    o.mesh.visible = o.landed;
+    o.mesh.scale.set(1, o.landed ? 0.85 + Math.sin(t * 13 + o.phase) * 0.15 : 1, 1);
+    o.marker.visible = !o.landed;
+    o.ball.visible = !o.landed;
+    if (o.landed) return;
+    const pulse = 1 + Math.sin(t * 10) * 0.12 + o.fall * 0.3;
+    this.track.place(o.marker, o.x, 0.02, o.dist, true);
+    o.marker.scale.set(pulse, 1, pulse);
+    const k = 1 - o.fall;
+    const x = o.x + o.side * k * 14;
+    const y = k * 34 + 0.6;
+    const d = o.dist + k * 22;
+    this.track.place(o.ball, x, y, d, false, 0);
+    // Tilt the flame trail back along the way it came.
+    o.ball.rotation.z += -o.side * 0.4;
+    o.ball.rotation.x += -0.55;
+    if (Math.random() < 0.7) this.fx.glows.spawn(x, y + 0.6, d, 0, 1, speed * 0.2, 0.5, 0.45, Math.random() < 0.5 ? '#ff6a1a' : '#ffb020', 0, 0);
   }
 
   hitSomething(e, player, speed) {

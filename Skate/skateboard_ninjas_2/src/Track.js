@@ -152,6 +152,27 @@ export class Track {
       for (const x of [-(CONFIG.road.halfWidth - 0.25), CONFIG.road.halfWidth - 0.25]) ctx.fillRect(px(x) - 4, 0, 8, H);
     };
     const rng = makeRng(env.id.length * 999);
+    // Glowing lava cracks: the same shapes on the colour and glow maps.
+    const lava = [];
+    if (R.lava) {
+      const lr = makeRng(77);
+      for (let i = 0; i < 10; i++) {
+        const pts = [[lr() * W, lr() * H]];
+        for (let k = 0; k < 6; k++) pts.push([pts[k][0] + (lr() - 0.5) * 50, pts[k][1] + 10 + lr() * 30]);
+        lava.push(pts);
+      }
+    }
+    const drawLava = (ctx, color) => {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 4;
+      ctx.lineJoin = 'round';
+      for (const pts of lava) {
+        ctx.beginPath();
+        ctx.moveTo(...pts[0]);
+        for (const pt of pts) ctx.lineTo(...pt);
+        ctx.stroke();
+      }
+    };
     const map = canvasTexture(W, H, (ctx) => {
       ctx.fillStyle = R.base;
       ctx.fillRect(0, 0, W, H);
@@ -167,6 +188,20 @@ export class Track {
         ctx.fillStyle = 'rgba(120,150,190,0.25)';
         for (const x of [-2.9, -1.7, -0.6, 0.6, 1.7, 2.9]) ctx.fillRect(px(x) - 5, 0, 10, H);
       }
+      if (R.craters) {
+        // Little impact craters pressed into the road.
+        for (let i = 0; i < 14; i++) {
+          const x = rng() * W, y = rng() * H, r = 8 + rng() * 22;
+          ctx.fillStyle = R.craters;
+          ctx.beginPath();
+          ctx.ellipse(x, y, r, r * 0.8, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+          ctx.lineWidth = 3;
+          ctx.stroke();
+        }
+      }
+      if (R.lava) drawLava(ctx, '#7a2a14');
       if (env.id === 'forest') {
         for (let i = 0; i < 60; i++) {
           ctx.fillStyle = ['#c96a2a', '#e0a040', '#8b5a2b'][i % 3];
@@ -201,6 +236,7 @@ export class Track {
       emissive = canvasTexture(W, H, (ctx) => {
         ctx.fillStyle = '#000';
         ctx.fillRect(0, 0, W, H);
+        if (R.lava) drawLava(ctx, '#ff5a14');
         drawLines(ctx, R.line, R.edge);
       });
       emissive.wrapT = THREE.RepeatWrapping;
@@ -292,6 +328,17 @@ export class Track {
         y = k * step + smoothstep(0.65, 1, raw / step - k) * step + bumps * 0.5;
         break;
       }
+      case 'craters':
+        y = smoothstep(1.5, 34, u) * T.hill * (0.3 + n) + u * 0.02 + bumps + this.craterAt(x, D) * near;
+        break;
+      case 'volcano':
+        // Steep slope up one side, a drop into the lava river on the other.
+        if (side === this.env.water?.side) {
+          y = -smoothstep(1.2, 10, u) * 4.6 + (noise2(x * 0.2, D * 0.08) - 0.5) * 0.6 * near;
+        } else {
+          y = smoothstep(1.5, 40, u) * T.hill * (0.5 + n * 1.2) + u * 0.12 + bumps;
+        }
+        break;
       case 'beach':
         if (side === this.env.water?.side) {
           y = -smoothstep(1.5, 16, u) * 3.4 + (noise2(x * 0.1, D * 0.05) - 0.5) * 0.4 * near;
@@ -303,6 +350,27 @@ export class Track {
         y = smoothstep(1.5, 32, u) * T.hill * (0.35 + n * 1.0) + u * 0.03 + bumps;
     }
     return u < 0.6 ? -0.06 : y - 0.06;
+  }
+
+  // Bowl-shaped craters with raised rims, scattered on a hashed grid.
+  craterAt(x, D) {
+    const C = 16;
+    const cx0 = Math.floor(x / C);
+    const cz0 = Math.floor(D / C);
+    let h = 0;
+    for (let cx = cx0 - 1; cx <= cx0 + 1; cx++) {
+      for (let cz = cz0 - 1; cz <= cz0 + 1; cz++) {
+        if (hash2(cx, cz * 7 + 3) < 0.45) continue;
+        const r = 2.5 + hash2(cx + 11, cz * 5) * 5;
+        const dx = x - (cx + 0.2 + hash2(cx * 3, cz) * 0.6) * C;
+        const dz = D - (cz + 0.2 + hash2(cx, cz * 3 + 1) * 0.6) * C;
+        const t = Math.sqrt(dx * dx + dz * dz) / r;
+        if (t > 1.8) continue;
+        if (t < 1) h -= (1 - t * t) * r * 0.3;
+        h += Math.exp(-(((t - 1) / 0.25) ** 2)) * r * 0.13;
+      }
+    }
+    return h;
   }
 
   // Height on the mesh as drawn (linear between columns), for placing props.
@@ -332,6 +400,18 @@ export class Track {
       if (band) out.lerp(_c2.set(T.high), 0.45);
     }
     if (T.snowLine && y > T.snowLine * (0.8 + n * 0.4)) out.set('#ffffff');
+    if (T.profile === 'craters') {
+      const c = this.craterAt(x, D);
+      if (c < 0) out.lerp(_c2.set(T.high), smoothstep(0, -1.6, c) * 0.7);
+      else out.lerp(_c2.set('#ffffff'), smoothstep(0.2, 1.2, c) * 0.15);
+    }
+    if (T.profile === 'volcano') {
+      // Cooling lava streaks, glowing hotter near the river.
+      const streak = noise2(x * 0.08, D * 0.5);
+      if (streak > 0.68) out.lerp(_c2.set('#7a2a14'), smoothstep(0.68, 0.8, streak));
+      const W = this.env.water;
+      if (W && (x < 0 ? -1 : 1) === W.side) out.lerp(_c2.set('#c8401a'), smoothstep(W.level + 1.6, W.level + 0.2, y));
+    }
     if (T.profile === 'beach') {
       const side = x < 0 ? -1 : 1;
       if (side === this.env.water?.side) out.set(T.low).lerp(_c2.set('#e0c07a'), smoothstep(-0.5, -2.5, y));
@@ -476,7 +556,7 @@ export class Track {
       const pos = [];
       const col = [];
       const base = new THREE.Color(color);
-      const snowC = new THREE.Color('#ffffff');
+      const snowC = new THREE.Color(M.snowColor || '#ffffff');
       for (let i = 0; i <= N; i++) {
         const a = (i / N) * Math.PI * 2;
         // Sample noise around a circle so the ring joins up without a seam.
@@ -552,6 +632,70 @@ export class Track {
     pts.frustumCulled = false;
     pts.renderOrder = -8;
     this.backdrop.add(pts);
+  }
+
+  // Other worlds hanging in the sky: Earth from the moon, Mars's two moons.
+  buildPlanets(env) {
+    for (const P of env.planets) {
+      const tex = canvasTexture(256, 256, (ctx, w) => {
+        const r = w * 0.4;
+        const c = w / 2;
+        const rng = makeRng(P.kind.length * 31);
+        if (P.kind === 'earth') {
+          const halo = ctx.createRadialGradient(c, c, r * 0.9, c, c, r * 1.22);
+          halo.addColorStop(0, 'rgba(120,180,255,0.6)');
+          halo.addColorStop(1, 'rgba(120,180,255,0)');
+          ctx.fillStyle = halo;
+          ctx.fillRect(0, 0, w, w);
+        }
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(c, c, r, 0, Math.PI * 2);
+        ctx.clip();
+        if (P.kind === 'earth') {
+          ctx.fillStyle = '#2a6fd8';
+          ctx.fillRect(0, 0, w, w);
+          ctx.fillStyle = '#3fa04a';
+          for (let i = 0; i < 9; i++) {
+            ctx.beginPath();
+            ctx.ellipse(c + (rng() - 0.5) * r * 1.6, c + (rng() - 0.5) * r * 1.6, 12 + rng() * 30, 8 + rng() * 22, rng() * 3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+          ctx.lineCap = 'round';
+          for (let i = 0; i < 9; i++) {
+            const a = rng() * 6;
+            ctx.lineWidth = 3 + rng() * 5;
+            ctx.beginPath();
+            ctx.arc(c + (rng() - 0.5) * r * 1.2, c + (rng() - 0.5) * r * 1.2, 25 + rng() * 45, a, a + 0.4 + rng() * 0.7);
+            ctx.stroke();
+          }
+        } else {
+          ctx.fillStyle = P.kind === 'phobos' ? '#8a7a6e' : '#a8988a';
+          ctx.fillRect(0, 0, w, w);
+          for (let i = 0; i < 14; i++) {
+            ctx.fillStyle = 'rgba(40,30,25,0.35)';
+            ctx.beginPath();
+            ctx.arc(c + (rng() - 0.5) * r * 1.7, c + (rng() - 0.5) * r * 1.7, 4 + rng() * 16, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+        // Night side.
+        const shade = ctx.createLinearGradient(c - r, 0, c + r, 0);
+        shade.addColorStop(0, 'rgba(0,0,10,0.85)');
+        shade.addColorStop(0.45, 'rgba(0,0,10,0.25)');
+        shade.addColorStop(0.7, 'rgba(0,0,10,0)');
+        ctx.fillStyle = shade;
+        ctx.fillRect(0, 0, w, w);
+        ctx.restore();
+      });
+      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, fog: false, depthWrite: false, transparent: true }));
+      const d = new THREE.Vector3(...P.dir).normalize().multiplyScalar(1250);
+      s.position.copy(d);
+      s.scale.set(P.size, P.size, 1);
+      s.renderOrder = -7;
+      this.backdrop.add(s);
+    }
   }
 
   // ------------------------------------------------------------- lights
@@ -754,26 +898,27 @@ export class Track {
     const phase = new Float32Array(N);
     const rng = makeRng(4242);
     const snow = W.type === 'snow';
+    const embers = W.type === 'embers';
     for (let i = 0; i < N; i++) {
       rel[i * 3] = rng.range(-26, 26);
       rel[i * 3 + 1] = rng.range(snow ? 0 : 0.3, snow ? 16 : 6);
       rel[i * 3 + 2] = rng.range(-6, 110);
       vel[i * 3] = rng.range(-0.4, 0.4);
-      vel[i * 3 + 1] = snow ? -rng.range(1.5, 3.2) : rng.range(-0.2, 0.25);
+      vel[i * 3 + 1] = snow ? -rng.range(1.5, 3.2) : embers ? rng.range(0.6, 2.2) : rng.range(-0.2, 0.25);
       vel[i * 3 + 2] = rng.range(-0.3, 0.3);
       phase[i] = rng() * 10;
     }
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(N * 3), 3));
     g.setAttribute('aPhase', new THREE.BufferAttribute(phase, 1));
-    const size = { snow: 0.22, fireflies: 0.3, dust: 0.12, pollen: 0.12, sparkle: 0.18, motes: 0.13 }[W.type] || 0.15;
+    const size = { snow: 0.22, fireflies: 0.3, dust: 0.12, pollen: 0.12, sparkle: 0.18, motes: 0.13, embers: 0.2 }[W.type] || 0.15;
     const mat = new THREE.ShaderMaterial({
       uniforms: {
         map: { value: dotTexture() },
         color: { value: new THREE.Color(W.color) },
         size: { value: size },
         time: { value: 0 },
-        twinkle: { value: W.type === 'fireflies' || W.type === 'sparkle' ? 1 : 0 },
+        twinkle: { value: W.type === 'fireflies' || W.type === 'sparkle' || embers ? 1 : 0 },
         scale: POINT_SCALE,
       },
       vertexShader: `
@@ -845,7 +990,12 @@ export class Track {
     this.roadMat.needsUpdate = true;
 
     this.water.visible = !!env.water;
-    if (env.water) this.waterMat.color.set(env.water.color);
+    if (env.water) {
+      this.waterMat.color.set(env.water.color);
+      this.waterMat.emissive.set(env.water.glow || '#000000');
+      this.waterMat.emissiveIntensity = env.water.glow ? 0.7 : 1;
+      this.waterMat.opacity = env.water.glow ? 1 : 0.92;
+    }
 
     const U = this.skyMat.uniforms;
     U.top.value.set(env.sky.top);
@@ -877,6 +1027,7 @@ export class Track {
     this.buildMountains(env);
     this.buildClouds(env);
     if (env.stars) this.buildStars();
+    if (env.planets) this.buildPlanets(env);
     this.buildScenery(env);
     this.buildWeather(env);
     this.heading = 0;

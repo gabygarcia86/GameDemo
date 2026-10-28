@@ -15,6 +15,8 @@ import { makeRng, lerp } from './utils.js';
 
 const G = CONFIG.generator;
 const LANES = [0, 1, 2];
+// How each local beast makes its entrance (beastMove).
+const BEAST_MOVES = { bear: ['cross', 'charge'], yeti: ['leap'], rockAlien: ['rise', 'cross'], alien: ['beam', 'leap'] };
 
 // name, minimum distance, weight(difficulty)
 const CHUNKS = [
@@ -64,7 +66,7 @@ export class Generator {
       const d = this.nextDist;
       const k = difficultyAt(d);
       const options = CHUNKS.filter(([name, min]) => d >= min && name !== this.last && (this.env.beast || !name.startsWith('beast')));
-      const [name] = this.rng.weighted(options, ([, , w]) => w(k));
+      const [name] = this.rng.weighted(options, ([n, , w]) => w(k) * (n === 'special' ? this.env.specialWeight || 1 : 1));
       this.last = name;
       this.extra = 0;
       const end = this[name](d, k);
@@ -424,16 +426,13 @@ export class Generator {
   }
 
   beastMove(d, k) {
-    // Bears wander out of the trees or charge down the lane; yetis leap off
-    // the snowbank. Either way they finish in the lane reserved here.
+    // Bears wander out of the trees or charge, yetis leap off the snowbank,
+    // rock aliens burst out of the ground, Mars aliens beam down from a UFO.
+    // However they arrive, they finish in the lane reserved here.
     const lane = this.rng.int(0, 2);
     const near = lane === 0 ? -1 : lane === 2 ? 1 : this.rng.chance(0.5) ? -1 : 1;
-    let behavior = 'leap';
-    let side = near;
-    if (this.env.beast === 'bear') {
-      behavior = this.rng.chance(0.5) ? 'cross' : 'charge';
-      side = -near; // cross from the far side so it's in view
-    }
+    const behavior = this.rng.pick(BEAST_MOVES[this.env.beast]);
+    const side = behavior === 'cross' ? -near : near; // cross from the far side so it's in view
     const specs = [null, null, null];
     specs[lane] = { enemy: this.env.beast, behavior, extra: { side } };
     if (k > 0.4 && this.rng.chance(0.5)) {
@@ -460,7 +459,13 @@ export class Generator {
     const rows = this.rng.int(2, 3);
     for (let i = 0; i < rows; i++) {
       const specs = [null, null, null];
-      if (sp === 'branch' || sp === 'neonSign') {
+      if (sp === 'fireball') {
+        // Fireballs crash into one or two lanes; the ring shows where.
+        const lanes = this.pickLanes(this.rng.chance(0.35 + k * 0.4) ? 2 : 1);
+        for (const l of lanes) specs[l] = { cat: 'block', type: 'fireball', extra: { side: this.rng.chance(0.5) ? 1 : -1 } };
+        const free = this.row(at, specs);
+        if (free.length) this.coinLine(this.rng.pick(free), at - 4, at + 2);
+      } else if (sp === 'branch' || sp === 'neonSign' || sp === 'satellite') {
         if (this.rng.chance(0.6)) {
           this.row(at, [{ cat: 'high', type: sp }, { cat: 'high', type: sp }, { cat: 'high', type: sp }]);
         } else {
@@ -471,7 +476,7 @@ export class Generator {
           this.row(at, specs);
         }
       } else {
-        // Tumbleweeds, hay bales, beach balls: jumpable, one or two lanes.
+        // Tumbleweeds, hay bales, beach balls, rovers: jumpable, one or two lanes.
         const lanes = this.pickLanes(this.rng.chance(0.4 + k * 0.3) ? 2 : 1);
         for (const l of lanes) {
           const side = l === 0 ? 1 : l === 2 ? -1 : this.rng.chance(0.5) ? 1 : -1;

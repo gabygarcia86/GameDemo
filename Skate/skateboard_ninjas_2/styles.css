@@ -166,9 +166,15 @@ h3 {
 
 .menu-buttons { display: grid; gap: 10px; margin-top: 14px; }
 .btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-.btn-row > .btn { flex: 1 1 0; min-width: 110px; }
+.btn-row > .btn { flex: 1 1 0; min-width: 110px; padding-inline: 8px; }
 
 .btn {
+  /* Flex centring keeps the label in the middle even when it's wider than the button. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  white-space: nowrap;
   padding: 14px 18px;
   font-size: clamp(15px, 3.6vw, 19px);
   letter-spacing: 0.06em;

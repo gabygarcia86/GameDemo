@@ -273,9 +273,8 @@ licensed (`vendor/LICENSE-three.txt`). Music is from `assets/music/`.
 
 ## TODO
 
-- Make evil ninja splats bigger on the screen
 - changing lanes is a stiff
-- increase difficulty
+- increase difficulty every 1000 m by increase the speed of the player
 - Fix feet so there on top of the board
 - Make music longer
 - Game over screen, fix text on buttons to be centered

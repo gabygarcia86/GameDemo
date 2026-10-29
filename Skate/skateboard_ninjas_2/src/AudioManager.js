@@ -19,7 +19,7 @@ export const SOUND_FILES = {
   ramp: null, grindStart: null, trick: null, whoosh: null, splat: null, beep: null, go: null,
   mission: null, buy: null, bump: null, pop: null, chest: null, slide: null, combo: null,
   error: null, enemyThrow: null, fall: null, nearMiss: null, bear: null, yeti: null,
-  rockAlien: null, alien: null, impact: null,
+  rockAlien: null, alien: null, impact: null, backflip: null,
 };
 
 // Browsers can't list a folder, so the songs are named here.
@@ -84,29 +84,42 @@ export class AudioManager {
     this.loopNoise(this.rollFilter);
     this.rollFilter.connect(this.rollGain).connect(this.sfx);
 
-    // Hoverboard hum: two detuned oscillators with a wobble.
+    // Hoverboard hum: a smooth sci-fi drone. Pure tones a fifth and two
+    // octaves apart, slightly detuned, with a slow pitch shimmer and a gentle
+    // swell (no fast tremolo, which is what made it sound like a mower).
     this.hoverGain = ctx.createGain();
     this.hoverGain.gain.value = 0;
     const hf = ctx.createBiquadFilter();
     hf.type = 'lowpass';
-    hf.frequency.value = 900;
-    this.hoverOscs = [ctx.createOscillator(), ctx.createOscillator()];
-    this.hoverOscs[0].type = 'sawtooth';
-    this.hoverOscs[1].type = 'sine';
-    for (const o of this.hoverOscs) {
-      o.frequency.value = 110;
-      o.connect(hf);
+    hf.frequency.value = 2600;
+    hf.Q.value = 3;
+    this.hoverRatios = [1, 1.5, 2.005, 4.01];
+    const levels = [0.5, 0.3, 0.22, 0.08];
+    const shimmer = ctx.createOscillator();
+    shimmer.frequency.value = 0.7;
+    this.hoverOscs = this.hoverRatios.map((r, i) => {
+      const o = ctx.createOscillator();
+      o.type = i === 3 ? 'triangle' : 'sine';
+      o.frequency.value = 200 * r;
+      const depth = ctx.createGain();
+      depth.gain.value = 3 * r;
+      shimmer.connect(depth).connect(o.frequency);
+      const g = ctx.createGain();
+      g.gain.value = levels[i];
+      o.connect(g).connect(hf);
       o.start();
-    }
-    const trem = ctx.createGain();
-    trem.gain.value = 1;
-    const lfo = ctx.createOscillator();
-    lfo.frequency.value = 7;
-    const lfoGain = ctx.createGain();
-    lfoGain.gain.value = 0.25;
-    lfo.connect(lfoGain).connect(trem.gain);
-    lfo.start();
-    hf.connect(trem).connect(this.hoverGain).connect(this.sfx);
+      return o;
+    });
+    shimmer.start();
+    const swell = ctx.createGain();
+    swell.gain.value = 1;
+    const swellLfo = ctx.createOscillator();
+    swellLfo.frequency.value = 0.35;
+    const swellDepth = ctx.createGain();
+    swellDepth.gain.value = 0.12;
+    swellLfo.connect(swellDepth).connect(swell.gain);
+    swellLfo.start();
+    hf.connect(swell).connect(this.hoverGain).connect(this.sfx);
 
     // Grind: scrapey band-passed noise plus a metallic buzz.
     this.grindGain = ctx.createGain();
@@ -236,10 +249,11 @@ export class AudioManager {
     const roll = board === 'longboard' && grounded && !grinding ? (0.05 + sp * 0.09) * level : 0;
     this.rollGain.gain.setTargetAtTime(roll, t, 0.05);
     this.rollFilter.frequency.setTargetAtTime(180 + sp * 600, t, 0.1);
-    const hover = board === 'hoverboard' ? (grounded ? 0.05 : 0.035) * level : 0;
+    const hover = board === 'hoverboard' ? (grounded ? 0.022 : 0.016) * level : 0;
     this.hoverGain.gain.setTargetAtTime(hover, t, 0.08);
-    this.hoverOscs[0].frequency.setTargetAtTime(80 + sp * 70, t, 0.1);
-    this.hoverOscs[1].frequency.setTargetAtTime(161 + sp * 140, t, 0.1);
+    // Pitch rises with speed, and lifts a little more in the air.
+    const base = 190 + sp * 110 + (grounded ? 0 : 25);
+    this.hoverOscs.forEach((o, i) => o.frequency.setTargetAtTime(base * this.hoverRatios[i], t, 0.15));
     this.grindGain.gain.setTargetAtTime(grinding ? 0.16 * level : 0, t, 0.03);
     this.windGain.gain.setTargetAtTime(sp * sp * 0.07 * level, t, 0.2);
     this.windFilter.frequency.setTargetAtTime(350 + sp * 900, t, 0.2);
@@ -506,6 +520,10 @@ const SYNTH = {
     a.noise({ dur: 0.9, gain: 0.4, type: 'lowpass', freq: 900, end: 90 });
     a.tone({ freq: 110, end: 35, dur: 0.6, gain: 0.25 });
     for (let i = 0; i < 6; i++) a.noise({ dur: 0.04, gain: 0.08, type: 'highpass', freq: 2500, delay: 0.15 + Math.random() * 0.5 });
+  },
+  backflip: (a) => {
+    a.tone({ type: 'triangle', freq: 300, end: 900, dur: 0.35, gain: 0.12 });
+    a.noise({ dur: 0.45, gain: 0.1, type: 'bandpass', freq: 900, end: 2400, q: 1.5 });
   },
   enemyThrow: (a) => a.tone({ freq: 1300, end: 600, dur: 0.3, gain: 0.04 }),
   splat: (a) => {

@@ -55,6 +55,7 @@ export class UI {
   setTouchMode(touch) {
     document.body.classList.toggle('touch', touch);
     $('star-btn').classList.toggle('desktop', !touch);
+    $('flip-btn').classList.toggle('desktop', !touch);
   }
 
   setLoading(done, message) {

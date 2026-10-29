@@ -130,6 +130,7 @@ export class Player {
     this.rampBoost = false;
     this.fromRamp = false;
     this.trick = null;
+    this.flip = null;
     this.throwT = 0;
     this.stumbleT = 0;
     this.bumpCd = 0;
@@ -207,11 +208,31 @@ export class Player {
     }
     // In the air: a trick, or a buffered jump if we're about to land.
     if (this.timeToLand() < 0.22) this.jumpBuffer = P.jumpBuffer;
-    else if (!this.trick && !this.falling) {
+    else if (!this.trick && !this.flip && !this.falling) {
       const def = TRICKS[Math.floor(Math.random() * TRICKS.length)];
       this.trick = { def, t: 0 };
       this.events.push({ type: 'trickStart', name: def.name });
     }
+  }
+
+  // Backflip: from the ground it launches a big jump with just enough air to
+  // get round; in the air it starts from wherever you are. Touch down before
+  // the rotation is finished (too late in a jump, slamming down, landing on a
+  // rail early) and you crash.
+  backflip() {
+    if (this.crashed || this.flip || this.trick) return false;
+    if (this.grind) {
+      this.events.push({ type: 'grindEnd', time: this.grindTime, jumped: true });
+      this.grind = null;
+      this.doJump(P.flipVel);
+    } else if (this.grounded || this.coyote > 0) {
+      this.onRamp = null;
+      this.doJump(P.flipVel);
+    }
+    this.flip = { t: 0 };
+    this.jumpBuffer = 0;
+    this.events.push({ type: 'flipStart' });
+    return true;
   }
 
   doJump(v) {
@@ -271,6 +292,8 @@ export class Player {
     this.crashCause = cause;
     this.sliding = 0;
     this.trick = null;
+    this.flip = null;
+    this.visual.position.z = 0;
     this.grind = null;
     this.crashStartY = this.y;
     this.events.push({ type: 'crash', cause });
@@ -361,6 +384,7 @@ export class Player {
     }
 
     if (this.trick) this.trick.t += dt;
+    if (this.flip) this.flip.t += dt;
   }
 
   land(groundY, rail, surf) {
@@ -370,6 +394,15 @@ export class Player {
     this.grounded = !rail;
     this.fastFall = false;
     let trick = null;
+    if (this.flip) {
+      const done = this.flip.t >= P.flipTime * 0.9;
+      this.flip = null;
+      if (!done) {
+        this.crash('backflip');
+        return;
+      }
+      trick = { name: 'BACKFLIP', clean: true, backflip: true };
+    }
     if (this.trick) {
       trick = { name: this.trick.def.name, clean: this.trick.t >= TRICK_TIME * 0.8 };
       this.trick = null;
@@ -443,6 +476,18 @@ export class Player {
       tv.lift = damp(tv.lift || 0, 0, 20, dt);
     }
     this.board.tilt.rotation.set(tv.pitch, tv.yaw, tv.roll + this.lean * 0.6);
+
+    // Backflip: the whole ninja and board rotate backwards around the hips.
+    if (this.flip) {
+      const p = Math.min(1, this.flip.t / P.flipTime);
+      const a = -p * p * (3 - 2 * p) * Math.PI * 2;
+      const h = 0.9;
+      this.visual.rotation.x = a;
+      this.visual.position.y = this.y + h - h * Math.cos(a);
+      this.visual.position.z = -h * Math.sin(a);
+    } else {
+      this.visual.position.z = 0;
+    }
     this.visual.rotation.y += tv.spin;
     this.rider.position.y = this.board.deckTop + tv.lift;
 

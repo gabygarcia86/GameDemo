@@ -39,6 +39,8 @@ export const CONFIG = {
     iceSwitchTime: 0.32,  // lane changes are slippery on ice
     jumpVel: 9.2,         // ~1.6 m high, ~0.7 s airtime
     gravity: 26,
+    flipVel: 12.6,        // backflip launch: ~0.97 s airtime
+    flipTime: 0.82,       // seconds to rotate all the way round
     fastFall: 70,         // pressing slide in the air slams you down
     slideTime: 0.72,
     rampVel: 13.2,        // launch speed off the lip of a ramp
@@ -75,6 +77,7 @@ export const CONFIG = {
     slideUnder: 30,
     ramp: 100,
     trick: 250,
+    backflip: 600,
     grindPerSecond: 80,
     powerup: 50,
     comboWindow: 3.5,     // seconds to land another action before the combo drops

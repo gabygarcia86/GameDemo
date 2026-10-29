@@ -48,6 +48,7 @@ songs are about 0.5 MB each.
 | Air trick                     | Jump again while in the air | Swipe up again in the air  |
 | Slide (in the air: slam down) | S or ↓                      | Swipe down                 |
 | Throw a ninja star            | J (or E / K), or left click | Star button (bottom right) |
+| Backflip (land it or crash)   | F or Q                      | FLIP button (above star)   |
 | Pause                         | Esc or P, or the ❚❚ button  | ❚❚ button                  |
 | Mute                          | M                           | Settings                   |
 | Start / restart               | Enter                       | Buttons                    |
@@ -278,9 +279,6 @@ licensed (`vendor/LICENSE-three.txt`). Music is from `assets/music/`.
 - Purchased customization be more patterns and fun designs, stickers fun emojis added to gear to back
 - Hover board neon lights be more dynamic or cooler lighting
 - Drag preview ninja not working
-- Black outer stroke hard to read text
-- Hover board sound fx are annoying
-- Back flip button for extra points
 - Don't auto grind, make them have to jump on it or they bail if they hit it
 - Multiplier can get up to 10x
 - In pause menu, add missions to the menu for visibility 

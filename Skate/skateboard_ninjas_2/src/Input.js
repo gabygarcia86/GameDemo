@@ -1,5 +1,5 @@
 // Keyboard, mouse and touch input, turned into game actions:
-//   left, right, jump, slide, throw, pause, confirm, mute
+//   left, right, jump, slide, throw, flip, pause, confirm, mute
 // Swipes fire as soon as the finger has moved far enough (not on release),
 // and one finger can chain swipes in different directions without lifting
 // (e.g. right then up), which keeps high-speed play responsive.
@@ -10,6 +10,7 @@ const KEYS = {
   ArrowUp: 'jump', KeyW: 'jump', Space: 'jump',
   ArrowDown: 'slide', KeyS: 'slide',
   KeyJ: 'throw', KeyE: 'throw', KeyK: 'throw',
+  KeyF: 'flip', KeyQ: 'flip',
   Escape: 'pause', KeyP: 'pause',
   Enter: 'confirm',
   KeyM: 'mute',

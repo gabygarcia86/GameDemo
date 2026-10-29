@@ -38,6 +38,7 @@ const CRASH_REASONS = {
   rockAlien: ['That rock had a face.', 'Moon rocks: harder than they look.', 'Houston, we have a problem.'],
   alien: ['Abducted at full speed.', 'Take me to your leader... ouch.', 'A close encounter of the painful kind.'],
   fireball: ['Toasted!', 'Well done. Extra crispy.', 'The floor is literally lava.'],
+  backflip: ['Didn\'t quite make it round.', 'Stick the landing next time!', 'Backflip 1, Ninja 0.'],
   gap: ['The road ended. You did not.', 'Mind the gap!', 'Into the abyss!'],
   default: ['Face, meet obstacle.', 'That one came out of nowhere.', 'Ouch. Right in the board.', 'Bonk.'],
 };
@@ -203,6 +204,11 @@ export class Game {
       e.stopPropagation();
       this.throwStar();
     });
+    document.getElementById('flip-btn').addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (this.state === 'playing') this.player.backflip();
+    });
     ui.bindSettings(this.settings, (k) => this.onSettingChanged(k));
 
     // Drag to spin the ninja on the customize screen.
@@ -283,6 +289,7 @@ export class Game {
         } else if (action === 'jump') p.jump();
         else if (action === 'slide') p.slide();
         else if (action === 'throw') this.throwStar();
+        else if (action === 'flip') p.backflip();
         else if (action === 'pause') this.pause();
         break;
       }
@@ -574,6 +581,9 @@ export class Game {
           st.slides++;
           this.audio.play('slide');
           break;
+        case 'flipStart':
+          this.audio.play('backflip');
+          break;
         case 'trickStart':
           this.audio.play('whoosh');
           break;
@@ -582,7 +592,13 @@ export class Game {
           const dust = env.dust || (env.id === 'snow' ? '#ffffff' : env.id === 'beach' ? '#f3dc9e' : '#d8cfc4');
           if (!e.onRail) this.particles.landing(p.x, this.dist, this.speed, dust);
           if (e.air > 0.9 && this.settings.shake) this.cam.shake(0.18);
-          if (e.trick) {
+          if (e.trick?.backflip) {
+            st.tricks++;
+            st.backflips++;
+            this.audio.play('trick');
+            if (this.settings.shake) this.cam.shake(0.12);
+            this.award(S.backflip * (e.fromRamp ? 1.5 : 1), e.fromRamp ? 'RAMP BACKFLIP!' : 'BACKFLIP!', 'good');
+          } else if (e.trick) {
             if (e.trick.clean) {
               st.tricks++;
               this.audio.play('trick');

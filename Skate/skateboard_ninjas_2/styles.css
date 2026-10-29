@@ -414,6 +414,35 @@ h3 {
   touch-action: manipulation;
 }
 .star-btn.desktop { width: 70px; height: 70px; pointer-events: none; opacity: 0.9; }
+.flip-btn {
+  position: absolute;
+  right: calc(16px + var(--safe-r) + var(--star-btn) * 0.14);
+  bottom: calc(52px + var(--safe-b) + var(--star-btn));
+  width: calc(var(--star-btn) * 0.72);
+  height: calc(var(--star-btn) * 0.72);
+  padding: 0;
+  pointer-events: auto;
+  background: rgba(20, 12, 43, 0.6);
+  border: 4px solid rgba(61, 225, 255, 0.55);
+  border-radius: 50%;
+  touch-action: manipulation;
+}
+.flip-btn.desktop { width: 56px; height: 56px; right: calc(16px + var(--safe-r) + 7px); bottom: calc(122px + var(--safe-b)); pointer-events: none; opacity: 0.9; }
+.flip-icon { position: absolute; inset: 14%; width: 72%; height: 72%; }
+.flip-btn:active .flip-icon { transform: rotate(-120deg) scale(0.92); }
+.flip-label {
+  position: absolute;
+  left: 50%;
+  bottom: -9px;
+  transform: translateX(-50%);
+  padding: 1px 6px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  background: var(--cyan);
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+}
 .star-ring { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
 .ring-bg { fill: none; stroke: rgba(255, 255, 255, 0.18); stroke-width: 8; }
 .ring-fill { fill: none; stroke: var(--yellow); stroke-width: 8; stroke-linecap: round; stroke-dasharray: 283; stroke-dashoffset: 0; }

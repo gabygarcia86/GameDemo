@@ -23,8 +23,10 @@ export const CONFIG = {
 
   speed: {
     start: 17,            // speed at the start line
-    max: 40,              // speed after a long run
-    rampDistance: 5200,   // speed = start + (max - start) * (1 - e^(-dist / rampDistance))
+    max: 40,              // top speed
+    stepEvery: 1000,      // every this many metres the speed steps up...
+    stepGain: 3,          // ...by this much (start 17 -> 40 at about 7.7 km)
+    stepBlend: 120,       // metres to ease into each new speed
     countdownRoll: 4,     // gentle roll during the countdown
   },
 
@@ -123,7 +125,16 @@ export const laneX = (lane) => (lane - 1) * CONFIG.lanes.width;
 // player will be going when they reach any point of the road.
 export function speedAt(dist) {
   const s = CONFIG.speed;
-  return s.start + (s.max - s.start) * (1 - Math.exp(-Math.max(0, dist) / s.rampDistance));
+  const d = Math.max(0, dist);
+  const level = Math.floor(d / s.stepEvery);
+  const t = Math.min(1, (d - level * s.stepEvery) / s.stepBlend);
+  const ease = level > 0 ? t * t * (3 - 2 * t) : 1;
+  return Math.min(s.max, s.start + s.stepGain * (level - 1 + ease));
+}
+
+// Which speed step the player is on (0 for the first stepEvery metres).
+export function speedLevelAt(dist) {
+  return Math.floor(Math.max(0, dist) / CONFIG.speed.stepEvery);
 }
 
 export function difficultyAt(dist) {

@@ -7,7 +7,7 @@
 // stats and settings are overlays on top of menu (settings also on pause).
 
 import { THREE, initSharedMaterials, POINT_SCALE, setOutlinesVisible } from './gfx.js';
-import { CONFIG, speedAt } from './config.js';
+import { CONFIG, speedAt, speedLevelAt } from './config.js';
 import { SaveData } from './storage.js';
 import { ENVIRONMENTS, pickEnvironment } from './environments.js';
 import { randomLook } from './cosmetics.js';
@@ -397,6 +397,7 @@ export class Game {
     this.player.reset();
     this.player.setLook(this.save.look);
     this.scoring.reset();
+    this.speedLevel = 0;
     this.missions.begin(env);
     this.generator.reset(env, (Math.random() * 2 ** 31) | 0);
     this.track.setBendInstant(0, 0);
@@ -502,6 +503,14 @@ export class Game {
     this.runTime += dt;
     const target = speedAt(this.dist);
     this.speed = damp(this.speed, target, 1.6, dt);
+    const level = speedLevelAt(this.dist);
+    if (level > this.speedLevel) {
+      this.speedLevel = level;
+      if (speedAt(this.dist + CONFIG.speed.stepBlend) > speedAt(this.dist - 1)) {
+        this.ui.callout(`${level * CONFIG.speed.stepEvery} M · SPEED UP!`, 'cyan');
+        this.audio.play('whoosh');
+      }
+    }
     const steps = Math.max(1, Math.ceil(dt / STEP));
     const h = dt / steps;
     for (let i = 0; i < steps && this.state === 'playing'; i++) {

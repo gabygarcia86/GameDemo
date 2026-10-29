@@ -227,7 +227,7 @@ the player, which keeps numbers small on very long runs.
 ## Configuring
 
 - **Difficulty and feel**: `src/config.js`. Change speeds (`speed.start`,
-  `speed.max`, `speed.rampDistance`), jump height (`player.jumpVel`,
+  `speed.max`, `speed.stepEvery`, `speed.stepGain`), jump height (`player.jumpVel`,
   `player.gravity`), row spacing (`generator.gapTimeEasy` / `gapTimeHard`), the
   star supply (`shuriken`), scoring values and the combo window.
 - **Which patterns appear and how often**: the `CHUNKS` table at the top of
@@ -274,10 +274,7 @@ licensed (`vendor/LICENSE-three.txt`). Music is from `assets/music/`.
 ## TODO
 
 - changing lanes is a stiff
-- increase difficulty every 1000 m by increase the speed of the player
 - Fix feet so there on top of the board
-- Make music longer
-- Game over screen, fix text on buttons to be centered
 - Purchased customization be more patterns and fun designs, stickers fun emojis added to gear to back
 - Hover board neon lights be more dynamic or cooler lighting
 - Drag preview ninja not working

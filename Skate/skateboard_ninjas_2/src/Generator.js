@@ -297,7 +297,7 @@ export class Generator {
     const len = Math.round(this.rng.range(18, 30 + k * 12) / RAIL.segment) * RAIL.segment;
     const rail = this.world.spawnRail(lane, d, len);
     this.coinLine(lane, d + 1, rail.d1 - 1, RAIL.top + 0.75);
-    // The other lanes get obstacles; the rail lane is always safe.
+    // The other lanes get obstacles; the rail lane is safe if you jump onto it.
     const others = LANES.filter((l) => l !== lane);
     for (let at = d + 8; at < rail.d1 - 4; at += this.spacing(at) * 0.9) {
       const specs = [null, null, null];

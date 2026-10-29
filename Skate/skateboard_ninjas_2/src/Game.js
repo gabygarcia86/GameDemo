@@ -38,6 +38,7 @@ const CRASH_REASONS = {
   rockAlien: ['That rock had a face.', 'Moon rocks: harder than they look.', 'Houston, we have a problem.'],
   alien: ['Abducted at full speed.', 'Take me to your leader... ouch.', 'A close encounter of the painful kind.'],
   fireball: ['Toasted!', 'Well done. Extra crispy.', 'The floor is literally lava.'],
+  rail: ['You have to jump onto rails!', 'Rail 1, shins 0.', 'Ollie first, grind second.'],
   backflip: ['Didn\'t quite make it round.', 'Stick the landing next time!', 'Backflip 1, Ninja 0.'],
   gap: ['The road ended. You did not.', 'Mind the gap!', 'Into the abyss!'],
   default: ['Face, meet obstacle.', 'That one came out of nowhere.', 'Ouch. Right in the board.', 'Bonk.'],

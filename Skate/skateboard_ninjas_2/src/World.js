@@ -73,7 +73,7 @@ export class World {
     this.beastPools = {}; // by kind
     this.outlines = true;
     this.events = [];
-    this._surf = { ramp: null, gap: false, ice: false, rail: null, railAhead: null };
+    this._surf = { ramp: null, gap: false, ice: false, rail: null };
     this._ramp = { h: 0, entity: null };
 
     // Coins: one instanced mesh pair for all of them.
@@ -258,7 +258,6 @@ export class World {
     s.gap = false;
     s.ice = false;
     s.rail = null;
-    s.railAhead = null;
     for (const r of this.ramps) {
       if (dist >= r.d0 && dist <= r.d1 && Math.abs(x - r.x) < RAMP.halfW + 0.15) {
         this._ramp.h = RAMP.height * (dist - r.d0) / RAMP.length;
@@ -273,7 +272,6 @@ export class World {
     for (const r of this.rails) {
       if (Math.abs(x - r.x) > 0.55) continue;
       if (dist >= r.d0 - 0.2 && dist <= r.d1) s.rail = r;
-      else if (dist < r.d0 - 0.2 && dist > r.d0 - 2.6) s.railAhead = r;
     }
     return s;
   }

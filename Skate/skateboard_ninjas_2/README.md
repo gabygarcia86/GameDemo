@@ -74,8 +74,9 @@ Controls are forgiving:
   some of them.
 - **Ramps** launch you high enough to clear tall obstacles. Press jump while on
   a ramp for a Mega Launch.
-- **Rails**: ride into one and you hop on and grind automatically. The rail lane
-  is always safe.
+- **Rails**: jump onto one to grind. Roll into a rail without jumping and you
+  crash (a shield hops you up onto it instead). The rail lane is always safe if
+  you jump on.
 - **Side bumps**: clip the side of something mid lane change and you bounce back
   into your old lane (your combo breaks). Hit something head-on and the run ends.
 - **Angry Karens** stand in your lane, push shopping carts, walk across the road,
@@ -277,4 +278,3 @@ licensed (`vendor/LICENSE-three.txt`). Music is from `assets/music/`.
 - changing lanes is a stiff
 - Purchased customization be more patterns and fun designs, stickers fun emojis added to gear to back
 - Hover board neon lights be more dynamic or cooler lighting
-- Don't auto grind, make them have to jump on it or they bail if they hit it

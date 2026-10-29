@@ -351,11 +351,17 @@ export class Player {
       } else {
         this.y = 0;
       }
-      if (this.grounded && (surf.railAhead || surf.rail) && !this.falling) {
-        // Auto hop up onto a rail just ahead (or one we've just steered into).
-        this.doJump(7.4);
-        this.events.pop(); // not a "real" jump for scoring
-        this.sliding = 0;
+      if (this.grounded && surf.rail && !this.falling) {
+        // Rolled into a rail without jumping onto it. The shield bounces you
+        // up onto it instead (like it does over gaps).
+        if (this.shield) {
+          this.doJump(7.4);
+          this.events.pop(); // not a "real" jump for scoring
+          this.sliding = 0;
+          this.events.push({ type: 'shieldHop' });
+        } else {
+          this.crash('rail');
+        }
       } else if (this.grounded && surf.gap && !this.shield) {
         this.grounded = false;
         this.falling = true;

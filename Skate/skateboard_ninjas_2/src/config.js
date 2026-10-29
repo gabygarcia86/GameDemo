@@ -71,6 +71,7 @@ export const CONFIG = {
     yeti: 250,
     rockAlien: 250,
     alien: 250,
+    scooter: 200,
     ball: 80,
     nearMiss: 60,
     jumpOver: 25,

@@ -38,6 +38,7 @@ const CRASH_REASONS = {
   rockAlien: ['That rock had a face.', 'Moon rocks: harder than they look.', 'Houston, we have a problem.'],
   alien: ['Abducted at full speed.', 'Take me to your leader... ouch.', 'A close encounter of the painful kind.'],
   fireball: ['Toasted!', 'Well done. Extra crispy.', 'The floor is literally lava.'],
+  scooter: ['Hit-and-scoot.', 'They did say "on your left".', 'Scooter 1, Ninja 0.'],
   rail: ['You have to jump onto rails!', 'Rail 1, shins 0.', 'Ollie first, grind second.'],
   backflip: ['Didn\'t quite make it round.', 'Stick the landing next time!', 'Backflip 1, Ninja 0.'],
   gap: ['The road ended. You did not.', 'Mind the gap!', 'Into the abyss!'],
@@ -50,9 +51,10 @@ const OBSTACLE_NAMES = {
   log: 'a log', roots: 'tree roots', snowdrift: 'a snowdrift', sandcastle: 'a sandcastle', cooler: 'a cooler', tumbleweed: 'a tumbleweed',
   beachBall: 'a beach ball', sign: 'a road sign', pipeBar: 'a pipe', banner: 'a banner', branch: 'a branch', surfRack: 'a surf rack',
   snowArch: 'a snowy log', neonSign: 'a neon sign', satellite: 'a crashed satellite', rover: 'a runaway rover',
+  taxi: 'a taxi', dumpster: 'a dumpster', trashBags: 'some trash bags', scaffold: 'scaffolding',
 };
 const KO_CALLOUTS = {
-  karen: 'KAREN POPPED!', ninja: 'NINJA DOWN!', bear: 'BEAR DOWN!', yeti: 'YETI TAMED!', rockAlien: 'ROCK ALIEN SMASHED!', alien: 'ALIEN ZAPPED!',
+  karen: 'KAREN POPPED!', ninja: 'NINJA DOWN!', bear: 'BEAR DOWN!', yeti: 'YETI TAMED!', rockAlien: 'ROCK ALIEN SMASHED!', alien: 'ALIEN ZAPPED!', scooter: 'SCOOTER SCRAPPED!',
 };
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
@@ -674,6 +676,7 @@ export class Game {
             st.slideUnders++;
             if (e.objType === 'branch') st.branches++;
             if (e.objType === 'satellite') st.satellites++;
+            if (e.objType === 'scaffold') st.scaffolds++;
             this.award(S.slideUnder, null);
           } else if (e.how === 'near') {
             st.nearMisses++;

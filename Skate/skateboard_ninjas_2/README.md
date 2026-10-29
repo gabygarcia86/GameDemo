@@ -3,7 +3,7 @@
 An endless 3D downhill runner for desktop and mobile browsers. Your ninja
 bombs down a winding mountain road on a longboard or hoverboard: switch
 lanes, jump, slide, grind rails, hit ramps, and throw ninja stars at Angry
-Karens and rival ninjas. Every run picks one of nine environments at random.
+Karens and rival ninjas. Every run picks one of ten environments at random.
 
 Built with HTML, CSS, JavaScript ES modules and [Three.js](https://threejs.org)
 r170, which is included in `vendor/`. There's no build step and nothing to
@@ -126,6 +126,7 @@ Controls are forgiving:
 | The Moon (Tranquility Drop)      | Craters, Earth in the sky, crashed satellites | Moon rock alien (bursts out of the ground) | Slide under 5 satellites |
 | Mars (Red Planet Rush)           | Red dunes, two moons, runaway rovers       | Green alien (beams down from a UFO) | Jump 5 rovers   |
 | Volcano (Magma Mountain)         | Lava river, embers, fireballs crash into lanes (a glowing ring marks the spot) | | Dodge 8 fireballs |
+| Downtown (Rush Hour Run)         | Skyscrapers, taxis, dumpsters, scaffolding | Scooter rider (weaves through lanes or zips across) | Slide under 5 scaffolds |
 
 Each environment has its own sky, lighting, fog, terrain, roadside props,
 weather particles, obstacle set and ambient soundscape. The same environment
@@ -191,7 +192,7 @@ skateboard_ninjas_2/
     ├── main.js           entry point (WebGL check)
     ├── Game.js           state machine, main loop, scoring events, saving
     ├── config.js         every tuning number (speeds, physics, scoring…)
-    ├── environments.js   the nine environments
+    ├── environments.js   the ten environments
     ├── cosmetics.js      colour swatches, unlock costs, default look
     ├── storage.js        save data + validation
     ├── Track.js          road, terrain, sky, mountains, scenery, weather, the road bend
@@ -242,7 +243,7 @@ the player, which keeps numbers small on very long runs.
 ### Testing helpers
 
 - `?env=snow` (or `sunset`, `daytime`, `night`, `beach`, `forest`, `moon`,
-  `mars`, `volcano`) forces that
+  `mars`, `volcano`, `downtown`) forces that
   environment for every run.
 - `?debug=1` draws collision boxes: yellow = jump, cyan = slide, magenta = go
   around, red = enemies.

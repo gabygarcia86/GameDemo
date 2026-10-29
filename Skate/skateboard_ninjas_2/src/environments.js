@@ -1,6 +1,6 @@
-// The nine environments. Each run picks one at random (never the same one twice
+// The ten environments. Each run picks one at random (never the same one twice
 // in a row). Everything that makes an environment look, sound and play
-// differently lives here so it's easy to tweak or add a tenth.
+// differently lives here so it's easy to tweak or add an eleventh.
 //
 // Obstacle lists name prefabs from models/props.js:
 //   block - tall, must change lanes      low  - knee high, jump it
@@ -8,6 +8,8 @@
 // beast (optional) names a local enemy that only shows up there (Enemies.js).
 // rock / dust (optional) colour the rocks and landing dust; planets hang extra
 // worlds in the sky; specialWeight makes the gimmick chunk come up more often.
+// buildings lines the street with building fronts; bend scales how much the
+// road winds.
 
 export const ENVIRONMENTS = {
   sunset: {
@@ -276,6 +278,38 @@ export const ENVIRONMENTS = {
     ambience: 'volcano',
     challenge: { stat: 'fireballs', target: 8, text: 'Dodge 8 falling fireballs' },
     lamps: false,
+  },
+
+  downtown: {
+    id: 'downtown',
+    name: 'DOWNTOWN',
+    title: 'Rush Hour Run',
+    blurb: 'Skyscrapers, taxis and scooters everywhere.',
+    sky: { top: '#1a1440', mid: '#5a3a8a', horizon: '#ff9a6a', bottom: '#3a2a5a' },
+    sun: { color: '#ffe0b0', glow: '#ff7a5a', dir: [0.15, 0.08, -1], size: 0.06 },
+    fog: { color: '#6a4a7a', near: 70, far: 235 },
+    hemi: { sky: '#ffc8d8', ground: '#2a2440', intensity: 1.2 },
+    light: { color: '#ffc49a', intensity: 1.9, dir: [0.3, 0.55, -0.8] },
+    road: { base: '#3a3a44', speck: '#4a4a56', line: '#ffffff', edge: '#ffe066', curb: ['#c9ccd6', '#9aa0ae'], glow: false, manholes: true },
+    terrain: { profile: 'city', low: '#9aa0ae', mid: '#b0b4c0', high: '#7a7e8a', hill: 1, shoulder: '#c9ccd6' },
+    mountains: { far: '#3a3060', near: '#2a2448', snow: false, scale: 1, skyline: true },
+    clouds: { color: '#ffb0c0', count: 6 },
+    stars: false,
+    weather: { type: 'motes', color: '#ffe0b0', count: 50 },
+    scenery: { near: ['hydrant', 'cityTree', 'trashCan', 'parkingMeter', 'newsBox', 'cityTree'], far: [] },
+    buildings: ['bldgTall', 'bldgMid', 'bldgShop', 'bldgMid', 'bldgTall', 'bldgShop'],
+    obstacles: {
+      block: ['taxi', 'dumpster', 'barrier'],
+      low: ['cones', 'trashBags', 'lowBar'],
+      high: ['scaffold', 'sign'],
+    },
+    special: 'scaffold',
+    beast: 'scooter',
+    bend: 0.5,
+    dust: '#c9ccd6',
+    ambience: 'city',
+    challenge: { stat: 'scaffolds', target: 5, text: 'Slide under 5 scaffolds' },
+    lamps: true,
   },
 };
 

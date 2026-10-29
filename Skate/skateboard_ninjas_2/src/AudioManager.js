@@ -19,7 +19,7 @@ export const SOUND_FILES = {
   ramp: null, grindStart: null, trick: null, whoosh: null, splat: null, beep: null, go: null,
   mission: null, buy: null, bump: null, pop: null, chest: null, slide: null, combo: null,
   error: null, enemyThrow: null, fall: null, nearMiss: null, bear: null, yeti: null,
-  rockAlien: null, alien: null, impact: null, backflip: null,
+  rockAlien: null, alien: null, impact: null, backflip: null, scooter: null,
 };
 
 // Browsers can't list a folder, so the songs are named here.
@@ -376,6 +376,7 @@ export class AudioManager {
       case 'space': bed('lowpass', 180, 0.5, 0.03, 0.05, 0.02); break;
       case 'mars': bed('bandpass', 380, 1.2, 0.08, 0.09, 0.05); break;
       case 'volcano': bed('lowpass', 150, 0.8, 0.14, 0.07, 0.07); break;
+      case 'city': bed('lowpass', 260, 0.6, 0.08, 0.06, 0.03); break;
       default: break;
     }
     this.ambTimer = 1;
@@ -429,6 +430,16 @@ export class AudioManager {
       case 'mars':
         this.noise({ dur: 2.8, gain: 0.07, type: 'bandpass', freq: 300, end: 800, q: 2, attack: 1.1, dest: A });
         this.ambTimer = 4 + Math.random() * 5;
+        break;
+      case 'city':
+        // Distant car horns and the odd siren.
+        if (r < 0.7) {
+          const f = 330 + Math.random() * 120;
+          for (let i = 0; i < 1 + Math.floor(Math.random() * 2); i++) this.tone({ type: 'square', freq: f, dur: 0.22, gain: 0.012, delay: i * 0.3, filter: { type: 'lowpass', freq: 1200 }, dest: A });
+        } else {
+          this.tone({ type: 'sine', freq: 700, end: 1000, dur: 1.4, gain: 0.012, vibrato: 2, dest: A });
+        }
+        this.ambTimer = 3 + Math.random() * 5;
         break;
       case 'volcano':
         // Crackling lava, now and then a distant eruption.
@@ -520,6 +531,11 @@ const SYNTH = {
     a.noise({ dur: 0.9, gain: 0.4, type: 'lowpass', freq: 900, end: 90 });
     a.tone({ freq: 110, end: 35, dur: 0.6, gain: 0.25 });
     for (let i = 0; i < 6; i++) a.noise({ dur: 0.04, gain: 0.08, type: 'highpass', freq: 2500, delay: 0.15 + Math.random() * 0.5 });
+  },
+  scooter: (a) => {
+    // Electric whine and a "ding ding!" bell.
+    a.tone({ type: 'sawtooth', freq: 500, end: 900, dur: 0.3, gain: 0.03, filter: { type: 'bandpass', freq: 1200, q: 3 } });
+    for (let i = 0; i < 2; i++) a.tone({ type: 'triangle', freq: 2350, dur: 0.18, gain: 0.07, delay: 0.25 + i * 0.16 });
   },
   backflip: (a) => {
     a.tone({ type: 'triangle', freq: 300, end: 900, dur: 0.35, gain: 0.12 });

@@ -100,7 +100,7 @@ export class Track {
     if (this.bendTimer <= 0 && live) {
       const [lo, hi] = CONFIG.curve.changeEvery;
       this.bendTimer = this.rng.range(lo, hi);
-      const amount = this.env?.id === 'forest' || this.env?.id === 'snow' ? 1.15 : 0.85;
+      const amount = this.env?.bend ?? (this.env?.id === 'forest' || this.env?.id === 'snow' ? 1.15 : 0.85);
       // Sometimes go straight for a while.
       this.tx = this.rng.chance(0.2) ? 0 : this.rng.range(-1, 1) * CONFIG.curve.maxBend * amount;
       this.ty = this.rng.range(-1, 1) * CONFIG.curve.maxHill;
@@ -202,6 +202,24 @@ export class Track {
         }
       }
       if (R.lava) drawLava(ctx, '#7a2a14');
+      if (R.manholes) {
+        // Manhole covers and patched asphalt.
+        for (const [x, y] of [[-1.15, 0.3], [1.15, 0.75]]) {
+          ctx.fillStyle = '#2a2a32';
+          ctx.beginPath();
+          ctx.arc(px(x), y * H, 16, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#55555f';
+          ctx.lineWidth = 2;
+          for (let r = 5; r < 16; r += 5) {
+            ctx.beginPath();
+            ctx.arc(px(x), y * H, r, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        }
+        ctx.fillStyle = 'rgba(20,20,26,0.35)';
+        for (let i = 0; i < 5; i++) ctx.fillRect(rng() * W, rng() * H, 20 + rng() * 40, 14 + rng() * 30);
+      }
       if (env.id === 'forest') {
         for (let i = 0; i < 60; i++) {
           ctx.fillStyle = ['#c96a2a', '#e0a040', '#8b5a2b'][i % 3];
@@ -328,6 +346,10 @@ export class Track {
         y = k * step + smoothstep(0.65, 1, raw / step - k) * step + bumps * 0.5;
         break;
       }
+      case 'city':
+        // Raised sidewalks; the buildings stand on them.
+        y = 0.18;
+        break;
       case 'craters':
         y = smoothstep(1.5, 34, u) * T.hill * (0.3 + n) + u * 0.02 + bumps + this.craterAt(x, D) * near;
         break;
@@ -400,6 +422,7 @@ export class Track {
       if (band) out.lerp(_c2.set(T.high), 0.45);
     }
     if (T.snowLine && y > T.snowLine * (0.8 + n * 0.4)) out.set('#ffffff');
+    if (T.profile === 'city') return out.set(u < 10 ? T.mid : T.high).lerp(_c2.set(T.low), n * 0.4);
     if (T.profile === 'craters') {
       const c = this.craterAt(x, D);
       if (c < 0) out.lerp(_c2.set(T.high), smoothstep(0, -1.6, c) * 0.7);
@@ -551,17 +574,41 @@ export class Track {
   buildMountains(env) {
     const M = env.mountains;
     const fog = new THREE.Color(env.fog.color);
+    const windows = [];
     const make = (radius, height, color, seed, snow) => {
-      const N = 120;
+      // [angle, height] columns around the ring.
+      const ring = [];
+      if (M.skyline) {
+        // City skyline: flat-topped towers with vertical sides (two columns
+        // at the same angle make a sheer wall), dotted with lit windows.
+        const B = 80;
+        for (let i = 0; i < B; i++) {
+          const n = hash2(i, seed * 7);
+          const h = (18 + Math.pow(n, 1.4) * height * 1.5) * M.scale;
+          const a0 = (i / B) * Math.PI * 2;
+          const a1 = ((i + 1) / B) * Math.PI * 2;
+          ring.push([a0, h], [a1, h]);
+          for (let k = 0; k < 10; k++) {
+            if (hash2(i * 10 + k, seed) < 0.35) continue;
+            const a = lerp(a0, a1, 0.1 + hash2(k, i + seed) * 0.8);
+            windows.push(Math.sin(a) * (radius - 2), 4 + hash2(i, k * 3 + seed) * (h - 8), -Math.cos(a) * (radius - 2));
+          }
+        }
+      } else {
+        const N = 120;
+        for (let i = 0; i <= N; i++) {
+          const a = (i / N) * Math.PI * 2;
+          // Sample noise around a circle so the ring joins up without a seam.
+          const n = fbm2(Math.cos(a) * 2.3 + seed, Math.sin(a) * 2.3 + seed, 4);
+          ring.push([a, (20 + Math.pow(n, 1.6) * height * 2.2) * M.scale]);
+        }
+      }
+      const N = ring.length - 1;
       const pos = [];
       const col = [];
       const base = new THREE.Color(color);
       const snowC = new THREE.Color(M.snowColor || '#ffffff');
-      for (let i = 0; i <= N; i++) {
-        const a = (i / N) * Math.PI * 2;
-        // Sample noise around a circle so the ring joins up without a seam.
-        const n = fbm2(Math.cos(a) * 2.3 + seed, Math.sin(a) * 2.3 + seed, 4);
-        const h = (20 + Math.pow(n, 1.6) * height * 2.2) * M.scale;
+      for (const [a, h] of ring) {
         const x = Math.sin(a) * radius, z = -Math.cos(a) * radius;
         pos.push(x, -60, z, x, h, z);
         col.push(fog.r, fog.g, fog.b);
@@ -584,6 +631,13 @@ export class Track {
     };
     this.backdrop.add(make(1150, 150, M.far, 3.1, M.snow));
     this.backdrop.add(make(820, 85, M.near, 7.7, M.snow));
+    if (windows.length) {
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(windows, 3));
+      const pts = new THREE.Points(g, new THREE.PointsMaterial({ color: '#ffd98a', size: 2.4, sizeAttenuation: false, fog: false, depthWrite: false }));
+      pts.frustumCulled = false;
+      this.backdrop.add(pts);
+    }
   }
 
   buildClouds(env) {
@@ -763,7 +817,7 @@ export class Track {
     this.clearScenery();
     this.layers = {};
     const dense = this.quality === 'low' ? 0.6 : this.quality === 'medium' ? 0.85 : 1;
-    const types = new Set([...env.scenery.near, ...env.scenery.far]);
+    const types = new Set([...env.scenery.near, ...env.scenery.far, ...(env.buildings || [])]);
     if (env.lamps) types.add('lamp');
     for (const t of types) {
       const big = SCENERY_INFO[t].r > 3;
@@ -772,11 +826,13 @@ export class Track {
     // Plans for the deterministic slot layout.
     const forest = env.id === 'forest';
     this.slotPlans = [
-      { layer: 'near', spacing: (forest ? 3.2 : 5.5) / dense, from: 1.4, to: 11, skip: forest ? 0.1 : 0.3, list: env.scenery.near },
+      { layer: 'near', spacing: (forest ? 3.2 : 5.5) / dense, from: 1.4, to: env.buildings ? 8 : 11, skip: forest ? 0.1 : 0.3, list: env.scenery.near },
       // Mid layer: near props plus the smaller far ones (no barns or mesas by the road).
       { layer: 'mid', spacing: (forest ? 5 : 9) / dense, from: 11, to: 30, skip: 0.25, list: env.scenery.near.concat(env.scenery.far.filter((t) => SCENERY_INFO[t].r < 3.4)) },
       { layer: 'far', spacing: 16 / dense, from: 30, to: 85, skip: 0.3, list: env.scenery.far },
     ];
+    // Downtown: the buildings fill everything past the sidewalk.
+    if (env.buildings) this.slotPlans.length = 1;
     // Night lamps + light pools on the road.
     this.poolLayer = null;
     if (env.lamps) {
@@ -853,6 +909,18 @@ export class Track {
           if (type === 'house' || type === 'cabin' || type === 'barn' || type === 'hutProp') yaw = side > 0 ? -Math.PI / 2 : Math.PI / 2;
           const scale = type === 'mesa' ? 0.8 + h * 0.8 : 0.8 + hash2(i, seed + 7) * 0.5;
           push(this.layers[type], x, this.heightAt(x, D) - 0.05, D, yaw, scale);
+        }
+      }
+    }
+    if (env.buildings) {
+      // A continuous wall of building fronts along both sidewalks.
+      const sp = 12.6;
+      for (let i = Math.floor(start / sp); i <= Math.ceil(end / sp) + 3; i++) {
+        for (const side of [-1, 1]) {
+          const type = env.buildings[Math.floor(hash2(i, side > 0 ? 911 : 912) * env.buildings.length)];
+          const x = side * (EDGE + 9 + 5 + hash2(i, 913) * 1.5);
+          const D = i * sp;
+          push(this.layers[type], x, this.heightAt(x, D) - 0.05, D, side > 0 ? -Math.PI / 2 : Math.PI / 2, 1);
         }
       }
     }

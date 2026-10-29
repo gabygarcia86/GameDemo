@@ -76,6 +76,10 @@ export const OBSTACLE_INFO = {
   snowArch: { cat: 'high', bottom: 1.2, top: 2.1, halfD: 0.4 },
   neonSign: { cat: 'high', bottom: 1.25, top: 2.6, halfD: 0.12 },
   satellite: { cat: 'high', bottom: 1.2, top: 2.2, halfD: 0.45 },
+  taxi: { cat: 'block', top: 1.6, halfD: 1.9, halfW: 0.95 },
+  dumpster: { cat: 'block', top: 1.7, halfD: 0.8 },
+  trashBags: { cat: 'low', top: 0.8, halfD: 0.45 },
+  scaffold: { cat: 'high', bottom: 1.25, top: 2.6, halfD: 0.5 },
   rover: { cat: 'low', top: 0.95, halfD: 0.5, halfW: 0.6, moving: true },
   // Falls from the sky and leaves a burning crater (World.moveObstacle).
   fireball: { cat: 'block', top: 2.2, halfD: 0.8, halfW: 0.85, moving: true },
@@ -85,7 +89,7 @@ export const OBSTACLE_INFO = {
 export const OBSTACLE_SPANS = {
   barrier: [1, 2], lowBar: [1, 2, 3], log: [1, 3], snowdrift: [1, 3], roots: [1, 3],
   sign: [1, 3], pipeBar: [1, 3], banner: [1, 3], branch: [1, 3], surfRack: [1, 3],
-  snowArch: [1, 3], neonSign: [1, 3], satellite: [1, 3], rocks: [1], crates: [1], hay: [1],
+  snowArch: [1, 3], neonSign: [1, 3], satellite: [1, 3], scaffold: [1, 3], rocks: [1], crates: [1], hay: [1],
 };
 export const spansFor = (type) => OBSTACLE_SPANS[type] || [1];
 
@@ -114,6 +118,29 @@ function surfboardInto(b, color, stripe, pos, rot, len = 2.1) {
 }
 
 // Glowing orange cracks over a rock of radius r centred at height y.
+const sd6 = (i) => -0.75 + (i % 6) * 0.3; // taxi checker squares
+
+// A downtown building front, facing +Z, width w along X, h tall. Windows are a
+// grid, hashed lit (warm glow) or dark so every building looks different.
+function buildingInto(b, w, h, d, wall, trim, seed, shop = null) {
+  b.add(box(w, h, d), wall, { pos: [0, h / 2, 0] });
+  b.add(box(w + 0.3, 0.4, d + 0.3), trim, { pos: [0, h + 0.2, 0] });
+  const floor0 = shop ? 4 : 1.2;
+  const cols = Math.max(2, Math.floor(w / 1.8));
+  for (let y = floor0; y < h - 1.2; y += 2.4) {
+    for (let c = 0; c < cols; c++) {
+      const x = -w / 2 + (c + 0.5) * (w / cols);
+      const lit = hash2(c + seed * 13, Math.round(y * 10) + seed) < 0.55;
+      b.add(box(1.1, 1.4, 0.08), lit ? (hash2(c, y + seed) < 0.3 ? '#bfe8ff' : '#ffd98a') : '#232842', { pos: [x, y + 0.7, d / 2 + 0.03], glow: lit });
+    }
+  }
+  if (shop) {
+    b.add(box(w - 0.6, 2.4, 0.08), '#9ff3ff', { pos: [0, 1.4, d / 2 + 0.03], glow: true });
+    b.add(box(w - 0.2, 0.25, 1.4), shop.awning, { pos: [0, 3.0, d / 2 + 0.7], rot: [0.25, 0, 0] });
+    b.add(box(Math.min(5, w - 1), 0.7, 0.12), shop.sign, { pos: [0, 3.6, d / 2 + 0.1], glow: true });
+  }
+}
+
 function lavaCracksInto(b, r, y, zScale = 1) {
   for (let i = 0; i < 7; i++) {
     const a = hash2(i, 31) * Math.PI * 2;
@@ -589,6 +616,68 @@ const OBSTACLE_BUILDERS = {
     for (const [x, z, h, r, c] of flames) b.add(cone(r, h, 7), c, { pos: [x, 0.3 + h / 2, z], glow: true });
     return b;
   },
+
+  // --- downtown
+  taxi() {
+    const b = new GeoBuilder();
+    b.add(box(1.75, 0.7, 3.8), '#ffcc1a', { pos: [0, 0.6, 0] });
+    b.add(box(1.55, 0.6, 2.0), '#ffcc1a', { pos: [0, 1.25, -0.15] });
+    b.add(box(1.5, 0.5, 0.05), '#9fd3ff', { pos: [0, 1.25, 0.86], rot: [-0.35, 0, 0] });
+    b.add(box(1.5, 0.5, 0.05), '#9fd3ff', { pos: [0, 1.25, -1.16], rot: [0.35, 0, 0] });
+    for (const sd of [-1, 1]) b.add(box(0.05, 0.42, 1.7), '#9fd3ff', { pos: [sd * 0.78, 1.27, -0.15] });
+    for (let i = 0; i < 6; i++) b.add(box(0.2, 0.2, 0.06), i % 2 ? '#14162b' : '#ffffff', { pos: [sd6(i), 0.62, 1.91] });
+    b.add(box(0.55, 0.22, 0.3), '#ffffff', { pos: [0, 1.66, -0.15] });
+    b.add(box(0.5, 0.12, 0.31), '#ff2e55', { pos: [0, 1.68, -0.15], glow: true });
+    for (const sd of [-1, 1]) {
+      b.add(box(0.3, 0.16, 0.05), '#fff6c0', { pos: [sd * 0.6, 0.72, 1.91], glow: true });
+      b.add(box(0.3, 0.14, 0.05), '#ff2e2e', { pos: [sd * 0.6, 0.72, -1.91], glow: true });
+      for (const z of [-1.2, 1.2]) b.add(cyl(0.34, 0.34, 0.26, 12), '#1a1a22', { pos: [sd * 0.82, 0.34, z], rot: [0, 0, Math.PI / 2] });
+    }
+    b.add(box(1.8, 0.12, 0.2), '#2a2a33', { pos: [0, 0.3, 1.9] });
+    return b;
+  },
+
+  dumpster() {
+    const b = new GeoBuilder();
+    b.add(box(1.9, 1.3, 1.3), '#2f7a4a', { pos: [0, 0.75, 0] });
+    b.add(box(2.0, 0.1, 1.4), '#245e39', { pos: [0, 1.45, 0], rot: [-0.12, 0, 0] });
+    b.add(box(1.92, 0.08, 0.06), '#245e39', { pos: [0, 1.2, 0.66] });
+    for (const x of [-0.75, 0.75]) b.add(cyl(0.1, 0.1, 0.1, 8), '#1a1a22', { pos: [x, 0.08, 0.5], rot: [0, 0, Math.PI / 2] });
+    b.add(box(0.6, 0.35, 0.02), '#ffffff', { pos: [0, 0.8, 0.66] });
+    b.add(sph(0.3, 8, 6), '#1c1c24', { pos: [0.4, 1.55, 0.2], scale: [1, 0.6, 1] });
+    return b;
+  },
+
+  trashBags() {
+    const b = new GeoBuilder();
+    const cols = ['#1c1c24', '#2a2a36', '#1c1c24', '#3a3a4a'];
+    for (let i = 0; i < 4; i++) {
+      b.add(sph(0.38, 9, 7), cols[i], { pos: [-0.55 + i * 0.37, 0.32, (i % 2) * 0.15 - 0.05], scale: [1, 0.95, 0.9] });
+      b.add(cone(0.08, 0.2, 6), cols[i], { pos: [-0.55 + i * 0.37, 0.72, (i % 2) * 0.15 - 0.05] });
+    }
+    b.add(box(0.25, 0.3, 0.2), '#d8c49a', { pos: [0.75, 0.15, 0.3], rot: [0, 0.4, 0] });
+    return b;
+  },
+
+  // Construction scaffolding over the street: slide under the boards.
+  scaffold(span) {
+    const b = new GeoBuilder();
+    const w = spanWidth(span, 0.3);
+    for (const sd of [-1, 1]) {
+      for (const z of [-0.4, 0.4]) b.add(cyl(0.05, 0.05, 2.7, 6), '#c9ccd6', { pos: [sd * w / 2, 1.35, z] });
+      b.add(box(0.06, 0.06, 0.85), '#c9ccd6', { pos: [sd * w / 2, 0.6, 0], rot: [0.9, 0, 0] });
+      b.add(box(0.5, 0.08, 1.0), '#3a3a44', { pos: [sd * w / 2, 0.04, 0] });
+    }
+    b.add(box(w, 0.1, 1.0), '#c8893f', { pos: [0, 1.32, 0] });
+    for (let i = 0; i < Math.max(3, Math.round(w / 0.5)); i++) b.add(box(0.03, 0.105, 1.0), '#9c6a2e', { pos: [-w / 2 + (i + 0.5) * (w / Math.max(3, Math.round(w / 0.5))), 1.32, 0] });
+    b.add(box(w, 0.06, 0.06), '#c9ccd6', { pos: [0, 2.6, 0.4] });
+    b.add(box(w, 0.06, 0.06), '#c9ccd6', { pos: [0, 2.6, -0.4] });
+    stripedBar(b, w, 0.3, 1.55, 0.5, '#ff7a1a', '#ffffff', 0.42);
+    b.add(box(0.9, 0.5, 0.04), '#ffcc1a', { pos: [0, 2.05, 0.52] });
+    b.add(box(0.5, 0.06, 0.05), INK, { pos: [-0.1, 2.12, 0.54], rot: [0, 0, 0.6] });
+    b.add(box(0.5, 0.06, 0.05), INK, { pos: [0.1, 2.12, 0.54], rot: [0, 0, -0.6] });
+    return b;
+  },
 };
 
 // ---------------------------------------------------------- course pieces
@@ -773,7 +862,8 @@ export const SCENERY_INFO = {
   pineSnow: { r: 1.6 }, snowMound: { r: 1.2 }, rockSnow: { r: 1.2 }, cabin: { r: 3 }, palm: { r: 1.5 },
   umbrellaProp: { r: 1.2 }, shell: { r: 0.3 }, hutProp: { r: 2.5 }, pineTall: { r: 1.8 }, oak: { r: 2.6 },
   fern: { r: 0.7 }, mushroom: { r: 0.4 }, moonFlag: { r: 0.5 }, moonDish: { r: 1.4 }, lander: { r: 3 },
-  marsSpire: { r: 1.5 }, roverProp: { r: 1 }, habitat: { r: 4.5 }, lavaRock: { r: 1.4 }, deadTree: { r: 1.2 }, lavaVent: { r: 1.2 },
+  marsSpire: { r: 1.5 }, bldgTall: { r: 6 }, bldgMid: { r: 6 }, bldgShop: { r: 6 }, hydrant: { r: 0.3 }, trashCan: { r: 0.4 },
+  cityTree: { r: 1.2 }, parkingMeter: { r: 0.2 }, newsBox: { r: 0.4 }, roverProp: { r: 1 }, habitat: { r: 4.5 }, lavaRock: { r: 1.4 }, deadTree: { r: 1.2 }, lavaVent: { r: 1.2 },
 };
 
 function pineInto(b, h, green, cap) {
@@ -1121,6 +1211,68 @@ const SCENERY_BUILDERS = {
     b.add(cyl(0.42, 0.42, 0.06, 8), '#ffb020', { pos: [0, 1.1, 0], glow: true });
     b.add(sph(0.35, 8, 5), '#ff6a1a', { pos: [0.6, 0.05, 0.5], scale: [2.2, 0.2, 1.4], glow: true });
     for (let i = 0; i < 3; i++) b.add(sph(0.35 + i * 0.12, 8, 6), '#5a4a4c', { pos: [0.1 * i, 1.6 + i * 0.7, -0.1 * i], scale: [1, 0.8, 1] });
+    return b;
+  },
+
+  // --- downtown (buildings line the street; see Track's street wall)
+  bldgTall() {
+    const b = new GeoBuilder();
+    buildingInto(b, 12, 38, 10, '#4a5578', '#2e3550', 1);
+    b.add(box(3, 3, 3), '#3a4260', { pos: [2, 39.9, -1] });
+    b.add(cyl(0.08, 0.08, 6, 4), '#c9ccd6', { pos: [-3, 41, 0] });
+    b.add(sph(0.25, 6, 4), '#ff2e55', { pos: [-3, 44, 0], glow: true });
+    return b;
+  },
+  bldgMid() {
+    const b = new GeoBuilder();
+    buildingInto(b, 12, 21, 10, '#8a4a3a', '#5a2e24', 2, { awning: '#2f7a4a', sign: '#ff5ea8' });
+    b.add(cyl(1.3, 1.3, 2.4, 10), '#7a5a3a', { pos: [-2.5, 22.6, -1] });
+    b.add(cone(1.5, 1, 10), '#5a4026', { pos: [-2.5, 24.3, -1] });
+    for (const x of [-3.5, -1.5]) b.add(cyl(0.08, 0.08, 1.4, 4), '#3a3a44', { pos: [x, 21.6, -1] });
+    return b;
+  },
+  bldgShop() {
+    const b = new GeoBuilder();
+    buildingInto(b, 12, 11, 10, '#c9b48a', '#8a7a5a', 3, { awning: '#ff2e55', sign: '#3de1ff' });
+    b.add(box(1.2, 0.8, 1.2), '#8a8c95', { pos: [3, 11.8, 0] });
+    return b;
+  },
+  hydrant() {
+    const b = new GeoBuilder();
+    b.add(cyl(0.16, 0.18, 0.6, 10), '#e0302a', { pos: [0, 0.3, 0] });
+    b.add(sph(0.17, 10, 6), '#e0302a', { pos: [0, 0.62, 0] });
+    for (const sd of [-1, 1]) b.add(cyl(0.07, 0.07, 0.14, 8), '#e0302a', { pos: [sd * 0.2, 0.42, 0], rot: [0, 0, Math.PI / 2] });
+    b.add(cyl(0.22, 0.22, 0.06, 10), '#a82420', { pos: [0, 0.03, 0] });
+    return b;
+  },
+  trashCan() {
+    const b = new GeoBuilder();
+    b.add(cyl(0.3, 0.26, 0.9, 12), '#2f5a3a', { pos: [0, 0.45, 0] });
+    b.add(cyl(0.34, 0.34, 0.08, 12), '#24462e', { pos: [0, 0.92, 0] });
+    for (let i = 0; i < 6; i++) b.add(box(0.03, 0.8, 0.03), '#24462e', { pos: [Math.cos(i) * 0.3, 0.45, Math.sin(i) * 0.3] });
+    return b;
+  },
+  cityTree() {
+    const b = new GeoBuilder();
+    b.add(box(1.3, 0.35, 1.3), '#8a8c95', { pos: [0, 0.17, 0] });
+    b.add(box(1.1, 0.05, 1.1), '#4a3220', { pos: [0, 0.36, 0] });
+    b.add(cyl(0.1, 0.14, 2.6, 6), '#5a3a22', { pos: [0, 1.6, 0] });
+    b.add(sph(1.1, 9, 7), '#3f9a4a', { pos: [0, 3.3, 0] });
+    b.add(sph(0.75, 8, 6), '#4fb85a', { pos: [0.5, 3.0, 0.3] });
+    return b;
+  },
+  parkingMeter() {
+    const b = new GeoBuilder();
+    b.add(cyl(0.04, 0.05, 1.1, 6), '#5a5d6a', { pos: [0, 0.55, 0] });
+    b.add(box(0.2, 0.32, 0.16), '#9aa3b5', { pos: [0, 1.25, 0] });
+    b.add(box(0.12, 0.08, 0.02), '#7dffb0', { pos: [0, 1.3, 0.09], glow: true });
+    return b;
+  },
+  newsBox() {
+    const b = new GeoBuilder();
+    b.add(box(0.5, 0.9, 0.45), '#2a4fa8', { pos: [0, 0.55, 0] });
+    b.add(box(0.4, 0.3, 0.02), '#e9ecf2', { pos: [0, 0.75, 0.23] });
+    for (const sd of [-1, 1]) b.add(box(0.04, 0.12, 0.4), '#1a1a22', { pos: [sd * 0.2, 0.06, 0] });
     return b;
   },
 };

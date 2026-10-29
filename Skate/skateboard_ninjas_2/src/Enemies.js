@@ -9,8 +9,9 @@ import { CONFIG, laneX } from './config.js';
 import { KarenRig } from './models/karen.js';
 import { NinjaRig, EVIL_PALETTES } from './models/ninja.js';
 import { BeastRig, buildUfo } from './models/beasts.js';
+import { ScooterRig } from './models/scooter.js';
 import { obstaclePrefab } from './models/props.js';
-import { smoothstep, lerp } from './utils.js';
+import { smoothstep, lerp, damp } from './utils.js';
 
 export const KAREN_LINES = [
   'MANAGER!', 'EXCUSE ME?!', 'SLOW DOWN!', "I'M CALLING THE HOA!", 'NO SKATING!', 'UNBELIEVABLE!',
@@ -29,7 +30,9 @@ export const ROCK_ALIEN_LINES = ['RUMBLE!', 'MY CRATER!', 'ROCK ON!', 'YOU SHALL
 export const ALIEN_LINES = ['ACK ACK!', 'TAKE ME TO YOUR LEADER!', 'EARTHLING!', 'ZORP!', 'PROBE TIME!', 'NICE BOARD, HUMAN!'];
 export const ROCK_ALIEN_KO = ['CRUMBLE!', 'ROCKED!', 'GRAVEL!', 'SMASH!'];
 export const ALIEN_KO = ['ZAPPED!', 'BEAM ME UP!', 'ACK!', 'ZORP-KO!'];
-const KO_WORDS = { karen: KAREN_KO, ninja: NINJA_KO, bear: BEAR_KO, yeti: YETI_KO, rockAlien: ROCK_ALIEN_KO, alien: ALIEN_KO };
+export const SCOOTER_LINES = ['ON YOUR LEFT!', 'BEEP BEEP!', 'MOVE IT!', "I'M LATE!", 'BIKE LANE, BRO!', 'WHEEEE!', 'ONE SEC, TEXTING!'];
+export const SCOOTER_KO = ['SCOOTED!', 'BATTERY DEAD!', 'DOCKED!', 'WIPEOUT!'];
+const KO_WORDS = { karen: KAREN_KO, ninja: NINJA_KO, bear: BEAR_KO, yeti: YETI_KO, rockAlien: ROCK_ALIEN_KO, alien: ALIEN_KO, scooter: SCOOTER_KO };
 
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
@@ -406,6 +409,77 @@ export class Beast extends EnemyBase {
   updateDying(dt) {
     if (this.ufo) this.ufo.group.visible = false;
     return super.updateDying(dt);
+  }
+}
+
+// Downtown scooter rider. Weaves head-on through the lanes toward you, or zips
+// across the street, and always ends up in the lane reserved for it.
+const WEAVE_RUN = 30; // how far up the road a weaving rider starts
+
+export class ScooterRider extends EnemyBase {
+  constructor(scene, outline) {
+    super(scene);
+    this.kind = 'scooter';
+    this.rig = new ScooterRig({ outline });
+    this.body = this.rig.root;
+    this.group.add(this.rig.root);
+    this.poofColors = this.rig.poofColors;
+    this.koColors = ['#3de1ff', '#14162b'];
+  }
+
+  setup(spec) {
+    this.reset(spec);
+    this.halfW = 0.55;
+    this.halfD = 0.6;
+    this.top = 2.0;
+    this.line = pick(SCOOTER_LINES);
+    this.saidLine = false;
+    this.side = spec.side || (this.lane === 0 ? 1 : this.lane === 2 ? -1 : Math.random() < 0.5 ? -1 : 1);
+    this.path = spec.path || [this.lane];
+    if (this.behavior === 'weave') {
+      this.dist = spec.dist + WEAVE_RUN;
+      this.x = laneX(this.path[0]);
+    }
+    if (this.behavior === 'cross') this.x = this.side * (CONFIG.road.halfWidth + 3);
+    this.rig.lean = 0;
+  }
+
+  update(dt, pDist) {
+    const dRem = this.baseDist - pDist;
+    this.t += dt;
+    this.active = dRem < CONFIG.road.ahead;
+    let mode = 'idle';
+    let lean = 0;
+    this.yaw = 0;
+    if (this.behavior === 'weave') {
+      // Rides up the lane at you, swerving lane to lane, and stops dead in
+      // the final lane by dRem 24.
+      const p = smoothstep(84, 24, dRem);
+      this.dist = this.baseDist + (1 - p) * WEAVE_RUN;
+      const n = this.path.length - 1;
+      let x = laneX(this.path[0]);
+      if (n > 0) {
+        const f = Math.min(n, p * n * 1.15);
+        const i = Math.min(n - 1, Math.floor(f));
+        const k = smoothstep(0, 1, f - i);
+        x = lerp(laneX(this.path[i]), laneX(this.path[i + 1]), k);
+        lean = (this.path[i + 1] - this.path[i]) * Math.sin(k * Math.PI) * -0.35;
+      }
+      this.x = x;
+      if (p < 1) mode = 'ride';
+    } else if (this.behavior === 'cross') {
+      // Zips across the street and brakes in its lane.
+      const p = smoothstep(56, 22, dRem);
+      this.x = lerp(this.side * (CONFIG.road.halfWidth + 3), laneX(this.lane), p);
+      if (p > 0 && p < 1) {
+        mode = 'ride';
+        this.yaw = -this.side * Math.PI / 2;
+        lean = this.side * 0.12;
+      }
+    }
+    this.rig.lean = damp(this.rig.lean, lean, 10, dt);
+    this.rig.animate(dt, mode, 1);
+    this.updateBubble(dt, dRem);
   }
 }
 

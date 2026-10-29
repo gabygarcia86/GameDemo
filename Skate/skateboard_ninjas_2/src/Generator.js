@@ -16,7 +16,7 @@ import { makeRng, lerp } from './utils.js';
 const G = CONFIG.generator;
 const LANES = [0, 1, 2];
 // How each local beast makes its entrance (beastMove).
-const BEAST_MOVES = { bear: ['cross', 'charge'], yeti: ['leap'], rockAlien: ['rise', 'cross'], alien: ['beam', 'leap'] };
+const BEAST_MOVES = { bear: ['cross', 'charge'], yeti: ['leap'], rockAlien: ['rise', 'cross'], alien: ['beam', 'leap'], scooter: ['weave', 'cross'] };
 
 // name, minimum distance, weight(difficulty)
 const CHUNKS = [
@@ -433,8 +433,11 @@ export class Generator {
     const near = lane === 0 ? -1 : lane === 2 ? 1 : this.rng.chance(0.5) ? -1 : 1;
     const behavior = this.rng.pick(BEAST_MOVES[this.env.beast]);
     const side = behavior === 'cross' ? -near : near; // cross from the far side so it's in view
+    // Weaving scooters swerve through one or two other lanes on the way in.
+    const start = this.rng.pick(LANES.filter((l) => l !== lane));
+    const path = this.rng.chance(0.5) ? [start, lane] : [this.rng.pick(LANES.filter((l) => l !== start)), start, lane];
     const specs = [null, null, null];
-    specs[lane] = { enemy: this.env.beast, behavior, extra: { side } };
+    specs[lane] = { enemy: this.env.beast, behavior, extra: { side, path } };
     if (k > 0.4 && this.rng.chance(0.5)) {
       const other = this.rng.pick(LANES.filter((l) => l !== lane));
       specs[other] = 'low';
@@ -465,7 +468,7 @@ export class Generator {
         for (const l of lanes) specs[l] = { cat: 'block', type: 'fireball', extra: { side: this.rng.chance(0.5) ? 1 : -1 } };
         const free = this.row(at, specs);
         if (free.length) this.coinLine(this.rng.pick(free), at - 4, at + 2);
-      } else if (sp === 'branch' || sp === 'neonSign' || sp === 'satellite') {
+      } else if (sp === 'branch' || sp === 'neonSign' || sp === 'satellite' || sp === 'scaffold') {
         if (this.rng.chance(0.6)) {
           this.row(at, [{ cat: 'high', type: sp }, { cat: 'high', type: sp }, { cat: 'high', type: sp }]);
         } else {

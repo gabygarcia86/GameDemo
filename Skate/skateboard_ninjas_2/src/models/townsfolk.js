@@ -35,6 +35,10 @@ const LOOKS = {
     skin: '#f6f4ff', shirt: '#ffffff', stripes: INK, pants: INK, shoe: INK, hat: 'beret', hatColor: INK,
     hands: '#ffffff', mimeFace: true, poof: ['#ffffff', INK, '#ff2e55', '#e9ecf2', '#ffe066'],
   }),
+  astronaut: () => ({
+    skin: pick(SKINS), shirt: '#e9ecf2', pants: '#e9ecf2', shoe: '#9aa0ae', hat: 'helmet', hatColor: '#e9ecf2',
+    hands: '#c9ccd6', backpack: true, poof: ['#e9ecf2', '#ffcc33', '#3d7bff', '#ff2e55', '#ffffff'],
+  }),
   hotdog: () => ({
     skin: pick(SKINS), shirt: '#ffffff', pants: '#3a3a44', shoe: '#14162b', hat: 'paper', hatColor: '#ff2e55',
     apron: '#ff2e55', mustache: true, hands: null, poof: ['#ff2e55', '#ffcc1a', '#c8893f', '#ffffff', '#e9ecf2'],
@@ -93,6 +97,14 @@ export class TownRig {
       for (const y of [0.24, 0.4]) plain(mesh(new THREE.TorusGeometry(0.265, 0.018, 4, 22), toon('#e9ecf2'), this.torso, [0, y, 0.01], [Math.PI / 2, 0, 0], [1.1, 0.88, 1]));
       mesh(new THREE.BoxGeometry(0.1, 0.08, 0.03), toon('#ffcc33'), this.torso, [-0.12, 0.5, 0.22]);
     }
+    if (L.backpack) {
+      // Life-support pack, chest controls and a mission patch.
+      mesh(new THREE.BoxGeometry(0.44, 0.5, 0.2), toon('#c9ccd6'), this.torso, [0, 0.36, -0.27]);
+      mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.45, 8), toon('#9aa0ae'), this.torso, [0.16, 0.38, -0.39]);
+      mesh(new THREE.BoxGeometry(0.2, 0.12, 0.06), toon('#6b7280'), this.torso, [0, 0.2, 0.22]);
+      for (const [x, c] of [[-0.05, '#ff2e55'], [0.05, '#3dff6a']]) plain(mesh(sph(0.018, 6, 4), new THREE.MeshBasicMaterial({ color: c }), this.torso, [x, 0.21, 0.26]));
+      mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.02, 12), toon('#3d7bff'), this.torso, [-0.14, 0.5, 0.2], [Math.PI / 2, 0, 0]);
+    }
     if (L.apron) {
       mesh(new THREE.BoxGeometry(0.42, 0.55, 0.04), toon(L.apron), this.torso, [0, 0.12, 0.21]);
       mesh(new THREE.BoxGeometry(0.2, 0.12, 0.05), M.white, this.torso, [0, 0.05, 0.23]);
@@ -129,6 +141,12 @@ export class TownRig {
     } else if (L.hat === 'beret') {
       mesh(new THREE.CylinderGeometry(0.27, 0.22, 0.08, 16), H, this.head, [0.04, R * 1.9, -0.02], [0, 0, -0.25]);
       mesh(sph(0.03, 6, 4), H, this.head, [0.08, R * 2.08, -0.02]);
+    } else if (L.hat === 'helmet') {
+      // Bubble helmet with a gold sun visor over the face.
+      mesh(sph(R * 1.32, 18, 14), H, this.head, [0, R * 1.05, -0.02]);
+      plain(mesh(new THREE.SphereGeometry(R * 1.34, 18, 10, Math.PI / 2 - 0.85, 1.7, 0.75, 1.2), toon('#ffcc33'), this.head, [0, R * 1.05, -0.02]));
+      plain(mesh(new THREE.BoxGeometry(0.08, 0.04, 0.02), new THREE.MeshBasicMaterial({ color: '#ffffff' }), this.head, [-0.12, R * 1.45, R * 1.18], [0, 0, 0.6]));
+      mesh(new THREE.TorusGeometry(0.24, 0.05, 6, 18), toon('#9aa0ae'), this.head, [0, R * 0.05, 0], [Math.PI / 2, 0, 0]);
     } else if (L.hat === 'paper') {
       mesh(new THREE.BoxGeometry(0.42, 0.14, 0.24), M.white, this.head, [0, R * 1.8, -0.02]);
       mesh(new THREE.BoxGeometry(0.43, 0.04, 0.25), H, this.head, [0, R * 1.68, -0.02]);
@@ -143,7 +161,7 @@ export class TownRig {
       const elbow = new THREE.Group();
       elbow.position.y = -0.3;
       shoulder.add(elbow);
-      mesh(cap(0.07, 0.18), L.stripes ? M.shirt : M.skin, elbow, [0, -0.13, 0]);
+      mesh(cap(0.07, 0.18), L.stripes || L.backpack ? M.shirt : M.skin, elbow, [0, -0.13, 0]);
       mesh(sph(0.08, 10, 8), M.hands, elbow, [0, -0.28, 0]);
       this.arms.push({ shoulder, elbow, side: s });
     }
@@ -264,6 +282,16 @@ export class TownRig {
       R.elbow.rotation.set(-1.0 + Math.sin(t * 22) * 0.12, 0, 0);
       this.head.rotation.set(0.25 - Math.max(0, Math.sin(t * 1.4)) * 0.4, 0, 0);
       this.mouth.scale.set(1.2, 0.3 + Math.max(0, Math.sin(t * 1.4)) * 0.5, 0.4);
+    } else if (this.kind === 'astronaut') {
+      // Bouncing in low gravity, waving hello.
+      this.body.position.y = Math.abs(Math.sin(t * 2.4)) * 0.22;
+      this.legs[0].thigh.rotation.x = -0.25;
+      this.legs[1].thigh.rotation.x = 0.15;
+      L.shoulder.rotation.set(-0.3, 0, -0.6);
+      L.elbow.rotation.set(-0.4, 0, 0);
+      R.shoulder.rotation.set(-2.6, 0, 0.3 + Math.sin(t * 5) * 0.3);
+      R.elbow.rotation.set(-0.3, 0, 0);
+      this.mouth.scale.set(1.2, 0.5, 0.4);
     } else if (this.kind === 'mime') {
       // Palms flat on an invisible wall, feeling along it.
       const slide = Math.sin(t * 2.2);

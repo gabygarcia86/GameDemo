@@ -122,10 +122,10 @@ Controls are forgiving:
 | Nighttime (Midnight Descent)     | Glowing road, neon signs, street lamps     | Street crowd*              | Knock out 5 enemies      |
 | Snowy Mountains (Frostbite Pass) | Icy patches make lane changes slippery     | Yeti (leaps off the bank)  | Cross 6 icy patches      |
 | Beach (Coconut Coast)            | Bouncing beach balls (pop them with stars) | Street crowd*              | Pop 4 beach balls        |
-| Forest (Whispering Woods)        | Fallen branches, sunbeams                  | Bear (wanders out, charges)| Slide under 5 branches   |
-| The Moon (Tranquility Drop)      | Craters, Earth in the sky, crashed satellites | Moon rock alien (bursts out of the ground) | Slide under 5 satellites |
-| Mars (Red Planet Rush)           | Red dunes, two moons, runaway rovers       | Green alien (beams down from a UFO) | Jump 5 rovers   |
-| Volcano (Magma Mountain)         | Lava river, embers, fireballs crash into lanes (a glowing ring marks the spot) | | Dodge 8 fireballs |
+| Forest (Whispering Woods)        | Fallen branches, sunbeams                  | Bear (wanders out, charges), Bigfoot (strides across, glancing at you) | Slide under 5 branches   |
+| The Moon (Tranquility Drop)      | Craters, Earth in the sky, crashed satellites | Moon rock alien (bursts out of the ground), astronaut (moon-bounces in), space fighter (swoops down) | Slide under 5 satellites |
+| Mars (Red Planet Rush)           | Red dunes, two moons, runaway rovers       | Green alien (beams down from a UFO), UFO (swoops down and hovers) | Jump 5 rovers   |
+| Volcano (Magma Mountain)         | Lava river, embers, fireballs crash into lanes (a glowing ring marks the spot) | Lava monster (bursts out of the ground or lumbers in) | Dodge 8 fireballs |
 | Downtown (Rush Hour Run)         | Skyscrapers, taxis, dumpsters, scaffolding | Street crowd* | Slide under 5 scaffolds |
 
 Each environment has its own sky, lighting, fog, terrain, roadside props,
@@ -294,6 +294,3 @@ licensed (`vendor/LICENSE-three.txt`). Music is from `assets/music/`.
 ## TODO
 
 - changing lanes is a stiff
-- Mars level add ufo enemies
-- Moon level add space ships and astronauts enemies
-- Volcano level add lava monster enemy 

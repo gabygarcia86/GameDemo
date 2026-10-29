@@ -11,6 +11,7 @@ import { NinjaRig, EVIL_PALETTES } from './models/ninja.js';
 import { BeastRig, buildUfo } from './models/beasts.js';
 import { ScooterRig } from './models/scooter.js';
 import { TownRig } from './models/townsfolk.js';
+import { CraftRig } from './models/craft.js';
 import { obstaclePrefab } from './models/props.js';
 import { smoothstep, lerp, damp } from './utils.js';
 
@@ -37,6 +38,16 @@ export const OFFICER_LINES = ['TICKET!', 'NO PARKING!', "YOU'RE GETTING TOWED!",
 export const MIME_LINES = ['...', '(INVISIBLE WALL)', '(SILENT SCREAM)', '(PULLS ROPE)', '. . . !', '(SHRUGS)'];
 export const HOTDOG_LINES = ['HOT DOGS!', 'GET YER DOGS!', 'EXTRA MUSTARD?', 'NO REFUNDS!', 'RELISH THIS!', 'TWO FOR FIVE!'];
 export const PIGEON_LINES = ['COO!', 'COO COO!', 'BREAD?!', 'FLAP FLAP!', 'MINE! MINE!'];
+export const ASTRONAUT_LINES = ['HOUSTON?!', 'ONE SMALL STEP!', 'GROUND CONTROL!', 'NO SKATING ON THE MOON!', 'MOON WALK!'];
+export const UFO_LINES = ['BEEP BOOP!', 'PREPARE FOR PROBING!', 'ZORP ZORP!', 'WE COME IN PEACE... NOT!'];
+export const SHIP_LINES = ['PEW PEW!', 'TARGET LOCKED!', 'RED FIVE, GOING IN!', 'ENGAGE!'];
+export const BIGFOOT_LINES = ['HOOOOO!', 'NO PHOTOS!', 'YOU SAW NOTHING!', '*BLURRY GRUNT*', 'I AM NOT A MYTH!'];
+export const BIGFOOT_KO = ['MYTH BUSTED!', 'SPOTTED!', 'CAUGHT ON CAMERA!', 'BLURRY!'];
+export const LAVA_LINES = ['ROOAARR!', 'HOT HOT HOT!', 'FEEL THE BURN!', "YOU'RE TOAST!", 'MAGMA TIME!'];
+export const ASTRONAUT_KO = ['LIFTOFF!', 'HOUSTON...', 'ZERO G!', 'SPACED!'];
+export const UFO_KO = ['CRASH LANDED!', 'ABDUCTED!', 'SAUCER SMASH!', 'ZORP-KO!'];
+export const SHIP_KO = ['SHOT DOWN!', 'KABOOM!', 'EJECT!', 'MAYDAY!'];
+export const LAVA_KO = ['COOLED OFF!', 'SIZZLE!', 'ROCK SOLID!', 'EXTINGUISHED!'];
 export const OFFICER_KO = ['TICKETED!', 'CITED!', 'TOWED!', 'VOID!'];
 export const MIME_KO = ['...POP!', 'BOX BROKEN!', 'MIMED OUT!', '(SILENT BONK)'];
 export const HOTDOG_KO = ['RELISHED!', 'MUSTARD!', 'DOG GONE!', 'SPLAT!'];
@@ -44,6 +55,7 @@ export const PIGEON_KO = ['FEATHERS!', 'SCATTER!', 'COO-KO!', 'FLAP OFF!'];
 const KO_WORDS = {
   karen: KAREN_KO, ninja: NINJA_KO, bear: BEAR_KO, yeti: YETI_KO, rockAlien: ROCK_ALIEN_KO, alien: ALIEN_KO, scooter: SCOOTER_KO,
   parkingOfficer: OFFICER_KO, mime: MIME_KO, hotdog: HOTDOG_KO, pigeons: PIGEON_KO,
+  astronaut: ASTRONAUT_KO, ufo: UFO_KO, ship: SHIP_KO, lavaMonster: LAVA_KO, bigfoot: BIGFOOT_KO,
 };
 
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
@@ -318,6 +330,8 @@ const BEASTS = {
   yeti: { top: 2.5, lines: YETI_LINES, ko: ['#e8f6ff', '#2f6fd8'] },
   rockAlien: { top: 2.5, lines: ROCK_ALIEN_LINES, ko: ['#5ff0ff', '#33364a'] },
   alien: { top: 2.3, lines: ALIEN_LINES, ko: ['#7dffb0', '#3a0a5a'] },
+  lavaMonster: { top: 2.8, lines: LAVA_LINES, ko: ['#ffd23f', '#5a1a0a'] },
+  bigfoot: { top: 2.75, lines: BIGFOOT_LINES, ko: ['#d8c49a', '#3e2614'] },
 };
 
 export class Beast extends EnemyBase {
@@ -369,6 +383,10 @@ export class Beast extends EnemyBase {
       if (p > 0 && p < 1) {
         mode = 'walk';
         this.yaw = -this.side * Math.PI / 2;
+        // Bigfoot strides across and turns to look right at you.
+        if (this.kind === 'bigfoot') this.rig.glance = this.side * 1.2 * Math.sin(p * Math.PI);
+      } else {
+        this.rig.glance = 0;
       }
     } else if (this.behavior === 'charge') {
       // Stands roaring up the road, then charges down the lane at you and
@@ -390,12 +408,13 @@ export class Beast extends EnemyBase {
       }
       this.collidable = this.y < 1.2;
     } else if (this.behavior === 'rise') {
-      // Bursts up out of the ground in a cloud of moon dust.
+      // Bursts up out of the ground in a cloud of moon dust (or fire).
       const p = smoothstep(54, 38, dRem);
       this.y = -(1 - p) * 2.9;
       if (p > 0 && !this.burst) {
         this.burst = true;
-        world.fx.poof(this.x, 0, this.dist, speed * 0.3, ['#d8dce8', '#9a9ca6', '#ffffff', this.poofColors[2]]);
+        const burst = this.kind === 'lavaMonster' ? ['#ff4a1a', '#ffb020', '#ffd23f', '#2a2024'] : ['#d8dce8', '#9a9ca6', '#ffffff', this.poofColors[2]];
+        world.fx.poof(this.x, 0, this.dist, speed * 0.3, burst);
       }
       if (p > 0 && p < 1) mode = 'leap';
       this.collidable = this.y > -1;
@@ -503,6 +522,7 @@ const TOWNS = {
   mime: { top: 1.95, halfW: 0.5, halfD: 0.45, lines: MIME_LINES, ko: ['#ffffff', '#140c2b'] },
   hotdog: { top: 2.0, halfW: 0.75, halfD: 0.9, lines: HOTDOG_LINES, ko: ['#ffcc1a', '#ff2e55'] },
   pigeons: { top: 1.6, halfW: 0.8, halfD: 0.7, lines: PIGEON_LINES, ko: ['#e9ecf2', '#5a6070'] },
+  astronaut: { top: 2.0, halfW: 0.55, halfD: 0.5, lines: ASTRONAUT_LINES, ko: ['#ffcc33', '#14162b'] },
 };
 export const TOWN_KINDS = Object.keys(TOWNS);
 
@@ -529,6 +549,7 @@ export class Townsperson extends EnemyBase {
     this.side = spec.side || (this.lane === 0 ? 1 : this.lane === 2 ? -1 : Math.random() < 0.5 ? -1 : 1);
     if (this.behavior === 'cross') this.x = this.side * (CONFIG.road.halfWidth + 2.2);
     if (this.behavior === 'flock') this.x = this.side * (CONFIG.road.halfWidth + 3.5);
+    if (this.behavior === 'hop') this.x = this.side * (CONFIG.road.halfWidth + 2.6);
   }
 
   update(dt, pDist) {
@@ -556,8 +577,84 @@ export class Townsperson extends EnemyBase {
         this.yaw = -this.side * Math.PI / 2;
       }
       this.collidable = this.y < 1.2;
+    } else if (this.behavior === 'hop') {
+      // Moon-bounces in from the roadside in three big low-gravity hops.
+      const p = smoothstep(60, 22, dRem);
+      this.x = lerp(this.side * (CONFIG.road.halfWidth + 2.6), laneX(this.lane), p);
+      this.y = Math.abs(Math.sin(p * Math.PI * 3)) * 1.5;
+      if (p > 0 && p < 1) {
+        mode = 'walk';
+        this.yaw = -this.side * Math.PI / 2;
+      }
+      this.collidable = this.y < 1.2;
     }
     this.rig.animate(dt, mode, 1);
+    this.updateBubble(dt, dRem);
+  }
+}
+
+// Flying craft: the Mars UFO and the moon space fighter. They swoop down out
+// of the sky and hover low in the lane reserved for them.
+const CRAFTS = {
+  ufo: { top: 1.35, halfW: 0.95, halfD: 0.95, hover: 0.35, lines: UFO_LINES, ko: ['#7be35a', '#3a0a5a'] },
+  ship: { top: 1.25, halfW: 1.0, halfD: 1.2, hover: 0.4, lines: SHIP_LINES, ko: ['#ffb020', '#14162b'] },
+};
+export const CRAFT_KINDS = Object.keys(CRAFTS);
+const SWOOP_RUN = 30; // how far up the road a swooping craft starts
+
+export class Craft extends EnemyBase {
+  constructor(scene, outline, kind) {
+    super(scene);
+    this.kind = kind;
+    this.rig = new CraftRig({ kind, outline });
+    this.body = this.rig.root;
+    this.group.add(this.rig.root);
+    this.poofColors = this.rig.poofColors;
+    this.koColors = CRAFTS[kind].ko;
+  }
+
+  setup(spec) {
+    this.reset(spec);
+    const info = CRAFTS[this.kind];
+    this.top = info.top;
+    this.halfW = info.halfW;
+    this.halfD = info.halfD;
+    this.bubbleY = 2.4;
+    this.line = pick(info.lines);
+    this.saidLine = false;
+    this.side = spec.side || (Math.random() < 0.5 ? -1 : 1);
+    this.y = info.hover;
+    if (this.behavior === 'swoop') {
+      this.x = this.side * 10;
+      this.y = 16;
+      this.dist = spec.dist + SWOOP_RUN;
+    }
+  }
+
+  update(dt, pDist) {
+    const dRem = this.baseDist - pDist;
+    this.t += dt;
+    this.active = dRem < CONFIG.road.ahead;
+    const hover = CRAFTS[this.kind].hover;
+    let bank = Math.sin(this.t * 1.7) * 0.06;
+    let dive = 0;
+    this.yaw = 0;
+    if (this.behavior === 'swoop') {
+      // Dives in from high up and off to the side, levels out in the lane.
+      const p = smoothstep(84, 32, dRem);
+      const k = 1 - p;
+      this.x = lerp(this.side * 10, laneX(this.lane), p);
+      this.y = hover + k * k * 16;
+      this.dist = this.baseDist + k * SWOOP_RUN;
+      if (p < 1) {
+        bank += -this.side * Math.sin(p * Math.PI) * 0.7;
+        dive = Math.sin(p * Math.PI) * 0.8;
+      }
+    } else {
+      this.y = hover;
+    }
+    this.collidable = this.y < 1.2;
+    this.rig.animate(dt, { bank, dive, beamTo: this.y + 0.5 });
     this.updateBubble(dt, dRem);
   }
 }

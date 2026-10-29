@@ -42,6 +42,11 @@ const CRASH_REASONS = {
   mime: ['That invisible wall was very real.', '...', 'Trapped in the box with them.'],
   hotdog: ['Covered in mustard.', 'You got relished.', 'Hot dog stand: 1, Ninja: 0.'],
   pigeons: ['A face full of feathers.', 'The pigeons were here first.', 'Coo coo... crash.'],
+  astronaut: ['One small step... into your face.', 'Houston, we have a crash.', 'Lost in space.'],
+  ufo: ['Abducted at full speed.', 'Close encounter of the crunchy kind.', 'The truth was right in front of you.'],
+  ship: ['Shot down by a space fighter.', 'That ship had right of way.', 'Never tell me the odds.'],
+  bigfoot: ['Bigfoot is real. And solid.', 'Nobody will believe this.', 'Flattened by a legend.'],
+  lavaMonster: ['Melted by a lava monster.', 'Too hot to handle.', 'You got magma-ed.'],
   scooter: ['Hit-and-scoot.', 'They did say "on your left".', 'Scooter 1, Ninja 0.'],
   rail: ['You have to jump onto rails!', 'Rail 1, shins 0.', 'Ollie first, grind second.'],
   backflip: ['Didn\'t quite make it round.', 'Stick the landing next time!', 'Backflip 1, Ninja 0.'],
@@ -59,6 +64,7 @@ const OBSTACLE_NAMES = {
 };
 const KO_CALLOUTS = {
   karen: 'KAREN POPPED!', ninja: 'NINJA DOWN!', bear: 'BEAR DOWN!', yeti: 'YETI TAMED!', rockAlien: 'ROCK ALIEN SMASHED!', alien: 'ALIEN ZAPPED!', scooter: 'SCOOTER SCRAPPED!',
+  astronaut: 'ASTRONAUT LAUNCHED!', ufo: 'UFO DOWNED!', ship: 'FIGHTER DOWN!', lavaMonster: 'LAVA MONSTER COOLED!', bigfoot: 'BIGFOOT SPOTTED!',
   parkingOfficer: 'TICKET VOIDED!', mime: 'MIME SILENCED!', hotdog: 'HOT DOG STAND DOWN!', pigeons: 'PIGEONS SCATTERED!',
 };
 const pick = (a) => a[Math.floor(Math.random() * a.length)];

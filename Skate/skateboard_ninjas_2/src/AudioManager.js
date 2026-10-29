@@ -21,6 +21,7 @@ export const SOUND_FILES = {
   error: null, enemyThrow: null, fall: null, nearMiss: null, bear: null, yeti: null,
   rockAlien: null, alien: null, impact: null, backflip: null, scooter: null,
   parkingOfficer: null, mime: null, hotdog: null, pigeons: null, fart: null,
+  astronaut: null, ufo: null, ship: null, lavaMonster: null, bigfoot: null,
 };
 
 // Browsers can't list a folder, so the songs are named here.
@@ -556,6 +557,31 @@ const SYNTH = {
     // Coo-coo, then a flurry of wings.
     for (let i = 0; i < 2; i++) a.tone({ type: 'sine', freq: 420, end: 330, dur: 0.18, gain: 0.07, delay: i * 0.22, vibrato: 18 });
     for (let i = 0; i < 6; i++) a.noise({ dur: 0.04, gain: 0.08, type: 'bandpass', freq: 1400, q: 1.5, delay: 0.45 + i * 0.05 });
+  },
+  bigfoot: (a) => {
+    // A long, eerie "whooooop" howl and a grunt.
+    a.tone({ type: 'triangle', freq: 420, end: 300, dur: 0.9, gain: 0.06, vibrato: 8, attack: 0.08 });
+    a.tone({ type: 'sawtooth', freq: 110, end: 80, dur: 0.25, gain: 0.06, delay: 0.85, filter: { type: 'lowpass', freq: 500 } });
+  },
+  astronaut: (a) => {
+    // Radio click, crackle and a two-tone beep.
+    a.noise({ dur: 0.18, gain: 0.05, type: 'bandpass', freq: 2500, q: 1 });
+    a.tone({ type: 'square', freq: 1400, dur: 0.08, gain: 0.03, delay: 0.2 });
+    a.tone({ type: 'square', freq: 1100, dur: 0.1, gain: 0.03, delay: 0.3 });
+  },
+  ufo: (a) => {
+    // Wobbly theremin sweep.
+    a.tone({ type: 'sine', freq: 600, end: 1600, dur: 0.6, gain: 0.06, vibrato: 60 });
+  },
+  ship: (a) => {
+    // Jet roar and a pew-pew.
+    a.noise({ dur: 0.6, gain: 0.08, type: 'bandpass', freq: 600, end: 1800, q: 1.2 });
+    for (let i = 0; i < 2; i++) a.tone({ type: 'square', freq: 1600, end: 300, dur: 0.12, gain: 0.04, delay: 0.15 + i * 0.14 });
+  },
+  lavaMonster: (a) => {
+    // Deep rumbling roar with a sizzle on top.
+    a.tone({ type: 'sawtooth', freq: 80, end: 55, dur: 0.7, gain: 0.09, vibrato: 25, filter: { type: 'lowpass', freq: 400 } });
+    a.noise({ dur: 0.6, gain: 0.05, type: 'highpass', freq: 3000 });
   },
   fart: (a) => {
     // A wobbly low "pfffrrt".

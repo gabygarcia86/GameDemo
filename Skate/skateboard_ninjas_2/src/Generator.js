@@ -19,6 +19,8 @@ const LANES = [0, 1, 2];
 const BEAST_MOVES = {
   bear: ['cross', 'charge'], yeti: ['leap'], rockAlien: ['rise', 'cross'], alien: ['beam', 'leap'], scooter: ['weave', 'cross'],
   parkingOfficer: ['cross'], mime: ['cross'], hotdog: ['cross'], pigeons: ['flock'],
+  bigfoot: ['cross', 'charge'],
+  astronaut: ['hop', 'cross'], ufo: ['swoop'], ship: ['swoop'], lavaMonster: ['rise', 'cross'],
 };
 
 // name, minimum distance, weight(difficulty)

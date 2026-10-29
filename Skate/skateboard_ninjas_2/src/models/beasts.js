@@ -16,6 +16,12 @@ const BEAR_COATS = [
   ['#9a6a3a', '#7a5028', '#d8b07c', '#5a3a1e', '#f2e6c8'], // grizzly
   ['#2e2622', '#1e1916', '#b08a62', '#1a1512', '#e8dcc0'], // black bear
 ];
+// Bigfoot: shaggy brown fur, leathery face and hands.
+const BIGFOOT_COATS = [
+  ['#5a3a22', '#3e2614', '#a88462', '#6b4a32', '#d8c49a'],
+  ['#6b4428', '#4a2c18', '#b8946e', '#7a5638', '#d8c49a'],
+  ['#4a3424', '#2e2016', '#9a7a5a', '#5a4030', '#c9b48a'],
+];
 const YETI_COATS = [
   ['#f2f6ff', '#d2dff2', '#6f9ad6', '#5a86c8', '#efe2c4'], // classic blue face
   ['#f6f4ff', '#dcd6f2', '#9a86d8', '#7f6cc4', '#efe2c4'], // purple face
@@ -57,7 +63,7 @@ export class BeastRig {
   constructor({ kind = 'bear', outline = true } = {}) {
     this.kind = kind;
     this.root = new THREE.Group();
-    if (kind === 'rockAlien') this.buildRockAlien();
+    if (kind === 'rockAlien' || kind === 'lavaMonster') this.buildRockAlien();
     else if (kind === 'alien') this.buildAlien();
     else this.buildFurry();
     bakeRig(this.root);
@@ -68,7 +74,8 @@ export class BeastRig {
   // Every look builds the same joints (body, hips, legs, torso, head, mouth,
   // arms) so animate() drives them all.
   buildFurry() {
-    const coat = pick(this.kind === 'yeti' ? YETI_COATS : BEAR_COATS);
+    const bigfoot = this.kind === 'bigfoot';
+    const coat = pick(this.kind === 'yeti' ? YETI_COATS : bigfoot ? BIGFOOT_COATS : BEAR_COATS);
     const M = this.mats = {
       fur: toon(coat[0]),
       fur2: toon(coat[1]),
@@ -83,8 +90,11 @@ export class BeastRig {
     };
     this.poofColors = [coat[0], coat[1], coat[2], '#ffffff', '#ffe066'];
     const yeti = this.kind === 'yeti';
+    const shaggy = yeti || bigfoot;
+    this.glance = 0; // extra head turn (Bigfoot looks at the camera mid-stride)
     this.body = new THREE.Group();
     this.root.add(this.body);
+    if (bigfoot) this.root.scale.setScalar(1.15);
 
     this.hips = new THREE.Group();
     this.hips.position.y = 0.82;
@@ -98,9 +108,15 @@ export class BeastRig {
       thigh.position.set(s * 0.24, -0.05, 0);
       this.hips.add(thigh);
       mesh(cap(0.17, 0.36), M.fur, thigh, [0, -0.32, 0]);
-      mesh(sph(0.19), yeti ? M.face : M.paw, thigh, [0, -0.66, 0.1], [0, 0, 0], [1, 0.55, 1.4]);
-      for (let i = -1; i <= 1; i++) {
-        plain(mesh(new THREE.ConeGeometry(0.035, 0.1, 5), M.claw, thigh, [i * 0.07, -0.68, 0.36], [Math.PI / 2, 0, 0]));
+      if (bigfoot) {
+        // The famous enormous feet, with stubby toes.
+        mesh(sph(0.19), M.paw, thigh, [0, -0.66, 0.2], [0, 0, 0], [1.25, 0.5, 2.3]);
+        for (let i = 0; i < 5; i++) plain(mesh(sph(0.045, 8, 6), M.face, thigh, [(i - 2) * 0.07, -0.66, 0.63 - Math.abs(i - 2) * 0.03]));
+      } else {
+        mesh(sph(0.19), yeti ? M.face : M.paw, thigh, [0, -0.66, 0.1], [0, 0, 0], [1, 0.55, 1.4]);
+        for (let i = -1; i <= 1; i++) {
+          plain(mesh(new THREE.ConeGeometry(0.035, 0.1, 5), M.claw, thigh, [i * 0.07, -0.68, 0.36], [Math.PI / 2, 0, 0]));
+        }
       }
       this.legs.push({ thigh, side: s });
     }
@@ -110,8 +126,8 @@ export class BeastRig {
     this.torso.position.y = 0.1;
     this.hips.add(this.torso);
     mesh(sph(0.52, 18, 14), M.fur, this.torso, [0, 0.48, 0], [0, 0, 0], [1.1, 1.05, 0.9]);
-    plain(mesh(sph(0.4, 16, 12), yeti ? M.fur2 : M.face, this.torso, [0, 0.4, 0.27], [0, 0, 0], [0.95, 1, 0.6]));
-    if (yeti) {
+    plain(mesh(sph(0.4, 16, 12), shaggy ? M.fur2 : M.face, this.torso, [0, 0.4, 0.27], [0, 0, 0], [0.95, 1, 0.6]));
+    if (shaggy) {
       // Shaggy tufts on the shoulders and back.
       for (let i = 0; i < 9; i++) {
         const a = -1.6 + i * 0.4;
@@ -128,7 +144,16 @@ export class BeastRig {
     const R = 0.33;
     mesh(sph(R, 18, 14), M.fur, this.head, [0, R * 0.75, 0.05]);
     const faceZ = 0.05 + R * 0.88;
-    if (yeti) {
+    if (bigfoot) {
+      // Flat leathery face under a heavy furry brow, pointed crest on top.
+      mesh(sph(0.24, 16, 12), M.face, this.head, [0, R * 0.68, 0.26], [0, 0, 0], [1, 1.1, 0.55]);
+      mesh(new THREE.BoxGeometry(0.46, 0.1, 0.16), M.fur2, this.head, [0, R * 1.18, 0.3], [0.2, 0, 0]);
+      mesh(sph(0.05, 8, 6), M.paw, this.head, [0, R * 0.82, 0.4], [0, 0, 0], [1.3, 0.8, 0.8]);
+      mesh(new THREE.ConeGeometry(0.2, 0.35, 8), M.fur, this.head, [0, R * 1.75, -0.02], [-0.25, 0, 0]);
+      for (const s of [-1, 1]) {
+        plain(mesh(new THREE.ConeGeometry(0.07, 0.22, 5), M.fur2, this.head, [s * 0.3, R * 0.9, 0.1], [0, 0, s * 1.9]));
+      }
+    } else if (yeti) {
       // Blue face, curly horns and a messy fringe.
       mesh(sph(0.25, 16, 12), M.face, this.head, [0, R * 0.72, 0.27], [0, 0, 0], [1, 1.05, 0.6]);
       for (const s of [-1, 1]) {
@@ -152,16 +177,16 @@ export class BeastRig {
     // Small furious eyes under heavy brows.
     for (const s of [-1, 1]) {
       const ex = s * 0.12;
-      const ey = R * (yeti ? 1.0 : 1.05);
-      const ez = faceZ - (yeti ? -0.04 : 0.05);
+      const ey = R * (shaggy ? 1.0 : 1.05);
+      const ez = faceZ - (shaggy ? -0.04 : 0.05);
       plain(mesh(sph(0.05, 10, 8), M.eye, this.head, [ex, ey, ez], [0, 0, 0], [1, 0.8, 0.5]));
       plain(mesh(sph(0.025, 8, 6), M.ink, this.head, [ex - s * 0.01, ey - 0.005, ez + 0.03], [0, 0, 0], [1, 1, 0.5]));
       plain(mesh(new THREE.BoxGeometry(0.15, 0.045, 0.05), M.ink, this.head, [ex, ey + 0.07, ez - 0.01], [0, 0, s * 0.45]));
     }
 
     // Wide roaring mouth with fangs.
-    const my = R * (yeti ? 0.5 : 0.36);
-    const mz = yeti ? faceZ + 0.1 : 0.42;
+    const my = R * (shaggy ? 0.5 : 0.36);
+    const mz = shaggy ? faceZ + 0.1 : 0.42;
     this.mouth = mesh(sph(0.12, 12, 8), M.mouth, this.head, [0, my, mz], [0, 0, 0], [1.3, 0.8, 0.45]);
     this.mouth.userData.noOutline = true;
     this.mouth.userData.keep = true; // opens and shuts while it roars
@@ -177,12 +202,14 @@ export class BeastRig {
       const shoulder = new THREE.Group();
       shoulder.position.set(s * 0.55, 0.75, 0);
       this.torso.add(shoulder);
-      mesh(cap(0.15, 0.34), M.fur, shoulder, [0, -0.24, 0]);
+      // Bigfoot's arms hang long, ape-style.
+      const long = bigfoot ? 1.2 : 1;
+      mesh(cap(0.15, 0.34 * long), M.fur, shoulder, [0, -0.24 * long, 0]);
       const elbow = new THREE.Group();
-      elbow.position.y = -0.48;
+      elbow.position.y = -0.48 * long;
       shoulder.add(elbow);
-      mesh(cap(0.14, 0.3), M.fur, elbow, [0, -0.2, 0]);
-      mesh(sph(0.17, 12, 10), yeti ? M.face : M.paw, elbow, [0, -0.44, 0.02], [0, 0, 0], [1, 1, 0.85]);
+      mesh(cap(0.14, 0.3 * long), M.fur, elbow, [0, -0.2 * long, 0]);
+      mesh(sph(0.17, 12, 10), shaggy ? M.face : M.paw, elbow, [0, -0.44 * long, 0.02], [0, 0, 0], [1, 1, 0.85]);
       for (let i = -1; i <= 1; i++) {
         plain(mesh(new THREE.ConeGeometry(0.035, 0.14, 5), M.claw, elbow, [i * 0.08, -0.6, 0.08], [Math.PI - 0.4, 0, 0]));
       }
@@ -191,8 +218,10 @@ export class BeastRig {
   }
 
   // A hulking stack of moon rocks with glowing crystals for eyes and a heart.
+  // The lava monster is the same hulk in black basalt, oozing magma.
   buildRockAlien() {
-    const [rock, dark, glowA, glowB] = pick(MOON_ROCKS);
+    const lava = this.kind === 'lavaMonster';
+    const [rock, dark, glowA, glowB] = lava ? ['#3a2a26', '#1e1416', '#ff6a1a', '#ffd23f'] : pick(MOON_ROCKS);
     const R = toon(rock);
     const D = toon(dark);
     const G = glow(glowA);
@@ -200,6 +229,7 @@ export class BeastRig {
     this.poofColors = [rock, dark, glowA, glowB, '#ffffff'];
     this.body = new THREE.Group();
     this.root.add(this.body);
+    if (lava) this.root.scale.setScalar(1.12);
 
     this.hips = new THREE.Group();
     this.hips.position.y = 0.85;
@@ -260,7 +290,18 @@ export class BeastRig {
       mesh(rockGeo(0.21, 17 + s), D, elbow, [0, -0.12, 0]);
       mesh(rockGeo(0.3, 19 + s), R, elbow, [0, -0.42, 0.03]);
       for (let i = -1; i <= 1; i++) plain(mesh(new THREE.ConeGeometry(0.04, 0.16, 4), G, elbow, [i * 0.1, -0.5, 0.26], [Math.PI / 2, 0, 0]));
+      if (lava) plain(mesh(new THREE.SphereGeometry(0.06, 8, 6), G, elbow, [0.05, -0.68, 0.05], [0, 0, 0], [1, 1.8, 1]));
       this.arms.push({ shoulder, elbow, side: s });
+    }
+    if (lava) {
+      // Glowing magma cracks over the chest and dripping from the jaw.
+      for (let i = 0; i < 9; i++) {
+        const a = -1.3 + i * 0.33;
+        plain(mesh(new THREE.BoxGeometry(0.05, 0.3 + (i % 3) * 0.12, 0.03), i % 2 ? G : G2, this.torso,
+          [Math.sin(a) * 0.55, 0.35 + (i % 4) * 0.12, Math.cos(a) * 0.46], [0, a, (i % 3 - 1) * 0.5]));
+      }
+      for (const x of [-0.1, 0.08]) plain(mesh(new THREE.SphereGeometry(0.04, 8, 6), G2, this.head, [x, -0.02, 0.27], [0, 0, 0], [1, 2, 1]));
+      for (const s of [-1, 1]) plain(mesh(new THREE.ConeGeometry(0.1, 0.35, 5), G, this.head, [s * 0.22, 0.45, -0.05], [0, 0, -s * 0.5]));
     }
   }
 
@@ -364,7 +405,7 @@ export class BeastRig {
         else shoulder.rotation.set(-side * sw * amp, 0, side * 0.3);
         elbow.rotation.set(run ? -0.5 : -0.3, 0, 0);
       }
-      this.head.rotation.set(run ? -0.3 : 0, Math.sin(t * 2.5) * 0.15, 0);
+      this.head.rotation.set(run ? -0.3 : 0, Math.sin(t * 2.5) * 0.15 + (this.glance || 0), 0);
       this.mouth.scale.set(1.3, run ? 0.9 + Math.abs(sw) * 0.3 : 0.5, 0.45);
     } else if (mode === 'leap') {
       // Knees tucked, arms flung up.

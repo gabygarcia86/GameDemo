@@ -8,7 +8,7 @@ import { CONFIG, laneX } from './config.js';
 import {
   OBSTACLE_INFO, obstaclePrefab, piecePrefab, RAMP, RAIL, GAP, ICE, coinGeometry, powerupBuilder,
 } from './models/props.js';
-import { Karen, EvilNinja, Beast, ScooterRider, Townsperson, TOWN_KINDS, enemyKoWord } from './Enemies.js';
+import { Karen, EvilNinja, Beast, ScooterRider, Townsperson, TOWN_KINDS, Craft, CRAFT_KINDS, enemyKoWord } from './Enemies.js';
 import { lerp, clamp } from './utils.js';
 
 const LANE = CONFIG.lanes.width;
@@ -168,6 +168,7 @@ export class World {
       enemy = (this.beastPools[kind] ??= []).pop()
         || (kind === 'scooter' ? new ScooterRider(this.root, true)
           : TOWN_KINDS.includes(kind) ? new Townsperson(this.root, true, kind)
+            : CRAFT_KINDS.includes(kind) ? new Craft(this.root, true, kind)
             : new Beast(this.root, true, kind));
       enemy.setup({ behavior, lane, dist, ...extra });
     }

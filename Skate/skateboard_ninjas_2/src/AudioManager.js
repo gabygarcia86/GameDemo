@@ -20,6 +20,7 @@ export const SOUND_FILES = {
   mission: null, buy: null, bump: null, pop: null, chest: null, slide: null, combo: null,
   error: null, enemyThrow: null, fall: null, nearMiss: null, bear: null, yeti: null,
   rockAlien: null, alien: null, impact: null, backflip: null, scooter: null,
+  parkingOfficer: null, mime: null, hotdog: null, pigeons: null,
 };
 
 // Browsers can't list a folder, so the songs are named here.
@@ -536,6 +537,25 @@ const SYNTH = {
     // Electric whine and a "ding ding!" bell.
     a.tone({ type: 'sawtooth', freq: 500, end: 900, dur: 0.3, gain: 0.03, filter: { type: 'bandpass', freq: 1200, q: 3 } });
     for (let i = 0; i < 2; i++) a.tone({ type: 'triangle', freq: 2350, dur: 0.18, gain: 0.07, delay: 0.25 + i * 0.16 });
+  },
+  parkingOfficer: (a) => {
+    // Sharp police-style whistle.
+    a.tone({ type: 'sine', freq: 2600, end: 2450, dur: 0.35, gain: 0.07, vibrato: 40 });
+  },
+  mime: (a) => {
+    // A mime makes no sound... except a slide whistle.
+    a.tone({ type: 'sine', freq: 500, end: 1400, dur: 0.3, gain: 0.05 });
+    a.tone({ type: 'sine', freq: 1400, end: 400, dur: 0.35, gain: 0.05, delay: 0.3 });
+  },
+  hotdog: (a) => {
+    // Cart bell and a "hey!".
+    a.tone({ type: 'triangle', freq: 1800, dur: 0.25, gain: 0.06 });
+    a.tone({ type: 'sawtooth', freq: 260, end: 340, dur: 0.22, gain: 0.05, delay: 0.2, filter: { type: 'bandpass', freq: 900, q: 4 } });
+  },
+  pigeons: (a) => {
+    // Coo-coo, then a flurry of wings.
+    for (let i = 0; i < 2; i++) a.tone({ type: 'sine', freq: 420, end: 330, dur: 0.18, gain: 0.07, delay: i * 0.22, vibrato: 18 });
+    for (let i = 0; i < 6; i++) a.noise({ dur: 0.04, gain: 0.08, type: 'bandpass', freq: 1400, q: 1.5, delay: 0.45 + i * 0.05 });
   },
   backflip: (a) => {
     a.tone({ type: 'triangle', freq: 300, end: 900, dur: 0.35, gain: 0.12 });

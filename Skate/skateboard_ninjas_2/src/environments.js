@@ -5,7 +5,7 @@
 // Obstacle lists name prefabs from models/props.js:
 //   block - tall, must change lanes      low  - knee high, jump it
 //   high  - overhead bar, slide under    special - the environment's gimmick
-// beast (optional) names a local enemy that only shows up there (Enemies.js).
+// locals (optional) lists the local enemies that only show up there (Enemies.js).
 // rock / dust (optional) colour the rocks and landing dust; planets hang extra
 // worlds in the sky; specialWeight makes the gimmick chunk come up more often.
 // buildings lines the street with building fronts; bend scales how much the
@@ -35,6 +35,7 @@ export const ENVIRONMENTS = {
       high: ['sign', 'pipeBar'],
     },
     special: 'tumbleweed',
+    locals: ['scooter', 'parkingOfficer', 'mime', 'pigeons', 'hotdog'],
     ambience: 'evening',
     challenge: { stat: 'tumbleweeds', target: 6, text: 'Jump over 6 tumbleweeds' },
     lamps: false,
@@ -63,6 +64,7 @@ export const ENVIRONMENTS = {
       high: ['banner', 'sign'],
     },
     special: 'hay',
+    locals: ['scooter', 'parkingOfficer', 'mime', 'pigeons', 'hotdog'],
     ambience: 'birds',
     challenge: { stat: 'hay', target: 8, text: 'Hop over 8 hay bales' },
     lamps: false,
@@ -91,6 +93,7 @@ export const ENVIRONMENTS = {
       high: ['neonSign', 'sign'],
     },
     special: 'neonSign',
+    locals: ['scooter', 'parkingOfficer', 'mime', 'pigeons', 'hotdog'],
     ambience: 'crickets',
     challenge: { stat: 'kos', target: 5, text: 'Knock out 5 enemies in the dark' },
     lamps: true,
@@ -119,7 +122,7 @@ export const ENVIRONMENTS = {
       high: ['snowArch', 'sign'],
     },
     special: 'ice',
-    beast: 'yeti',
+    locals: ['yeti'],
     ambience: 'wind',
     challenge: { stat: 'ice', target: 6, text: 'Cross 6 icy patches' },
     lamps: false,
@@ -149,6 +152,7 @@ export const ENVIRONMENTS = {
       high: ['surfRack', 'banner'],
     },
     special: 'beachBall',
+    locals: ['scooter', 'parkingOfficer', 'mime', 'pigeons', 'hotdog'],
     ambience: 'waves',
     challenge: { stat: 'balls', target: 4, text: 'Pop 4 beach balls with ninja stars' },
     lamps: false,
@@ -177,7 +181,7 @@ export const ENVIRONMENTS = {
       high: ['branch', 'sign'],
     },
     special: 'branch',
-    beast: 'bear',
+    locals: ['bear'],
     ambience: 'forest',
     challenge: { stat: 'branches', target: 5, text: 'Slide under 5 fallen branches' },
     lamps: false,
@@ -208,7 +212,7 @@ export const ENVIRONMENTS = {
       high: ['satellite', 'pipeBar'],
     },
     special: 'satellite',
-    beast: 'rockAlien',
+    locals: ['rockAlien'],
     rock: '#8c8e9a',
     dust: '#d8dce8',
     ambience: 'space',
@@ -240,7 +244,7 @@ export const ENVIRONMENTS = {
       high: ['sign', 'pipeBar'],
     },
     special: 'rover',
-    beast: 'alien',
+    locals: ['alien'],
     rock: '#a8482a',
     dust: '#e09060',
     ambience: 'mars',
@@ -304,7 +308,7 @@ export const ENVIRONMENTS = {
       high: ['scaffold', 'sign'],
     },
     special: 'scaffold',
-    beast: 'scooter',
+    locals: ['scooter', 'parkingOfficer', 'mime', 'pigeons', 'hotdog'],
     bend: 0.5,
     dust: '#c9ccd6',
     ambience: 'city',

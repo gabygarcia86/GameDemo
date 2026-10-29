@@ -10,6 +10,7 @@ import { KarenRig } from './models/karen.js';
 import { NinjaRig, EVIL_PALETTES } from './models/ninja.js';
 import { BeastRig, buildUfo } from './models/beasts.js';
 import { ScooterRig } from './models/scooter.js';
+import { TownRig } from './models/townsfolk.js';
 import { obstaclePrefab } from './models/props.js';
 import { smoothstep, lerp, damp } from './utils.js';
 
@@ -32,7 +33,18 @@ export const ROCK_ALIEN_KO = ['CRUMBLE!', 'ROCKED!', 'GRAVEL!', 'SMASH!'];
 export const ALIEN_KO = ['ZAPPED!', 'BEAM ME UP!', 'ACK!', 'ZORP-KO!'];
 export const SCOOTER_LINES = ['ON YOUR LEFT!', 'BEEP BEEP!', 'MOVE IT!', "I'M LATE!", 'BIKE LANE, BRO!', 'WHEEEE!', 'ONE SEC, TEXTING!'];
 export const SCOOTER_KO = ['SCOOTED!', 'BATTERY DEAD!', 'DOCKED!', 'WIPEOUT!'];
-const KO_WORDS = { karen: KAREN_KO, ninja: NINJA_KO, bear: BEAR_KO, yeti: YETI_KO, rockAlien: ROCK_ALIEN_KO, alien: ALIEN_KO, scooter: SCOOTER_KO };
+export const OFFICER_LINES = ['TICKET!', 'NO PARKING!', "YOU'RE GETTING TOWED!", 'EXPIRED METER!', "THAT'S A FINE!", 'LICENSE PLEASE!'];
+export const MIME_LINES = ['...', '(INVISIBLE WALL)', '(SILENT SCREAM)', '(PULLS ROPE)', '. . . !', '(SHRUGS)'];
+export const HOTDOG_LINES = ['HOT DOGS!', 'GET YER DOGS!', 'EXTRA MUSTARD?', 'NO REFUNDS!', 'RELISH THIS!', 'TWO FOR FIVE!'];
+export const PIGEON_LINES = ['COO!', 'COO COO!', 'BREAD?!', 'FLAP FLAP!', 'MINE! MINE!'];
+export const OFFICER_KO = ['TICKETED!', 'CITED!', 'TOWED!', 'VOID!'];
+export const MIME_KO = ['...POP!', 'BOX BROKEN!', 'MIMED OUT!', '(SILENT BONK)'];
+export const HOTDOG_KO = ['RELISHED!', 'MUSTARD!', 'DOG GONE!', 'SPLAT!'];
+export const PIGEON_KO = ['FEATHERS!', 'SCATTER!', 'COO-KO!', 'FLAP OFF!'];
+const KO_WORDS = {
+  karen: KAREN_KO, ninja: NINJA_KO, bear: BEAR_KO, yeti: YETI_KO, rockAlien: ROCK_ALIEN_KO, alien: ALIEN_KO, scooter: SCOOTER_KO,
+  parkingOfficer: OFFICER_KO, mime: MIME_KO, hotdog: HOTDOG_KO, pigeons: PIGEON_KO,
+};
 
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
@@ -478,6 +490,73 @@ export class ScooterRider extends EnemyBase {
       }
     }
     this.rig.lean = damp(this.rig.lean, lean, 10, dt);
+    this.rig.animate(dt, mode, 1);
+    this.updateBubble(dt, dRem);
+  }
+}
+
+// Street characters: parking officer, mime, hot-dog vendor, pigeon swarm.
+// The people stroll (or push their cart) in from the sidewalk; the pigeons
+// flutter in from the roadside. All end up in the lane reserved for them.
+const TOWNS = {
+  parkingOfficer: { top: 1.95, halfW: 0.5, halfD: 0.45, lines: OFFICER_LINES, ko: ['#d8ff3a', '#1e2a4a'] },
+  mime: { top: 1.95, halfW: 0.5, halfD: 0.45, lines: MIME_LINES, ko: ['#ffffff', '#140c2b'] },
+  hotdog: { top: 2.0, halfW: 0.75, halfD: 0.9, lines: HOTDOG_LINES, ko: ['#ffcc1a', '#ff2e55'] },
+  pigeons: { top: 1.6, halfW: 0.8, halfD: 0.7, lines: PIGEON_LINES, ko: ['#e9ecf2', '#5a6070'] },
+};
+export const TOWN_KINDS = Object.keys(TOWNS);
+
+export class Townsperson extends EnemyBase {
+  constructor(scene, outline, kind) {
+    super(scene);
+    this.kind = kind;
+    this.rig = new TownRig({ kind, outline });
+    this.body = this.rig.root;
+    this.group.add(this.rig.root);
+    this.poofColors = this.rig.poofColors;
+    this.koColors = TOWNS[kind].ko;
+  }
+
+  setup(spec) {
+    this.reset(spec);
+    const info = TOWNS[this.kind];
+    this.top = info.top;
+    this.halfW = info.halfW;
+    this.halfD = info.halfD;
+    this.bubbleY = this.kind === 'pigeons' ? 2.0 : 2.75;
+    this.line = pick(info.lines);
+    this.saidLine = false;
+    this.side = spec.side || (this.lane === 0 ? 1 : this.lane === 2 ? -1 : Math.random() < 0.5 ? -1 : 1);
+    if (this.behavior === 'cross') this.x = this.side * (CONFIG.road.halfWidth + 2.2);
+    if (this.behavior === 'flock') this.x = this.side * (CONFIG.road.halfWidth + 3.5);
+  }
+
+  update(dt, pDist) {
+    const dRem = this.baseDist - pDist;
+    this.t += dt;
+    this.active = dRem < CONFIG.road.ahead;
+    const pigeons = this.kind === 'pigeons';
+    let mode = pigeons ? (dRem < 14 ? 'flutter' : 'peck') : 'act';
+    this.yaw = 0;
+    this.y = 0;
+    if (this.behavior === 'cross') {
+      const p = smoothstep(58, 14, dRem);
+      this.x = lerp(this.side * (CONFIG.road.halfWidth + 2.2), laneX(this.lane), p);
+      if (p > 0 && p < 1) {
+        mode = this.kind === 'hotdog' ? 'push' : 'walk';
+        this.yaw = -this.side * Math.PI / 2;
+      }
+    } else if (this.behavior === 'flock') {
+      // The swarm swoops off the sidewalk in an arc and lands in the lane.
+      const p = smoothstep(52, 30, dRem);
+      this.x = lerp(this.side * (CONFIG.road.halfWidth + 3.5), laneX(this.lane), p);
+      this.y = Math.sin(p * Math.PI) * 2.6;
+      if (p > 0 && p < 1) {
+        mode = 'fly';
+        this.yaw = -this.side * Math.PI / 2;
+      }
+      this.collidable = this.y < 1.2;
+    }
     this.rig.animate(dt, mode, 1);
     this.updateBubble(dt, dRem);
   }

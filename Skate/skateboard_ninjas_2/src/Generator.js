@@ -9,14 +9,17 @@
 //   - moving enemies are timed by distance (see Enemies.js), so the lane
 //     they end up in is the lane reserved for them here.
 
-import { CONFIG, laneX, speedAt, difficultyAt } from './config.js';
+import { CONFIG, laneX, speedAt, difficultyAt, speedLevelAt } from './config.js';
 import { spansFor, RAMP, RAIL } from './models/props.js';
 import { makeRng, lerp } from './utils.js';
 
 const G = CONFIG.generator;
 const LANES = [0, 1, 2];
 // How each local beast makes its entrance (beastMove).
-const BEAST_MOVES = { bear: ['cross', 'charge'], yeti: ['leap'], rockAlien: ['rise', 'cross'], alien: ['beam', 'leap'], scooter: ['weave', 'cross'] };
+const BEAST_MOVES = {
+  bear: ['cross', 'charge'], yeti: ['leap'], rockAlien: ['rise', 'cross'], alien: ['beam', 'leap'], scooter: ['weave', 'cross'],
+  parkingOfficer: ['cross'], mime: ['cross'], hotdog: ['cross'], pigeons: ['flock'],
+};
 
 // name, minimum distance, weight(difficulty)
 const CHUNKS = [
@@ -38,7 +41,7 @@ const CHUNKS = [
   ['ninjaJump', 600, (k) => 0.3 + k * 0.6],
   ['ninjaDrop', 800, (k) => 0.3 + k * 0.4],
   ['ninjaGuard', 500, () => 0.45],
-  ['beastBlock', 150, () => 0.8], // only where env.beast is set
+  ['beastBlock', 150, () => 0.8], // only where env.locals is set
   ['beastMove', 400, (k) => 0.5 + k * 0.5],
   ['special', 200, () => 1.0],
 ];
@@ -65,8 +68,12 @@ export class Generator {
     while (this.nextDist < playerDist + G.spawnAhead) {
       const d = this.nextDist;
       const k = difficultyAt(d);
-      const options = CHUNKS.filter(([name, min]) => d >= min && name !== this.last && (this.env.beast || !name.startsWith('beast')));
-      const [name] = this.rng.weighted(options, ([n, , w]) => w(k) * (n === 'special' ? this.env.specialWeight || 1 : 1));
+      const options = CHUNKS.filter(([name, min]) => d >= min && name !== this.last && (this.env.locals || !name.startsWith('beast')));
+      // Evil ninjas turn up more often with every speed step (every 1000 m).
+      const ninjaBoost = 1 + speedLevelAt(d) * 0.3;
+      const [name] = this.rng.weighted(options, ([n, , w]) => w(k)
+        * (n === 'special' ? this.env.specialWeight || 1 : 1)
+        * (n.startsWith('ninja') ? ninjaBoost : 1));
       this.last = name;
       this.extra = 0;
       const end = this[name](d, k);
@@ -370,8 +377,13 @@ export class Generator {
     return at;
   }
 
+  // Chance of a second ninja in a ninja row: grows every 1000 m.
+  ninjaPairChance(d, k) {
+    return Math.min(0.9, (k > 0.3 ? 0.5 : 0) + speedLevelAt(d) * 0.12);
+  }
+
   ninjaBlock(d, k) {
-    const n = k > 0.3 && this.rng.chance(0.5) ? 2 : 1;
+    const n = this.rng.chance(this.ninjaPairChance(d, k)) ? 2 : 1;
     const lanes = this.pickLanes(n);
     const specs = [null, null, null];
     for (const l of lanes) specs[l] = { enemy: 'ninja', behavior: 'block' };
@@ -392,7 +404,7 @@ export class Generator {
   }
 
   ninjaDrop(d, k) {
-    const n = k > 0.5 && this.rng.chance(0.5) ? 2 : 1;
+    const n = this.rng.chance(this.ninjaPairChance(d, k) * 0.8) ? 2 : 1;
     const specs = [null, null, null];
     for (const l of this.pickLanes(n)) specs[l] = { enemy: 'ninja', behavior: 'drop' };
     const free = this.row(d, specs);
@@ -405,7 +417,7 @@ export class Generator {
     const lane = this.rng.int(0, 2);
     const specs = [null, null, null];
     specs[lane] = { enemy: 'ninja', behavior: 'block' };
-    if (k > 0.4) {
+    if (k > 0.4 || this.rng.chance(this.ninjaPairChance(d, k))) {
       const other = this.rng.pick(LANES.filter((l) => l !== lane));
       specs[other] = { enemy: 'ninja', behavior: 'block' };
     }
@@ -416,10 +428,10 @@ export class Generator {
   }
 
   beastBlock(d, k) {
-    // The local beast roaring in a lane (a pair, later on).
+    // A local enemy standing in a lane (a pair, later on).
     const n = k > 0.5 && this.rng.chance(0.35) ? 2 : 1;
     const specs = [null, null, null];
-    for (const l of this.pickLanes(n)) specs[l] = { enemy: this.env.beast, behavior: 'block' };
+    for (const l of this.pickLanes(n)) specs[l] = { enemy: this.rng.pick(this.env.locals), behavior: 'block' };
     const free = this.row(d, specs);
     this.rewardFree(free, d);
     return d;
@@ -431,13 +443,14 @@ export class Generator {
     // However they arrive, they finish in the lane reserved here.
     const lane = this.rng.int(0, 2);
     const near = lane === 0 ? -1 : lane === 2 ? 1 : this.rng.chance(0.5) ? -1 : 1;
-    const behavior = this.rng.pick(BEAST_MOVES[this.env.beast]);
+    const kind = this.rng.pick(this.env.locals);
+    const behavior = this.rng.pick(BEAST_MOVES[kind]);
     const side = behavior === 'cross' ? -near : near; // cross from the far side so it's in view
     // Weaving scooters swerve through one or two other lanes on the way in.
     const start = this.rng.pick(LANES.filter((l) => l !== lane));
     const path = this.rng.chance(0.5) ? [start, lane] : [this.rng.pick(LANES.filter((l) => l !== start)), start, lane];
     const specs = [null, null, null];
-    specs[lane] = { enemy: this.env.beast, behavior, extra: { side, path } };
+    specs[lane] = { enemy: kind, behavior, extra: { side, path } };
     if (k > 0.4 && this.rng.chance(0.5)) {
       const other = this.rng.pick(LANES.filter((l) => l !== lane));
       specs[other] = 'low';

@@ -23,9 +23,9 @@ export const CONFIG = {
 
   speed: {
     start: 17,            // speed at the start line
-    max: 40,              // top speed
+    max: 46,              // top speed
     stepEvery: 1000,      // every this many metres the speed steps up...
-    stepGain: 3,          // ...by this much (start 17 -> 40 at about 7.7 km)
+    stepGain: 3.6,        // ...by this much (start 17 -> 46 at about 8 km)
     stepBlend: 120,       // metres to ease into each new speed
     countdownRoll: 4,     // gentle roll during the countdown
   },
@@ -72,6 +72,10 @@ export const CONFIG = {
     rockAlien: 250,
     alien: 250,
     scooter: 200,
+    parkingOfficer: 200,
+    mime: 200,
+    hotdog: 200,
+    pigeons: 150,
     ball: 80,
     nearMiss: 60,
     jumpOver: 25,

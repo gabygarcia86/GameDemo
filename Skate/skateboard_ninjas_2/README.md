@@ -117,20 +117,27 @@ Controls are forgiving:
 
 | Environment                      | Gimmick                                    | Local enemy                | Challenge                |
 | -------------------------------- | ------------------------------------------ | -------------------------- | ------------------------ |
-| Sunset (Sunset Ridge)            | Tumbleweeds roll across the road           |                            | Jump 6 tumbleweeds       |
-| Daytime (Sunny Hills)            | Hay bales                                  |                            | Hop 8 hay bales          |
-| Nighttime (Midnight Descent)     | Glowing road, neon signs, street lamps     |                            | Knock out 5 enemies      |
+| Sunset (Sunset Ridge)            | Tumbleweeds roll across the road           | Street crowd*              | Jump 6 tumbleweeds       |
+| Daytime (Sunny Hills)            | Hay bales                                  | Street crowd*              | Hop 8 hay bales          |
+| Nighttime (Midnight Descent)     | Glowing road, neon signs, street lamps     | Street crowd*              | Knock out 5 enemies      |
 | Snowy Mountains (Frostbite Pass) | Icy patches make lane changes slippery     | Yeti (leaps off the bank)  | Cross 6 icy patches      |
-| Beach (Coconut Coast)            | Bouncing beach balls (pop them with stars) |                            | Pop 4 beach balls        |
+| Beach (Coconut Coast)            | Bouncing beach balls (pop them with stars) | Street crowd*              | Pop 4 beach balls        |
 | Forest (Whispering Woods)        | Fallen branches, sunbeams                  | Bear (wanders out, charges)| Slide under 5 branches   |
 | The Moon (Tranquility Drop)      | Craters, Earth in the sky, crashed satellites | Moon rock alien (bursts out of the ground) | Slide under 5 satellites |
 | Mars (Red Planet Rush)           | Red dunes, two moons, runaway rovers       | Green alien (beams down from a UFO) | Jump 5 rovers   |
 | Volcano (Magma Mountain)         | Lava river, embers, fireballs crash into lanes (a glowing ring marks the spot) | | Dodge 8 fireballs |
-| Downtown (Rush Hour Run)         | Skyscrapers, taxis, dumpsters, scaffolding | Scooter rider (weaves through lanes or zips across) | Slide under 5 scaffolds |
+| Downtown (Rush Hour Run)         | Skyscrapers, taxis, dumpsters, scaffolding | Street crowd* | Slide under 5 scaffolds |
 
 Each environment has its own sky, lighting, fog, terrain, roadside props,
 weather particles, obstacle set and ambient soundscape. The same environment
-never comes up twice in a row. Local enemies only appear in their own
+never comes up twice in a row.
+
+\*Street crowd: a scooter rider (weaves through lanes or zips across), a
+parking officer, a mime and a hot-dog vendor (they stroll or push their cart
+into your lane) and a pigeon swarm (swoops in off the sidewalk).
+
+Every 1000 m the speed steps up and evil ninjas turn up more often, more of
+them in pairs. Local enemies only appear in their own
 environment and go down to a single ninja star like everyone else.
 
 ### Missions

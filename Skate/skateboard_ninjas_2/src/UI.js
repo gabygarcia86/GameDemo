@@ -2,8 +2,9 @@
 // swatches, game over, stats, settings and the confirm dialog. Game.js owns
 // the logic; this module only reads state and reports clicks.
 
-import { FREE_SWATCHES, PREMIUM_SWATCHES, NINJA_PARTS, BOARD_PARTS, PATTERNS, STICKERS, EFFECTS, unlockIdFor } from './cosmetics.js';
+import { FREE_SWATCHES, PREMIUM_SWATCHES, NINJA_PARTS, BOARD_PARTS, PATTERNS, STICKERS, EFFECTS, HATS, unlockIdFor, colorUnlockId } from './cosmetics.js';
 import { patternThumb, stickerThumb, effectThumb } from './models/decals.js';
+import { hatThumb } from './models/hats.js';
 import { ENV_LIST } from './environments.js';
 import { formatInt } from './utils.js';
 
@@ -228,6 +229,9 @@ export class UI {
       this.decalRow({ key: 'stickerBack', label: 'Back sticker' }, STICKERS),
       this.decalRow({ key: 'trail', label: 'Effect' }, EFFECTS),
     );
+    const hats = $('cz-hats');
+    hats.textContent = '';
+    hats.append(this.decalRow({ key: 'hat', label: 'Hat' }, HATS));
     this.thumbColors = null;
     this.buildBoardRows(save);
     for (const b of document.querySelectorAll('[data-board]')) {
@@ -240,7 +244,7 @@ export class UI {
       this.onClick();
       handlers.neon(!save.look.neon);
     };
-    const tabs = [['tab-ninja', 'cz-ninja'], ['tab-board', 'cz-board']];
+    const tabs = [['tab-ninja', 'cz-ninja'], ['tab-hats', 'cz-hats'], ['tab-board', 'cz-board']];
     for (const [tab, panel] of tabs) {
       $(tab).onclick = () => {
         this.onClick();
@@ -282,12 +286,16 @@ export class UI {
       b.title = premium ? `${premium.name} (${premium.cost} coins)` : color;
       if (premium) {
         b.dataset.cost = String(premium.cost);
-        b.dataset.unlock = premium.id;
+        b.dataset.unlock = colorUnlockId(part.key, premium.id);
       }
       b.addEventListener('click', () => {
         this.onClick();
-        if (premium && !save.data.unlocked.includes(premium.id)) this.czHandlers.buy({ ...premium, unlockId: premium.id }, part.key, color);
-        else this.czHandlers.pick(part.key, color);
+        // Premium colours are bought for this part only.
+        if (premium && !this.czSave.data.unlocked.includes(b.dataset.unlock)) {
+          this.czHandlers.buy({ ...premium, unlockId: b.dataset.unlock, part: part.label }, part.key, color);
+        } else {
+          this.czHandlers.pick(part.key, color);
+        }
       });
       opts.append(b);
     };
@@ -322,7 +330,9 @@ export class UI {
         b.dataset.cost = String(item.cost);
         b.dataset.unlock = unlockIdFor(part.key, item.id);
       }
+      if (part.key === 'hat') b.classList.add('hat');
       if (item.id !== 'none' && part.key === 'trail') b.style.backgroundImage = `url(${effectThumb(item.id)})`;
+      else if (item.id !== 'none' && part.key === 'hat') b.style.backgroundImage = `url(${hatThumb(item.id)})`;
       else if (item.id !== 'none' && part.key !== 'pattern') b.style.backgroundImage = `url(${stickerThumb(item.id)})`;
       b.addEventListener('click', () => {
         this.onClick();

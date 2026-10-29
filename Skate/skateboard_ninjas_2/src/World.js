@@ -3,7 +3,7 @@
 // generator), pooled meshes, collisions and passes, and reports what happened
 // as events for Game to score and react to.
 
-import { THREE, prefabMesh, GeoBuilder, MATS, setOutlinesVisible, dotTexture } from './gfx.js';
+import { THREE, prefabMesh, GeoBuilder, MATS, setOutlinesVisible, dotTexture, canvasTexture } from './gfx.js';
 import { CONFIG, laneX } from './config.js';
 import {
   OBSTACLE_INFO, obstaclePrefab, piecePrefab, RAMP, RAIL, GAP, ICE, coinGeometry, powerupBuilder,
@@ -263,7 +263,7 @@ export class World {
       case 'ice':
         return this.pool.get(e.key, () => prefabMesh(piecePrefab('ice', 3, env), { cast: false }));
       case 'chest':
-        return this.pool.get(e.key, () => prefabMesh(piecePrefab('chest', 1, env)));
+        return this.pool.get(e.key, () => this.makeChest(env));
       case 'powerup':
         return this.pool.get(e.key, () => {
           const g = prefabMesh(powerupBuilder(e.type), { cast: false });
@@ -276,6 +276,63 @@ export class World {
         });
       default:
         return null;
+    }
+  }
+
+  // The treasure chest, with a golden glow and fan of light rays behind it.
+  // userData.spin turns (and bobs) the chest; the rays turn the other way.
+  makeChest(env) {
+    const group = new THREE.Group();
+    const spin = prefabMesh(piecePrefab('chest', 1, env));
+    spin.scale.setScalar(1.25);
+    group.add(spin);
+    const glowMat = (color, opacity) => new THREE.MeshBasicMaterial({
+      color, transparent: true, opacity, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false,
+    });
+    const halo = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: dotTexture(), color: '#ffd23f', transparent: true, opacity: 0.85, depthWrite: false, blending: THREE.AdditiveBlending, fog: false,
+    }));
+    halo.position.y = 0.6;
+    halo.scale.setScalar(3.2);
+    group.add(halo);
+    // Rays: thin planes fanning up and out of the chest, fading at the tips.
+    this.rayTex ??= canvasTexture(16, 128, (ctx, w, h) => {
+      const g = ctx.createLinearGradient(0, h, 0, 0);
+      g.addColorStop(0, 'rgba(255,255,255,1)');
+      g.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+    });
+    const rays = new THREE.Group();
+    rays.position.y = 0.55;
+    const rayMat = glowMat('#ffe9a0', 0.45);
+    rayMat.map = this.rayTex;
+    for (let i = 0; i < 8; i++) {
+      const g = new THREE.PlaneGeometry(0.28, 2.6).translate(0, 1.3, 0).rotateZ(0.45 + (i % 2) * 0.25);
+      const ray = new THREE.Mesh(g, rayMat);
+      ray.rotation.y = (i / 8) * Math.PI * 2;
+      rays.add(ray);
+    }
+    group.add(rays);
+    group.userData = { spin, halo, rays };
+    return group;
+  }
+
+  // Spin, bob and pulse the chest, and throw off the odd sparkle.
+  animateChest(e, dt, pDist) {
+    const { spin, halo, rays } = e.mesh.userData;
+    const t = this.track.time + e.dist * 0.1;
+    spin.rotation.y = t * 1.8;
+    spin.position.y = 0.15 + Math.sin(t * 3) * 0.1;
+    rays.rotation.y = -t * 0.6;
+    const pulse = 1 + Math.sin(t * 5) * 0.12;
+    halo.scale.setScalar(3.2 * pulse);
+    rays.scale.setScalar(0.9 + Math.sin(t * 2.3) * 0.1);
+    if (e.dist - pDist < 70 && Math.random() < dt * 22) {
+      const a = Math.random() * Math.PI * 2;
+      const color = Math.random() < 0.7 ? '#ffe066' : '#ffffff';
+      this.fx.stars.spawn(e.x + Math.cos(a) * 0.5, 0.5 + Math.random() * 0.6, e.dist + Math.sin(a) * 0.4,
+        Math.cos(a) * 1.2, 1.5 + Math.random() * 2, Math.sin(a) * 1.2, 0.6 + Math.random() * 0.4, 0.14 + Math.random() * 0.14, color, -0.5, 1.2);
     }
   }
 
@@ -542,6 +599,7 @@ export class World {
         if (near(e.dist)) {
           if (!e.mesh) e.mesh = this.makeMesh(e);
           this.track.place(e.mesh, e.x, 0, e.dist, true);
+          if (e.kind === 'chest') this.animateChest(e, dt, pDist);
         }
         if (e.kind === 'ice' && !e.counted && pDist > e.d1) {
           e.counted = true;

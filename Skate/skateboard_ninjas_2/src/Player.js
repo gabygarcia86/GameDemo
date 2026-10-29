@@ -25,6 +25,7 @@ const TRICKS = [
 
 export class Player {
   constructor(scene, look, outlines = true) {
+    this.outlinesOn = outlines;
     this.group = new THREE.Group();
     scene.add(this.group);
     this.visual = new THREE.Group();
@@ -100,9 +101,12 @@ export class Player {
     this.rig.setColors(look);
     this.board.setLook(look);
     this.rider.position.y = this.board.deckTop;
+    // A newly put-on hat comes with outlines; match the quality setting.
+    setOutlinesVisible(this.group, this.outlinesOn);
   }
 
   setOutlines(on) {
+    this.outlinesOn = on;
     setOutlinesVisible(this.group, on);
   }
 

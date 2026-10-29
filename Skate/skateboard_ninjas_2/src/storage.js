@@ -2,7 +2,9 @@
 // and missions. Everything loaded is validated so a corrupted or old save
 // can never break the game; anything invalid falls back to its default.
 
-import { COLOR_KEYS, DEFAULT_LOOK, BOARD_TYPES, isValidSwatch, PREMIUM_SWATCHES, ALL_UNLOCK_IDS, DECAL_KEYS, ownsDecal } from './cosmetics.js';
+import {
+  COLOR_KEYS, DEFAULT_LOOK, BOARD_TYPES, isValidSwatch, PREMIUM_SWATCHES, ALL_UNLOCK_IDS, DECAL_KEYS, ownsDecal, ownsColor, colorUnlockId,
+} from './cosmetics.js';
 
 const KEY = 'skateboardNinjas2.save';
 const VERSION = 1;
@@ -55,6 +57,7 @@ function defaults() {
     stats: defaultStats(),
     missions: [],
     lastEnv: null,
+    envPlayed: [], // levels played this round (see nextEnvironment)
   };
 }
 
@@ -67,7 +70,10 @@ function sanitize(raw) {
   d.coins = Math.floor(num(raw.coins));
   if (Array.isArray(raw.unlocked)) {
     const ids = new Set(ALL_UNLOCK_IDS);
-    d.unlocked = raw.unlocked.filter((id) => ids.has(id));
+    // Older saves unlocked a premium colour for every part at once ("gold");
+    // those purchases keep working everywhere they were sold for.
+    const legacy = raw.unlocked.flatMap((id) => (PREMIUM_SWATCHES.some((p) => p.id === id) ? COLOR_KEYS.map((k) => colorUnlockId(k, id)) : [id]));
+    d.unlocked = [...new Set(legacy.filter((id) => ids.has(id)))];
   }
 
   const look = raw.look || {};
@@ -80,10 +86,9 @@ function sanitize(raw) {
   for (const key of Object.keys(DECAL_KEYS)) {
     if (typeof look[key] === 'string' && ownsDecal(d.unlocked, key, look[key])) d.look[key] = look[key];
   }
-  // A premium colour that isn't unlocked (edited save) goes back to default.
+  // A premium colour that isn't unlocked for that part (edited save) goes back to default.
   for (const k of COLOR_KEYS) {
-    const p = PREMIUM_SWATCHES.find((s) => s.color === d.look[k]);
-    if (p && !d.unlocked.includes(p.id)) d.look[k] = DEFAULT_LOOK[k];
+    if (!ownsColor(d.unlocked, k, d.look[k])) d.look[k] = DEFAULT_LOOK[k];
   }
 
   const s = raw.settings || {};
@@ -112,6 +117,7 @@ function sanitize(raw) {
       .map((m) => ({ id: m.id, target: m.target, progress: num(m.progress), reward: num(m.reward, 50) }));
   }
   if (ENV_IDS.includes(raw.lastEnv)) d.lastEnv = raw.lastEnv;
+  if (Array.isArray(raw.envPlayed)) d.envPlayed = [...new Set(raw.envPlayed.filter((id) => ENV_IDS.includes(id)))];
   return d;
 }
 

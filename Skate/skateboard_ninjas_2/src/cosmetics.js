@@ -98,19 +98,55 @@ export const EFFECTS = [
   { id: 'fart', name: 'Fart Cloud', cost: 10000 },
 ];
 
-// Keys in the look that hold a pattern, sticker or effect id, and what they pick from.
-export const DECAL_KEYS = { pattern: PATTERNS, stickerFront: STICKERS, stickerBack: STICKERS, trail: EFFECTS };
+// Hats, worn on the ninja's head (built in models/hats.js).
+export const HATS = [
+  { id: 'none', name: 'No Hat', cost: 0 },
+  { id: 'beanie', name: 'Beanie', cost: 100 },
+  { id: 'party', name: 'Party Hat', cost: 120 },
+  { id: 'fez', name: 'Fez', cost: 150 },
+  { id: 'chef', name: 'Chef Hat', cost: 180 },
+  { id: 'propeller', name: 'Propeller Cap', cost: 200 },
+  { id: 'bunny', name: 'Bunny Ears', cost: 200 },
+  { id: 'cone', name: 'Traffic Cone', cost: 220 },
+  { id: 'graduation', name: 'Graduation Cap', cost: 250 },
+  { id: 'cowboy', name: 'Cowboy Hat', cost: 300 },
+  { id: 'topHat', name: 'Top Hat', cost: 350 },
+  { id: 'santa', name: 'Santa Hat', cost: 350 },
+  { id: 'pirate', name: 'Pirate Hat', cost: 400 },
+  { id: 'sombrero', name: 'Sombrero', cost: 400 },
+  { id: 'viking', name: 'Viking Helmet', cost: 450 },
+  { id: 'wizard', name: 'Wizard Hat', cost: 500 },
+  { id: 'unicorn', name: 'Unicorn Horn', cost: 500 },
+  { id: 'samurai', name: 'Samurai Helmet', cost: 600 },
+  { id: 'halo', name: 'Halo', cost: 600 },
+  { id: 'spaceHelmet', name: 'Space Helmet', cost: 750 },
+  { id: 'crown', name: 'Royal Crown', cost: 900 },
+];
+
+// Keys in the look that hold a pattern, sticker, effect or hat id, and what
+// they pick from.
+export const DECAL_KEYS = { pattern: PATTERNS, stickerFront: STICKERS, stickerBack: STICKERS, trail: EFFECTS, hat: HATS };
 // Unlock ids live in save.unlocked next to the colour ids.
-export const unlockIdFor = (key, id) => `${key === 'pattern' ? 'pat' : key === 'trail' ? 'fx' : 'stk'}:${id}`;
+const UNLOCK_PREFIX = { pattern: 'pat', trail: 'fx', hat: 'hat' };
+export const unlockIdFor = (key, id) => `${UNLOCK_PREFIX[key] || 'stk'}:${id}`;
+// Premium colours are bought separately for every part: Gold on the suit
+// doesn't put Gold on the mask or the deck.
+export const colorUnlockId = (part, id) => `${part}:${id}`;
 export const ALL_UNLOCK_IDS = [
-  ...PREMIUM_SWATCHES.map((p) => p.id),
+  ...COLOR_KEYS.flatMap((part) => PREMIUM_SWATCHES.map((p) => colorUnlockId(part, p.id))),
   ...PATTERNS.filter((p) => p.cost).map((p) => unlockIdFor('pattern', p.id)),
   ...STICKERS.filter((p) => p.cost).map((p) => unlockIdFor('sticker', p.id)),
   ...EFFECTS.filter((p) => p.cost).map((p) => unlockIdFor('trail', p.id)),
+  ...HATS.filter((p) => p.cost).map((p) => unlockIdFor('hat', p.id)),
 ];
 export function ownsDecal(unlocked, key, id) {
   const item = DECAL_KEYS[key]?.find((p) => p.id === id);
   return !!item && (!item.cost || unlocked.includes(unlockIdFor(key, id)));
+}
+// Whether a colour can be worn on a part (free colours always can).
+export function ownsColor(unlocked, part, value) {
+  const p = premiumFor(value);
+  return !p || unlocked.includes(colorUnlockId(part, p.id));
 }
 
 export const DEFAULT_LOOK = {
@@ -128,6 +164,7 @@ export const DEFAULT_LOOK = {
   stickerFront: 'none',
   stickerBack: 'none',
   trail: 'none',
+  hat: 'none',
 };
 
 export const BOARD_TYPES = ['longboard', 'hoverboard'];
@@ -140,12 +177,13 @@ export function premiumFor(value) {
   return PREMIUM_SWATCHES.find((p) => p.color === value) || null;
 }
 
-// A random look using only swatches the player owns.
+// A random look using only swatches, patterns, stickers and hats the player owns.
 export function randomLook(unlocked, current) {
-  const owned = [...FREE_SWATCHES, ...PREMIUM_SWATCHES.filter((p) => unlocked.includes(p.id)).map((p) => p.color)];
-  const pick = () => owned[Math.floor(Math.random() * owned.length)];
   const look = { ...current };
-  for (const k of COLOR_KEYS) look[k] = pick();
+  for (const k of COLOR_KEYS) {
+    const owned = [...FREE_SWATCHES, ...PREMIUM_SWATCHES.filter((p) => unlocked.includes(colorUnlockId(k, p.id))).map((p) => p.color)];
+    look[k] = owned[Math.floor(Math.random() * owned.length)];
+  }
   // Keep the mask readable against the suit most of the time.
   if (look.mask === look.suit) look.mask = '#14162b';
   // Owned patterns and stickers (plain/none just as likely as any one of them).

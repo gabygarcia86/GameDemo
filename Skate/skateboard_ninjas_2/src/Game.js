@@ -9,7 +9,7 @@
 import { THREE, initSharedMaterials, POINT_SCALE, setOutlinesVisible } from './gfx.js';
 import { CONFIG, speedAt, speedLevelAt } from './config.js';
 import { SaveData } from './storage.js';
-import { ENVIRONMENTS, pickEnvironment } from './environments.js';
+import { ENVIRONMENTS, pickEnvironment, nextEnvironment } from './environments.js';
 import { randomLook } from './cosmetics.js';
 import { Track } from './Track.js';
 import { Particles } from './Particles.js';
@@ -405,9 +405,11 @@ export class Game {
     }
     const where = item.kind === 'pattern' ? 'Wear it with any suit colour.'
       : item.kind === 'trail' ? 'Your ninja will never smell the same again.'
-        : item.kind ? 'Stick it on your chest or your back.'
-        : 'You can use it on any part.';
-    const ok = await this.ui.confirm(`Unlock ${item.name} for ${formatInt(item.cost)} coins? ${where}`, 'UNLOCK');
+        : item.kind === 'hat' ? 'Looking sharp!'
+          : item.kind ? 'Stick it on your chest or your back.'
+            : 'Other parts need their own unlock.';
+    const what = item.part ? `${item.name} for your ${item.part.toLowerCase()}` : item.name;
+    const ok = await this.ui.confirm(`Unlock ${what} for ${formatInt(item.cost)} coins? ${where}`, 'UNLOCK');
     if (!ok) return;
     this.save.data.coins -= item.cost;
     this.save.data.unlocked.push(item.unlockId);
@@ -431,7 +433,8 @@ export class Game {
     this.audio.unlock();
     this.audio.startMusic();
     if (this.state === 'playing' || this.state === 'paused' || this.state === 'crashing') this.endRunEarly();
-    const env = ENVIRONMENTS[this.forcedEnv] || pickEnvironment(this.save.data.lastEnv);
+    // Every level gets a turn before any of them repeats.
+    const env = ENVIRONMENTS[this.forcedEnv] || nextEnvironment(this.save.data.envPlayed, this.save.data.lastEnv);
     this.save.data.lastEnv = env.id;
     this.save.save();
     if (env !== this.env) this.setEnvironment(env);

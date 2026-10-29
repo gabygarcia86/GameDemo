@@ -977,13 +977,44 @@ function fireMarkerBuilder(outer = '#ff3d1a', inner = '#ffb020') {
   return b;
 }
 
+// The treasure chest: lid propped open with gold light spilling out, gold
+// bands and corners, a gem-set lock and a few glints. Origin at the bottom
+// centre; World spins it, bobs it and adds the halo, light rays and sparkles.
 function chestBuilder() {
   const b = new GeoBuilder();
-  b.add(box(1.0, 0.55, 0.65), '#8b3a2b', { pos: [0, 0.28, 0] });
-  b.add(cyl(0.33, 0.33, 1.0, 12, 1, false), '#9c4433', { pos: [0, 0.55, 0], rot: [0, 0, Math.PI / 2], scale: [1, 1, 0.98] });
-  for (const x of [-0.42, 0, 0.42]) b.add(box(0.08, 0.92, 0.68), '#ffcc33', { pos: [x, 0.45, 0] });
-  b.add(box(0.16, 0.2, 0.05), '#ffcc33', { pos: [0, 0.52, 0.35] });
-  for (let i = 0; i < 6; i++) b.add(cyl(0.12, 0.12, 0.04, 10), '#ffe066', { pos: [(i - 2.5) * 0.15, 0.92 + (i % 2) * 0.06, 0], rot: [Math.PI / 2, 0, i], glow: true });
+  const wood = '#9c3a2b', wood2 = '#7a2a20', gold = '#ffcc33', gold2 = '#e8a820';
+  b.add(box(1.0, 0.52, 0.66), wood, { pos: [0, 0.26, 0] });
+  for (let i = 0; i < 3; i++) b.add(box(1.01, 0.03, 0.67), wood2, { pos: [0, 0.1 + i * 0.16, 0] });
+  // Gold bands, corner caps and feet.
+  for (const x of [-0.44, 0, 0.44]) b.add(box(0.08, 0.54, 0.68), gold, { pos: [x, 0.27, 0] });
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+    b.add(box(0.12, 0.12, 0.12), gold2, { pos: [sx * 0.47, 0.06, sz * 0.31] });
+    b.add(box(0.12, 0.12, 0.12), gold2, { pos: [sx * 0.47, 0.5, sz * 0.31] });
+  }
+  // Treasure glowing inside, coins and gems spilling over the rim.
+  b.add(box(0.94, 0.06, 0.6), '#fff0a0', { pos: [0, 0.53, 0], glow: true });
+  for (let i = 0; i < 9; i++) {
+    b.add(cyl(0.09, 0.09, 0.03, 12), i % 2 ? '#ffe066' : '#ffd23f', { pos: [(hash2(i, 81) - 0.5) * 0.8, 0.57 + hash2(i, 82) * 0.08, (hash2(i, 83) - 0.5) * 0.45], rot: [hash2(i, 84) * 1.2, 0, hash2(i, 85) * 1.2], glow: true });
+  }
+  for (const [x, z, c] of [[-0.25, 0.1, '#ff2e7e'], [0.28, -0.08, '#3de1ff'], [0.05, 0.18, '#7dffb0']]) {
+    b.add(new THREE.OctahedronGeometry(0.08), c, { pos: [x, 0.64, z], scale: [1, 1.4, 1], glow: true });
+  }
+  // Lid, tipped back on its hinge.
+  const lid = (geo, color, pos, opts = {}) => b.add(geo, color, { pos, rot: [-1.05, 0, 0], ...opts });
+  const hingeY = 0.54, hingeZ = -0.33;
+  const lidAt = (y, z) => [0, hingeY + y * Math.cos(1.05) + z * Math.sin(1.05), hingeZ - y * Math.sin(1.05) + z * Math.cos(1.05)];
+  lid(new THREE.CylinderGeometry(0.33, 0.33, 1.0, 14, 1, false, 0, Math.PI).rotateZ(Math.PI / 2), wood, lidAt(0, 0.33));
+  for (const x of [-0.44, 0, 0.44]) {
+    lid(new THREE.CylinderGeometry(0.345, 0.345, 0.08, 14, 1, false, 0, Math.PI).rotateZ(Math.PI / 2), gold, [x, ...lidAt(0, 0.33).slice(1)]);
+  }
+  // The lock, with a glowing gem.
+  b.add(box(0.2, 0.24, 0.06), gold, { pos: [0, 0.42, 0.35] });
+  b.add(new THREE.OctahedronGeometry(0.07), '#ff2e55', { pos: [0, 0.43, 0.39], scale: [1, 1.2, 0.6], glow: true });
+  // Shiny glints on the gold.
+  for (const [x, y] of [[-0.44, 0.38], [0.44, 0.16], [0, 0.22]]) {
+    b.add(box(0.03, 0.14, 0.01), '#ffffff', { pos: [x, y, 0.345], glow: true });
+    b.add(box(0.14, 0.03, 0.01), '#ffffff', { pos: [x, y, 0.345], glow: true });
+  }
   return b;
 }
 

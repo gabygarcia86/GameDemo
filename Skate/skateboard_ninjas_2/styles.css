@@ -580,6 +580,8 @@ h3 {
 .swatch.tile { width: 40px; height: 40px; border-radius: 10px; background: #2d2052 center / cover no-repeat; }
 .swatch.tile.none::after { content: "\2205"; position: absolute; inset: 0; display: grid; place-items: center; font: 900 18px/1 var(--font-display); color: var(--muted); }
 .swatch.tile.locked::before { inset: 12px 13px 14px; }
+.swatch.tile.hat { width: 58px; height: 58px; border-radius: 12px; background-color: #3a2a68; }
+.swatch.tile.hat.locked::before { inset: 4px 4px auto auto; width: 16px; height: 18px; } /* padlock in the corner, hat stays visible */
 .swatch.rainbow { background: conic-gradient(#ff2e55, #ffb703, #ffe066, #4dff9a, #3de1ff, #7b2ff7, #ff2e7e, #ff2e55); }
 .swatch.locked::after {
   content: attr(data-cost);

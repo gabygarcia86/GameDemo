@@ -5,6 +5,7 @@
 
 import { THREE, toon, toonGradient, addOutlines, bakeRig } from '../gfx.js';
 import { patternTexture, stickerTexture } from './decals.js';
+import { hatMesh } from './hats.js';
 
 const INK = '#140c2b';
 const SKIN = '#f2c29a';
@@ -34,6 +35,9 @@ export const EVIL_PALETTES = [
 export class NinjaRig {
   constructor({ evil = false, palette = null, outline = true } = {}) {
     this.evil = evil;
+    this.outline = outline;
+    this.hat = null;
+    this.hatId = 'none';
     this.root = new THREE.Group();
     this.mats = {
       suit: toon('#2f3a7a', { unique: true }),
@@ -173,6 +177,19 @@ export class NinjaRig {
     }
     if (c.eyes && this.mats.eye) this.mats.eye.color.set(c.eyes);
     this.setDecals(c);
+    if (!this.evil) this.setHat(c.hat);
+  }
+
+  // The player's hat (models/hats.js), worn on the head joint.
+  setHat(id = 'none') {
+    if (this.hatId === id) return;
+    if (this.hat) this.head.remove(this.hat);
+    this.hatId = id;
+    this.hat = hatMesh(id, this.outline);
+    if (this.hat) this.head.add(this.hat);
+    // Some hats (the space helmet) would have the headband tails poking through.
+    const tails = !this.hat?.userData.hideTails;
+    for (const t of this.tails) t.pivot.visible = tails;
   }
 
   // Suit pattern (a texture painted in the suit colours) and stickers.
@@ -212,13 +229,15 @@ export class NinjaRig {
     arm.elbow.rotation.set(-bend, 0, 0);
   }
 
-  // Headband tails flap faster at speed.
+  // Headband tails flap faster at speed (and a propeller cap spins faster).
   updateTails(dt, speed) {
     this.tailTime += dt * (6 + speed * 0.5);
     for (const t of this.tails) {
       const f = this.tailTime + t.side;
       t.pivot.rotation.set(0.25 + Math.sin(f) * 0.25, t.side * 0.25 + Math.sin(f * 1.3) * 0.15, Math.sin(f * 0.7) * 0.2);
     }
+    const spin = this.hat?.userData.spin;
+    if (spin) spin.rotation.y += dt * (8 + speed * 0.6);
   }
 
   // Reset to a neutral standing pose.

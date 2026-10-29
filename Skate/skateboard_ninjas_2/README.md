@@ -3,7 +3,7 @@
 An endless 3D downhill runner for desktop and mobile browsers. Your ninja
 bombs down a winding mountain road on a longboard or hoverboard: switch
 lanes, jump, slide, grind rails, hit ramps, and throw ninja stars at Angry
-Karens and rival ninjas. Every run picks one of thirteen environments at random.
+Karens and rival ninjas. Every run picks one of thirteen environments, and you play all of them before any repeats.
 
 Built with HTML, CSS, JavaScript ES modules and [Three.js](https://threejs.org)
 r170, which is included in `vendor/`. There's no build step and nothing to
@@ -85,6 +85,8 @@ Controls are forgiving:
 - **Evil ninjas** guard lanes and treasure chests, hop between lanes, drop out of
   the sky, and throw paint balls. The paint just splats on your screen; it can't
   hurt you, and sliding dodges it.
+- **Treasure chests** spin and float in a golden glow with light rays and
+  sparkles. Ride through one for 25 coins (star its guard first).
 - **Ninja stars** lock on to the nearest enemy in your lane, or one in the next
   lane over if yours is clear. You carry 5 stars, and they recharge one every
   2.4 s. Popped enemies vanish in a cartoon burst and are worth points plus
@@ -132,8 +134,10 @@ Controls are forgiving:
 | Trench Run (Battle Station Trench) | A narrow metal trench, laser bolts streak up the lanes at you, laser tripwires and beams | Twin-wing fighter (screams up the trench or dives in, firing harmless laser shots) | Dodge 10 laser blasts |
 
 Each environment has its own sky, lighting, fog, terrain, roadside props,
-weather particles, obstacle set and ambient soundscape. The same environment
-never comes up twice in a row.
+weather particles, obstacle set and ambient soundscape. Levels are dealt
+like a shuffled deck: every one comes up once, in a random order, before any
+repeats, and never the same one twice in a row (the round in progress is
+saved).
 
 \*Street crowd: a scooter rider (weaves through lanes or zips across), a
 parking officer, a mime and a hot-dog vendor (they stroll or push their cart
@@ -159,8 +163,10 @@ preview; drag it to spin your ninja.
   underside, and accent/neon colours. The hoverboard floats, leaves a glowing
   trail, and can have its neon lights switched on or off.
 - 16 colours are free. 8 premium colours cost coins: Gold, Neon Lime, Hot
-  Magenta, Chrome, Galaxy, Lava, Mint, and an animated Rainbow. Once unlocked, a
-  colour works on every part.
+  Magenta, Chrome, Galaxy, Lava, Mint, and an animated Rainbow. Premium colours
+  are bought for one part at a time: Gold on the suit doesn't unlock Gold for
+  the mask or the deck. (Colours bought before this rule keep working on every
+  part.)
 - **Suit patterns** (150 to 600 coins), painted in your suit and accent colours:
   Racing Stripes, Polka Dots, Checkerboard, Starry Night, Camo, Tiger Stripes,
   Lightning, Flames, Skulls, Cyber Circuit, Dragon Scales and Galaxy.
@@ -171,7 +177,12 @@ preview; drag it to spin your ninja.
 - **Effect: Fart Cloud** (10,000 coins): every couple of seconds a burst of
   green gas puffs out of your ninja's backside, with sound on the customize
   screen. Switch it off any time with the empty tile.
-- **Randomize** only picks from colours, patterns, stickers and effects you own.
+- **Hats** (100 to 900 coins, on their own tab): Beanie, Party Hat, Fez, Chef
+  Hat, Propeller Cap (it spins faster the faster you go), Bunny Ears, Traffic
+  Cone, Graduation Cap, Cowboy Hat, Top Hat, Santa Hat, Pirate Hat, Sombrero,
+  Viking Helmet, Wizard Hat, Unicorn Horn, Samurai Helmet, Halo, Space Helmet
+  and Royal Crown.
+- **Randomize** only picks from colours, patterns, stickers, effects and hats you own.
 
 ## Settings
 
@@ -213,7 +224,7 @@ skateboard_ninjas_2/
     ├── Game.js           state machine, main loop, scoring events, saving
     ├── config.js         every tuning number (speeds, physics, scoring…)
     ├── environments.js   the thirteen environments
-    ├── cosmetics.js      colour swatches, patterns, stickers, unlock costs, default look
+    ├── cosmetics.js      colour swatches, patterns, stickers, hats, unlock costs, default look
     ├── storage.js        save data + validation
     ├── Track.js          road, terrain, sky, mountains, scenery, weather, the road bend
     ├── World.js          obstacles, enemies, coins, power-ups, collisions, projectiles
@@ -232,6 +243,7 @@ skateboard_ninjas_2/
     ├── utils.js          maths, seeded random, noise
     └── models/
         ├── ninja.js      the ninja rig (player + rivals)
+        ├── hats.js       the hats, and their customize thumbnails
         ├── board.js      longboard + hoverboard
         ├── karen.js      the Karen rig
         └── props.js      every obstacle, course piece and scenery prop
@@ -296,8 +308,3 @@ licensed (`vendor/LICENSE-three.txt`). Music is from `assets/music/`.
 
 ## TODO
 
-- Make the Treasure boxes shiny and look more special and rotate, with some sparkles coming out of it and shining light.
-- Fix on mobile, Mobile is auto jumping on rails instead of crashing.
-- When you purchase a color for a category, dont unlock that color for all categories, make it so the player has to individually purchase that color for each category. 
-- In the customizable section, add a new section for hat accessories that can be added to players ninja, Make a bunch fun hats that you can purchase and add on the character, include wizard hats, top hats, space helmets and about 15 others.
-- When restarting a new game, be sure that it always plays a new level. Try to avoid repeating a level until all levels have been played.

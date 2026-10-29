@@ -440,3 +440,18 @@ export function pickEnvironment(lastId, rng = Math.random) {
   const options = ENV_LIST.filter((e) => e.id !== lastId);
   return options[Math.floor(rng() * options.length)];
 }
+
+// The next level to play, shuffle-bag style: every level comes up once (in a
+// random order) before any of them repeats, and never the one just played,
+// even when a new round starts. played (the ids used so far this round) is
+// updated in place.
+export function nextEnvironment(played, lastId, rng = Math.random) {
+  let options = ENV_LIST.filter((e) => !played.includes(e.id) && e.id !== lastId);
+  if (!options.length) {
+    played.length = 0;
+    options = ENV_LIST.filter((e) => e.id !== lastId);
+  }
+  const env = options[Math.floor(rng() * options.length)];
+  played.push(env.id);
+  return env;
+}

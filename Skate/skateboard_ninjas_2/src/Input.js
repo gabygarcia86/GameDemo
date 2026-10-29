@@ -16,6 +16,12 @@ const KEYS = {
   KeyM: 'mute',
 };
 const GAME_KEYS = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space']);
+// Chaining a second swipe without lifting the finger: it must travel this many
+// times the normal swipe distance, be this many times straighter along its
+// axis than across it, and come at least this long after the first one.
+const CHAIN_DISTANCE = 1.6;
+const CHAIN_STRAIGHTNESS = 2;
+const CHAIN_GAP_MS = 90;
 
 export class Input {
   constructor(surface, onAction) {
@@ -53,7 +59,7 @@ export class Input {
       if (e.button === 0) this.onAction('throw', e);
       return;
     }
-    this.touch = { id: e.pointerId, x: e.clientX, y: e.clientY, last: null };
+    this.touch = { id: e.pointerId, x: e.clientX, y: e.clientY, last: null, time: 0 };
   }
 
   move(e) {
@@ -62,15 +68,24 @@ export class Input {
     const dx = e.clientX - t.x;
     const dy = e.clientY - t.y;
     const threshold = Math.max(22, Math.min(window.innerWidth, window.innerHeight) * 0.045);
-    if (Math.hypot(dx, dy) < threshold) return;
-    const action = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'left' : 'right') : dy < 0 ? 'jump' : 'slide';
+    // A follow-up stroke in the same touch has to be deliberate: the tail of a
+    // quick sideways flick usually curls up or down, and that must not turn
+    // into an accidental jump (straight onto a rail) or slide.
+    const chained = t.last !== null;
+    if (Math.hypot(dx, dy) < threshold * (chained ? CHAIN_DISTANCE : 1)) return;
+    const horizontal = Math.abs(dx) > Math.abs(dy);
+    const action = horizontal ? (dx < 0 ? 'left' : 'right') : dy < 0 ? 'jump' : 'slide';
+    const along = horizontal ? Math.abs(dx) : Math.abs(dy);
+    const across = horizontal ? Math.abs(dy) : Math.abs(dx);
     // Re-centre so the next stroke is measured from here, but a long swipe in
     // the same direction only counts once (one swipe = one lane).
     t.x = e.clientX;
     t.y = e.clientY;
     e.preventDefault();
     if (action === t.last) return;
+    if (chained && (along < across * CHAIN_STRAIGHTNESS || e.timeStamp - t.time < CHAIN_GAP_MS)) return;
     t.last = action;
+    t.time = e.timeStamp;
     this.onAction(action, e);
   }
 

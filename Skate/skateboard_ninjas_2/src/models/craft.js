@@ -29,7 +29,48 @@ export class CraftRig {
     this.root.add(this.body);
     this.t = Math.random() * 10;
     if (kind === 'ship') this.buildShip(outline);
+    else if (kind === 'tieFighter') this.buildTie(outline);
     else this.buildUfo(outline);
+  }
+
+  // The trench's twin-wing fighter: a ball cockpit slung between two tall
+  // hexagonal wing panels.
+  buildTie(outline) {
+    const hull = toon('#9aa0ae');
+    const dark = toon('#2a2d38');
+    const frame = toon('#6b7280');
+    const s = new THREE.Group();
+    s.position.y = 1.15;
+    this.body.add(s);
+    mesh(new THREE.SphereGeometry(0.45, 16, 12), hull, s);
+    // Round cockpit window with struts, facing the player.
+    plain(mesh(new THREE.CylinderGeometry(0.27, 0.27, 0.06, 8), dark, s, [0, 0, 0.42], [Math.PI / 2, 0, 0]));
+    for (let i = 0; i < 4; i++) mesh(new THREE.BoxGeometry(0.52, 0.035, 0.04), frame, s, [0, 0, 0.46], [0, 0, (i * Math.PI) / 4]);
+    mesh(new THREE.TorusGeometry(0.27, 0.04, 6, 8), frame, s, [0, 0, 0.45]);
+    for (const sd of [-1, 1]) {
+      // Chin cannons.
+      mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.3, 6), dark, s, [sd * 0.12, -0.3, 0.38], [Math.PI / 2, 0, 0]);
+      // Pylon out to the wing.
+      mesh(new THREE.CylinderGeometry(0.1, 0.15, 0.6, 8), hull, s, [sd * 0.62, 0, 0], [0, 0, Math.PI / 2]);
+      const wing = new THREE.Group();
+      wing.position.x = sd * 0.95;
+      wing.scale.set(1, 1.2, 0.85);
+      s.add(wing);
+      // Hex panel standing in the YZ plane, corners at top and bottom.
+      const panel = new THREE.CylinderGeometry(1, 1, 0.06, 6).rotateY(Math.PI / 2).rotateZ(Math.PI / 2);
+      mesh(panel, dark, wing);
+      const rim = new THREE.TorusGeometry(0.98, 0.05, 4, 6).rotateZ(Math.PI / 2).rotateY(Math.PI / 2);
+      mesh(rim, frame, wing);
+      for (let k = 0; k < 3; k++) mesh(new THREE.BoxGeometry(0.08, 1.95, 0.06), frame, wing, [sd * 0.02, 0, 0], [(k * Math.PI) / 3, 0, 0]);
+      mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.12, 10), hull, wing, [0, 0, 0], [0, 0, Math.PI / 2]);
+    }
+    bakeRig(this.body);
+    if (outline) addOutlines(this.body, 0.025);
+    // Twin engine glow out the back.
+    for (const sd of [-1, 1]) {
+      plain(mesh(new THREE.SphereGeometry(0.08, 8, 6), glow('#ff4a3a'), s, [sd * 0.13, 0.05, -0.43]));
+    }
+    this.poofColors = ['#9aa0ae', '#2a2d38', '#3dff5a', '#ffffff', '#6b7280'];
   }
 
   buildUfo(outline) {

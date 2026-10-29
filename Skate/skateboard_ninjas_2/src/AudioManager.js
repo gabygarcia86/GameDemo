@@ -22,6 +22,7 @@ export const SOUND_FILES = {
   rockAlien: null, alien: null, impact: null, backflip: null, scooter: null,
   parkingOfficer: null, mime: null, hotdog: null, pigeons: null, fart: null,
   astronaut: null, ufo: null, ship: null, lavaMonster: null, bigfoot: null,
+  tieFighter: null, laser: null, zap: null,
 };
 
 // Browsers can't list a folder, so the songs are named here.
@@ -379,6 +380,9 @@ export class AudioManager {
       case 'mars': bed('bandpass', 380, 1.2, 0.08, 0.09, 0.05); break;
       case 'volcano': bed('lowpass', 150, 0.8, 0.14, 0.07, 0.07); break;
       case 'city': bed('lowpass', 260, 0.6, 0.08, 0.06, 0.03); break;
+      case 'rings': bed('lowpass', 220, 0.6, 0.035, 0.04, 0.02); break;
+      case 'rainbow': bed('bandpass', 900, 0.5, 0.02, 0.1, 0.01); break;
+      case 'trench': bed('lowpass', 120, 0.8, 0.1, 0.1, 0.05); break;
       default: break;
     }
     this.ambTimer = 1;
@@ -448,6 +452,26 @@ export class AudioManager {
         for (let i = 0; i < 6; i++) this.noise({ dur: 0.03, gain: 0.05, type: 'highpass', freq: 2000, delay: Math.random() * 0.8, dest: A });
         if (r < 0.25) this.noise({ dur: 1.6, gain: 0.12, type: 'lowpass', freq: 220, end: 60, attack: 0.05, dest: A });
         this.ambTimer = 1 + Math.random() * 2;
+        break;
+      case 'rings': {
+        // Ice crystals tinkling against each other.
+        const notes = [1568, 1760, 2093, 2349, 2637];
+        for (let i = 0; i < 3 + Math.floor(r * 3); i++) this.tone({ type: 'triangle', freq: notes[Math.floor(Math.random() * notes.length)], dur: 0.25, gain: 0.018, delay: i * 0.09 + Math.random() * 0.05, dest: A });
+        this.ambTimer = 2 + Math.random() * 3;
+        break;
+      }
+      case 'rainbow': {
+        // A sparkly rising arpeggio.
+        const root = [523, 587, 659][Math.floor(r * 3)];
+        [1, 1.25, 1.5, 2].forEach((m, i) => this.tone({ type: 'sine', freq: root * m, dur: 0.4, gain: 0.02, delay: i * 0.11, dest: A }));
+        this.ambTimer = 3 + Math.random() * 4;
+        break;
+      }
+      case 'trench':
+        // Distant laser fire, and now and then a far-off explosion.
+        for (let i = 0; i < 1 + Math.floor(r * 3); i++) this.tone({ type: 'square', freq: 1400, end: 250, dur: 0.16, gain: 0.012, delay: i * 0.2, filter: { type: 'lowpass', freq: 2000 }, dest: A });
+        if (r < 0.3) this.noise({ dur: 1.2, gain: 0.08, type: 'lowpass', freq: 300, end: 60, attack: 0.03, delay: 0.4, dest: A });
+        this.ambTimer = 2 + Math.random() * 3;
         break;
       default:
         this.ambTimer = 5;
@@ -594,6 +618,21 @@ const SYNTH = {
     a.noise({ dur: 0.45, gain: 0.1, type: 'bandpass', freq: 900, end: 2400, q: 1.5 });
   },
   enemyThrow: (a) => a.tone({ freq: 1300, end: 600, dur: 0.3, gain: 0.04 }),
+  tieFighter: (a) => {
+    // The fighter's howling engine scream as it passes.
+    a.noise({ dur: 0.9, gain: 0.1, type: 'bandpass', freq: 1800, end: 700, q: 1.5 });
+    a.tone({ type: 'sawtooth', freq: 820, end: 420, dur: 0.9, gain: 0.035, vibrato: 30, filter: { type: 'bandpass', freq: 1500, q: 2 } });
+    a.tone({ type: 'sawtooth', freq: 870, end: 445, dur: 0.9, gain: 0.03, filter: { type: 'bandpass', freq: 1500, q: 2 } });
+  },
+  laser: (a) => {
+    // Pew!
+    a.tone({ type: 'square', freq: 1800, end: 220, dur: 0.18, gain: 0.05, filter: { type: 'lowpass', freq: 3000 } });
+    a.tone({ type: 'sine', freq: 2400, end: 400, dur: 0.12, gain: 0.04 });
+  },
+  zap: (a) => {
+    a.noise({ dur: 0.25, gain: 0.18, type: 'highpass', freq: 2500 });
+    a.tone({ type: 'sawtooth', freq: 120, end: 60, dur: 0.25, gain: 0.08, vibrato: 50 });
+  },
   splat: (a) => {
     a.noise({ dur: 0.22, gain: 0.25, type: 'lowpass', freq: 900, end: 200 });
     a.tone({ freq: 220, end: 70, dur: 0.12, gain: 0.12 });

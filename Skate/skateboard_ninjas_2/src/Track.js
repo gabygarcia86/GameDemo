@@ -18,6 +18,8 @@ const ROWS = Math.ceil((AHEAD + BEHIND) / ROW) + 1;
 // Terrain column offsets from the road edge (dense near, sparse far).
 const COLS = [0, 1.2, 3, 6, 10, 16, 24, 34, 48, 66, 92, 130, 190];
 const TILE = 8; // road texture repeat length
+// Rainbow road colours, wrapping back to red so the texture tiles.
+const RAINBOW = ['#ff2e55', '#ff8c1a', '#ffe066', '#3dff6a', '#3de1ff', '#3d7bff', '#b44dff', '#ff3df0', '#ff2e55'];
 
 const _v = new THREE.Vector3();
 const _c = new THREE.Color();
@@ -86,10 +88,11 @@ export class Track {
     obj.rotation.set(flat ? this.pitchAt(dist) : 0, this.yawAt(dist) + extraYaw, 0, 'YXZ');
   }
 
-  // Matrix version for instanced meshes.
-  matrixAt(x, y, dist, yaw, scale, out, flat = false) {
+  // Matrix version for instanced meshes. roll turns the object about its own
+  // Z axis after the yaw (walls that run along the road use it to follow the slope).
+  matrixAt(x, y, dist, yaw, scale, out, flat = false, roll = 0) {
     this.toWorld(x, y, dist, _v);
-    _e.set(flat ? this.pitchAt(dist) : 0, this.yawAt(dist) + yaw, 0, 'YXZ');
+    _e.set(flat ? this.pitchAt(dist) : 0, this.yawAt(dist) + yaw, roll, 'YXZ');
     _q.setFromEuler(_e);
     _s.set(scale, scale, scale);
     return out.compose(_v, _q, _s);
@@ -173,13 +176,53 @@ export class Track {
         ctx.stroke();
       }
     };
+    // Rainbow bands across the road, one full cycle per tile so it repeats
+    // seamlessly. update() scrolls them so the colours flow along the road.
+    const drawRainbow = (ctx) => {
+      const g = ctx.createLinearGradient(0, 0, 0, H);
+      RAINBOW.forEach((c, i) => g.addColorStop(i / (RAINBOW.length - 1), c));
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+    };
     const map = canvasTexture(W, H, (ctx) => {
       ctx.fillStyle = R.base;
       ctx.fillRect(0, 0, W, H);
-      // Asphalt speckle
-      for (let i = 0; i < 2600; i++) {
-        ctx.fillStyle = rng() < 0.5 ? R.speck : 'rgba(0,0,0,0.12)';
-        ctx.fillRect(rng() * W, rng() * H, 2, 2);
+      if (R.rainbow) {
+        drawRainbow(ctx);
+        // Sparkles instead of asphalt speckle.
+        for (let i = 0; i < 260; i++) {
+          ctx.fillStyle = rng() < 0.6 ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.3)';
+          ctx.fillRect(rng() * W, rng() * H, 2, 2);
+        }
+      } else {
+        // Asphalt speckle
+        for (let i = 0; i < 2600; i++) {
+          ctx.fillStyle = rng() < 0.5 ? R.speck : 'rgba(0,0,0,0.12)';
+          ctx.fillRect(rng() * W, rng() * H, 2, 2);
+        }
+      }
+      if (R.panels) {
+        // Metal deck plates: seams, rivets and a few tinted plates.
+        for (let i = 0; i < 10; i++) {
+          ctx.fillStyle = rng() < 0.5 ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.12)';
+          ctx.fillRect(px(-CONFIG.road.halfWidth) + Math.floor(rng() * 6) * (W / 9), Math.floor(rng() * 4) * (H / 4), W / 9, H / 4);
+        }
+        ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+        ctx.lineWidth = 2;
+        for (let y = 0; y < H; y += H / 4) {
+          ctx.beginPath();
+          ctx.moveTo(0, y + 1);
+          ctx.lineTo(W, y + 1);
+          ctx.stroke();
+        }
+        for (const x of [-3.45, -1.15, 1.15, 3.45]) {
+          ctx.beginPath();
+          ctx.moveTo(px(x), 0);
+          ctx.lineTo(px(x), H);
+          ctx.stroke();
+        }
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        for (let y = 6; y < H; y += H / 8) for (const x of [-2.3, 0, 2.3]) ctx.fillRect(px(x) - 1, y, 3, 3);
       }
       if (R.snowy) {
         // Packed snow with tyre tracks.
@@ -231,7 +274,7 @@ export class Track {
       // Cracks and tar snakes
       ctx.strokeStyle = 'rgba(0,0,0,0.25)';
       ctx.lineWidth = 2;
-      for (let i = 0; i < 6; i++) {
+      for (let i = 0; i < (R.rainbow ? 0 : 6); i++) {
         ctx.beginPath();
         let x = rng() * W, y = rng() * H;
         ctx.moveTo(x, y);
@@ -242,7 +285,7 @@ export class Track {
       // Curbs: alternating stripes on the outer strip.
       const stripe = H / TILE;
       for (let i = 0; i < TILE; i++) {
-        ctx.fillStyle = R.curb[i % 2];
+        ctx.fillStyle = R.curb[i % R.curb.length];
         ctx.fillRect(0, i * stripe, px(-CONFIG.road.halfWidth), stripe);
         ctx.fillRect(px(CONFIG.road.halfWidth), i * stripe, W - px(CONFIG.road.halfWidth), stripe);
       }
@@ -255,6 +298,7 @@ export class Track {
         ctx.fillStyle = '#000';
         ctx.fillRect(0, 0, W, H);
         if (R.lava) drawLava(ctx, '#ff5a14');
+        if (R.rainbow) drawRainbow(ctx);
         drawLines(ctx, R.line, R.edge);
       });
       emissive.wrapT = THREE.RepeatWrapping;
@@ -350,6 +394,21 @@ export class Track {
         // Raised sidewalks; the buildings stand on them.
         y = 0.18;
         break;
+      case 'rings':
+        // Saturn's rings: flat sheets of ice and rubble, sinking into a dark
+        // gap (ringGap) further out.
+        y = (fbm2(x * 0.05, D * 0.05, 2) - 0.5) * T.hill * smoothstep(2, 20, u) + bumps * 0.6 - this.ringGap(x) * 3;
+        break;
+      case 'void':
+        // Nothing there (the terrain mesh is hidden); props float.
+        y = 0;
+        break;
+      case 'trench':
+        // The trench floor runs under the wall sections (Track's building row,
+        // up to u = 2.5), then the station surface sits on top of them. The
+        // step up hides behind the walls.
+        y = u < 3 ? 0 : T.hill + (noise2(x * 0.3, D * 0.3) > 0.7 ? 0.6 : 0);
+        break;
       case 'craters':
         y = smoothstep(1.5, 34, u) * T.hill * (0.3 + n) + u * 0.02 + bumps + this.craterAt(x, D) * near;
         break;
@@ -395,6 +454,12 @@ export class Track {
     return h;
   }
 
+  // 0..1: how deep into the dark gap between two of Saturn's rings x is.
+  ringGap(x) {
+    const ax = Math.abs(x);
+    return smoothstep(44, 50, ax) * smoothstep(84, 76, ax);
+  }
+
   // Height on the mesh as drawn (linear between columns), for placing props.
   heightAt(x, D) {
     const cols = this.cols;
@@ -423,6 +488,18 @@ export class Track {
     }
     if (T.snowLine && y > T.snowLine * (0.8 + n * 0.4)) out.set('#ffffff');
     if (T.profile === 'city') return out.set(u < 10 ? T.mid : T.high).lerp(_c2.set(T.low), n * 0.4);
+    if (T.profile === 'rings') {
+      // Bands running parallel to the road, like the rings themselves.
+      const ax = Math.abs(x);
+      const band = smoothstep(0.3, 0.7, 0.5 + 0.5 * Math.sin(ax * 0.35 + Math.sin(ax * 0.06) * 4));
+      out.set(T.low).lerp(_c2.set(T.mid), band).lerp(_c2.set(T.high), n * 0.35);
+      return out.lerp(_c2.set(T.gap), this.ringGap(x) * 0.85);
+    }
+    if (T.profile === 'trench') {
+      // Grey hull plating in a checker of slightly different panels.
+      const panel = (Math.floor(D / 6) + Math.floor(Math.abs(x) / 5)) % 2;
+      return out.set(panel ? T.mid : T.low).lerp(_c2.set(T.high), n * 0.5);
+    }
     if (T.profile === 'craters') {
       const c = this.craterAt(x, D);
       if (c < 0) out.lerp(_c2.set(T.high), smoothstep(0, -1.6, c) * 0.7);
@@ -634,7 +711,7 @@ export class Track {
     if (windows.length) {
       const g = new THREE.BufferGeometry();
       g.setAttribute('position', new THREE.Float32BufferAttribute(windows, 3));
-      const pts = new THREE.Points(g, new THREE.PointsMaterial({ color: '#ffd98a', size: 2.4, sizeAttenuation: false, fog: false, depthWrite: false }));
+      const pts = new THREE.Points(g, new THREE.PointsMaterial({ color: M.windows || '#ffd98a', size: 2.4, sizeAttenuation: false, fog: false, depthWrite: false }));
       pts.frustumCulled = false;
       this.backdrop.add(pts);
     }
@@ -669,13 +746,14 @@ export class Track {
     }
   }
 
-  buildStars() {
-    const N = 700;
+  // all: stars below the horizon too, for roads with no ground under them.
+  buildStars(all = false) {
+    const N = all ? 1300 : 700;
     const pos = new Float32Array(N * 3);
     const rng = makeRng(99);
     for (let i = 0; i < N; i++) {
       const a = rng() * Math.PI * 2;
-      const y = 0.08 + rng() * 0.92;
+      const y = all ? rng.range(-1, 1) : 0.08 + rng() * 0.92;
       const r = Math.sqrt(1 - y * y);
       pos.set([Math.sin(a) * r * 1300, y * 1300, -Math.cos(a) * r * 1300], i * 3);
     }
@@ -688,9 +766,14 @@ export class Track {
     this.backdrop.add(pts);
   }
 
-  // Other worlds hanging in the sky: Earth from the moon, Mars's two moons.
+  // Other worlds hanging in the sky: Earth from the moon, Mars's two moons,
+  // Saturn and its rings, gas giants.
   buildPlanets(env) {
     for (const P of env.planets) {
+      if (P.kind === 'saturn' || P.kind === 'gas') {
+        this.buildGasGiant(P);
+        continue;
+      }
       const tex = canvasTexture(256, 256, (ctx, w) => {
         const r = w * 0.4;
         const c = w / 2;
@@ -724,6 +807,13 @@ export class Track {
             ctx.arc(c + (rng() - 0.5) * r * 1.2, c + (rng() - 0.5) * r * 1.2, 25 + rng() * 45, a, a + 0.4 + rng() * 0.7);
             ctx.stroke();
           }
+        } else if (P.kind === 'titan') {
+          // Saturn's hazy orange moon.
+          const haze = ctx.createRadialGradient(c - r * 0.3, c - r * 0.3, r * 0.1, c, c, r);
+          haze.addColorStop(0, '#f0c070');
+          haze.addColorStop(1, '#b8782a');
+          ctx.fillStyle = haze;
+          ctx.fillRect(0, 0, w, w);
         } else {
           ctx.fillStyle = P.kind === 'phobos' ? '#8a7a6e' : '#a8988a';
           ctx.fillRect(0, 0, w, w);
@@ -750,6 +840,70 @@ export class Track {
       s.renderOrder = -7;
       this.backdrop.add(s);
     }
+  }
+
+  // A banded gas giant, optionally ringed. The rings are drawn twice: all of
+  // them behind the planet, then the near half again in front of it.
+  buildGasGiant(P) {
+    const saturn = P.kind === 'saturn';
+    const bands = P.colors || ['#e8d4a0', '#d8b878', '#c8a060', '#e8c890', '#b89058', '#f0dcb0'];
+    const rings = P.rings || (saturn ? ['#d8c8a0', '#b8a888', '#e8dcc0', '#8a7a68'] : null);
+    const W = rings ? 512 : 256, H = 256;
+    const tilt = -0.22;
+    const tex = canvasTexture(W, H, (ctx) => {
+      const cx = W / 2, cy = H / 2;
+      const r = rings ? H * 0.3 : H * 0.4;
+      const rng = makeRng(bands.length * 57);
+      const ringPass = (front) => {
+        if (!rings) return;
+        for (let i = 0; i < 14; i++) {
+          const k = i / 13;
+          if (k > 0.55 && k < 0.63) continue; // the gap between two rings
+          const rx = r * (1.3 + k * 1.05);
+          ctx.strokeStyle = rings[i % rings.length];
+          ctx.globalAlpha = 0.55 + hash2(i, 7) * 0.4;
+          ctx.lineWidth = 3 + hash2(i, 8) * 4;
+          ctx.beginPath();
+          ctx.ellipse(cx, cy, rx, rx * 0.26, tilt, front ? 0 : Math.PI, front ? Math.PI : Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+      };
+      ringPass(false);
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.translate(cx, cy);
+      ctx.rotate(tilt);
+      // Cloud bands, a little wavy.
+      const n = 14;
+      for (let i = 0; i < n; i++) {
+        ctx.fillStyle = bands[Math.floor(rng() * bands.length)];
+        const y = -r + (i / n) * r * 2;
+        ctx.beginPath();
+        ctx.moveTo(-r * 1.2, y);
+        for (let x = -r * 1.2; x <= r * 1.2; x += r * 0.2) ctx.lineTo(x, y + Math.sin(x * 0.05 + i) * 3);
+        ctx.lineTo(r * 1.2, y + r * 0.3);
+        ctx.lineTo(-r * 1.2, y + r * 0.3);
+        ctx.fill();
+      }
+      ctx.rotate(-tilt);
+      // Night side.
+      const shade = ctx.createLinearGradient(-r, 0, r, 0);
+      shade.addColorStop(0, 'rgba(0,0,10,0.8)');
+      shade.addColorStop(0.4, 'rgba(0,0,10,0.2)');
+      shade.addColorStop(0.7, 'rgba(0,0,10,0)');
+      ctx.fillStyle = shade;
+      ctx.fillRect(-r, -r, r * 2, r * 2);
+      ctx.restore();
+      ringPass(true);
+    });
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, fog: false, depthWrite: false, transparent: true }));
+    s.position.copy(new THREE.Vector3(...P.dir).normalize().multiplyScalar(1250));
+    s.scale.set(P.size, (P.size * H) / W, 1);
+    s.renderOrder = -7;
+    this.backdrop.add(s);
   }
 
   // ------------------------------------------------------------- lights
@@ -819,6 +973,7 @@ export class Track {
     const dense = this.quality === 'low' ? 0.6 : this.quality === 'medium' ? 0.85 : 1;
     const types = new Set([...env.scenery.near, ...env.scenery.far, ...(env.buildings || [])]);
     if (env.lamps) types.add('lamp');
+    if (env.posts) types.add(env.posts.type);
     for (const t of types) {
       const big = SCENERY_INFO[t].r > 3;
       this.layers[t] = this.addInstanced(t, sceneryPrefab(t, env), 140, { cast: !big && this.quality === 'high' });
@@ -833,6 +988,7 @@ export class Track {
     ];
     // Downtown: the buildings fill everything past the sidewalk.
     if (env.buildings) this.slotPlans.length = 1;
+    this.slotPlans = this.slotPlans.filter((p) => p.list.length);
     // Night lamps + light pools on the road.
     this.poolLayer = null;
     if (env.lamps) {
@@ -877,9 +1033,9 @@ export class Track {
     for (const l of this.scenery) l.n = 0;
     const start = this.origin - BEHIND;
     const end = this.origin + AHEAD;
-    const push = (layer, x, y, D, yaw, scale, flat = false) => {
+    const push = (layer, x, y, D, yaw, scale, flat = false, roll = 0) => {
       if (layer.n >= layer.max) return;
-      this.matrixAt(x, y, D, yaw, scale, _m, flat);
+      this.matrixAt(x, y, D, yaw, scale, _m, flat, roll);
       for (const m of layer.meshes) m.setMatrixAt(layer.n, _m);
       layer.n++;
     };
@@ -908,7 +1064,8 @@ export class Track {
           if (type === 'fence') yaw = Math.PI / 2;
           if (type === 'house' || type === 'cabin' || type === 'barn' || type === 'hutProp') yaw = side > 0 ? -Math.PI / 2 : Math.PI / 2;
           const scale = type === 'mesa' ? 0.8 + h * 0.8 : 0.8 + hash2(i, seed + 7) * 0.5;
-          push(this.layers[type], x, this.heightAt(x, D) - 0.05, D, yaw, scale);
+          const lift = info.float ? lerp(info.float[0], info.float[1], hash2(i, seed + 71 + side)) : 0;
+          push(this.layers[type], x, this.heightAt(x, D) - 0.05 + lift, D, yaw, scale);
         }
       }
     }
@@ -918,9 +1075,12 @@ export class Track {
       for (let i = Math.floor(start / sp); i <= Math.ceil(end / sp) + 3; i++) {
         for (const side of [-1, 1]) {
           const type = env.buildings[Math.floor(hash2(i, side > 0 ? 911 : 912) * env.buildings.length)];
-          const x = side * (EDGE + 9 + 5 + hash2(i, 913) * 1.5);
+          const x = side * (EDGE + (env.buildingInset ?? 14 + hash2(i, 913) * 1.5));
           const D = i * sp;
-          push(this.layers[type], x, this.heightAt(x, D) - 0.05, D, side > 0 ? -Math.PI / 2 : Math.PI / 2, 1);
+          // Walls right up against the road tilt with the slope so their foot
+          // stays on the road along the whole section.
+          const roll = env.buildingInset != null ? -side * this.pitchAt(D) : 0;
+          push(this.layers[type], x, this.heightAt(x, D) - 0.05, D, side > 0 ? -Math.PI / 2 : Math.PI / 2, 1, false, roll);
         }
       }
     }
@@ -932,6 +1092,13 @@ export class Track {
         const x = side * (CONFIG.road.halfWidth + 0.9);
         push(this.layers.lamp, x, 0, D, side > 0 ? 0 : Math.PI, 1);
         if (this.poolLayer) push(this.poolLayer, side * (CONFIG.road.halfWidth - 0.6), 0.03, D, 0, 1, true);
+      }
+    }
+    if (env.posts) {
+      // A post on both road edges every few metres.
+      const sp = env.posts.spacing;
+      for (let i = Math.floor(start / sp); i <= Math.ceil(end / sp); i++) {
+        for (const side of [-1, 1]) push(this.layers[env.posts.type], side * (CONFIG.road.halfWidth + 0.3), 0, i * sp, 0, 1);
       }
     }
     if (this.beams) {
@@ -964,10 +1131,15 @@ export class Track {
     const rel = new Float32Array(N * 3); // x, y, d relative to the player
     const vel = new Float32Array(N * 3);
     const phase = new Float32Array(N);
+    const colors = new Float32Array(N * 3);
     const rng = makeRng(4242);
     const snow = W.type === 'snow';
     const embers = W.type === 'embers';
     for (let i = 0; i < N; i++) {
+      // rainbow: every particle its own bright hue.
+      if (W.rainbow) _c.setHSL(rng(), 1, 0.65);
+      else _c.set(W.color);
+      colors.set([_c.r, _c.g, _c.b], i * 3);
       rel[i * 3] = rng.range(-26, 26);
       rel[i * 3 + 1] = rng.range(snow ? 0 : 0.3, snow ? 16 : 6);
       rel[i * 3 + 2] = rng.range(-6, 110);
@@ -979,11 +1151,11 @@ export class Track {
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(N * 3), 3));
     g.setAttribute('aPhase', new THREE.BufferAttribute(phase, 1));
+    g.setAttribute('aColor', new THREE.BufferAttribute(colors, 3));
     const size = { snow: 0.22, fireflies: 0.3, dust: 0.12, pollen: 0.12, sparkle: 0.18, motes: 0.13, embers: 0.2 }[W.type] || 0.15;
     const mat = new THREE.ShaderMaterial({
       uniforms: {
         map: { value: dotTexture() },
-        color: { value: new THREE.Color(W.color) },
         size: { value: size },
         time: { value: 0 },
         twinkle: { value: W.type === 'fireflies' || W.type === 'sparkle' || embers ? 1 : 0 },
@@ -991,21 +1163,24 @@ export class Track {
       },
       vertexShader: `
         attribute float aPhase;
+        attribute vec3 aColor;
         uniform float size, time, twinkle, scale;
         varying float vA;
+        varying vec3 vC;
         void main() {
           vec4 mv = modelViewMatrix * vec4(position, 1.0);
           gl_PointSize = size * (scale / -mv.z);
           gl_Position = projectionMatrix * mv;
           vA = mix(0.85, 0.2 + 0.8 * pow(0.5 + 0.5 * sin(time * 3.0 + aPhase * 5.0), 3.0), twinkle);
+          vC = aColor;
         }`,
       fragmentShader: `
         uniform sampler2D map;
-        uniform vec3 color;
         varying float vA;
+        varying vec3 vC;
         void main() {
           vec4 t = texture2D(map, gl_PointCoord);
-          gl_FragColor = vec4(color, t.a * vA);
+          gl_FragColor = vec4(vC, t.a * vA);
           #include <colorspace_fragment>
         }`,
       transparent: true,
@@ -1055,8 +1230,10 @@ export class Track {
     this.roadMat.map = map;
     this.roadMat.emissiveMap = emissive;
     this.roadMat.emissive.set(emissive ? '#ffffff' : '#000000');
+    this.roadMat.emissiveIntensity = env.road.glowIntensity ?? 1;
     this.roadMat.needsUpdate = true;
 
+    this.terrain.visible = env.terrain.profile !== 'void';
     this.water.visible = !!env.water;
     if (env.water) {
       this.waterMat.color.set(env.water.color);
@@ -1092,9 +1269,9 @@ export class Track {
       this.backdrop.remove(c);
       c.geometry?.dispose();
     }
-    this.buildMountains(env);
+    if (env.mountains) this.buildMountains(env);
     this.buildClouds(env);
-    if (env.stars) this.buildStars();
+    if (env.stars) this.buildStars(env.stars === 'all');
     if (env.planets) this.buildPlanets(env);
     this.buildScenery(env);
     this.buildWeather(env);
@@ -1110,6 +1287,12 @@ export class Track {
   // After the simulation: rebuild the road and scenery around the player.
   update(dt, playerDist, speed, camera) {
     this.origin = playerDist;
+    if (this.env.road.rainbow) {
+      // Scroll the rainbow bands so every bit of road keeps changing colour.
+      const off = (this.time * this.env.road.flow) % 1;
+      this.roadMat.map.offset.y = off;
+      if (this.roadMat.emissiveMap) this.roadMat.emissiveMap.offset.y = off;
+    }
     this.updateRoad();
     this.updateTerrain();
     this.updateScenery();

@@ -1,6 +1,6 @@
-// The ten environments. Each run picks one at random (never the same one twice
-// in a row). Everything that makes an environment look, sound and play
-// differently lives here so it's easy to tweak or add an eleventh.
+// The thirteen environments. Each run picks one at random (never the same one
+// twice in a row). Everything that makes an environment look, sound and play
+// differently lives here so it's easy to tweak or add another.
 //
 // Obstacle lists name prefabs from models/props.js:
 //   block - tall, must change lanes      low  - knee high, jump it
@@ -8,8 +8,10 @@
 // locals (optional) lists the local enemies that only show up there (Enemies.js).
 // rock / dust (optional) colour the rocks and landing dust; planets hang extra
 // worlds in the sky; specialWeight makes the gimmick chunk come up more often.
-// buildings lines the street with building fronts; bend scales how much the
-// road winds.
+// buildings lines the street with building fronts (buildingInset: how far
+// from the road edge); bend scales how much the road winds. posts lines both
+// road edges with a prop; neon makes the standard obstacles glow like at night.
+// mountains: null leaves the horizon empty; stars: 'all' fills the whole sky.
 
 export const ENVIRONMENTS = {
   sunset: {
@@ -315,6 +317,119 @@ export const ENVIRONMENTS = {
     ambience: 'city',
     challenge: { stat: 'scaffolds', target: 5, text: 'Slide under 5 scaffolds' },
     lamps: true,
+  },
+
+  saturn: {
+    id: 'saturn',
+    name: 'SATURN',
+    title: 'Ring Runner',
+    blurb: 'Shredding the rings of Saturn. Look out above!',
+    sky: { top: '#020108', mid: '#0a0718', horizon: '#3a2c3e', bottom: '#2a2030' },
+    sun: { color: '#fff8e8', glow: '#ffd9a0', dir: [-0.6, 0.22, -1], size: 0.025 },
+    fog: { color: '#2a2230', near: 80, far: 250 },
+    hemi: { sky: '#e8ecff', ground: '#4a3a4a', intensity: 1.2 },
+    light: { color: '#fff4e4', intensity: 2.3, dir: [-0.55, 0.55, -0.5] },
+    road: { base: '#4a4458', speck: '#5e5870', line: '#ffe6a8', edge: '#bfe8ff', curb: ['#e8d6b0', '#7a6a8a'], glow: true, craters: 'rgba(200,220,255,0.12)' },
+    terrain: { profile: 'rings', low: '#eceae4', mid: '#a8987e', high: '#7a6c5e', hill: 2.5, shoulder: '#cfc8bc', gap: '#1e1826' },
+    mountains: { far: '#6a5a60', near: '#8a7868', snow: true, snowColor: '#e8f4ff', scale: 0.35 },
+    clouds: { color: '#ffffff', count: 0 },
+    stars: true,
+    planets: [{ kind: 'saturn', dir: [0.25, 0.3, -1], size: 900 }, { kind: 'titan', dir: [-0.55, 0.5, -1], size: 46 }],
+    weather: { type: 'sparkle', color: '#e8f4ff', count: 180 },
+    scenery: { near: ['iceChunk', 'rockSmall', 'iceChunk', 'floatRock'], far: ['iceSpire', 'rockBig', 'floatRock', 'iceSpire'] },
+    obstacles: {
+      block: ['iceBlock', 'boulder', 'crates'],
+      low: ['rocks', 'crate', 'lowBar'],
+      high: ['satellite', 'pipeBar'],
+    },
+    special: 'asteroid',
+    locals: ['ufo', 'alien'],
+    specialWeight: 2.2,
+    rock: '#c4b49a',
+    dust: '#e8e0d0',
+    ambience: 'rings',
+    challenge: { stat: 'asteroids', target: 8, text: 'Dodge 8 falling asteroids' },
+    lamps: false,
+  },
+
+  // No ground at all: the terrain is hidden, the road hangs in space and the
+  // props float (SCENERY_INFO float). The road colours flow along it.
+  rainbow: {
+    id: 'rainbow',
+    name: 'RAINBOW ROAD',
+    title: 'Prism Highway',
+    blurb: 'A glowing rainbow through deep space. Don\'t look down.',
+    sky: { top: '#05021a', mid: '#1a0a4a', horizon: '#5a1a7a', bottom: '#0a0420' },
+    sun: { color: '#ffffff', glow: '#ff7ae0', dir: [0.4, 0.25, -1], size: 0.03 },
+    fog: { color: '#1e0c46', near: 90, far: 260 },
+    hemi: { sky: '#ffd0ff', ground: '#3a2a8a', intensity: 1.35 },
+    light: { color: '#ffffff', intensity: 2.2, dir: [0.4, 0.75, -0.45] },
+    road: {
+      base: '#2a1a4a', speck: '#ffffff', line: '#ffffff', edge: '#ffffff', glow: true, glowIntensity: 0.55, rainbow: true, flow: 0.3,
+      curb: ['#ff2e55', '#ff8c1a', '#ffe066', '#3dff6a', '#3de1ff', '#3d7bff', '#b44dff', '#ff3df0'],
+    },
+    terrain: { profile: 'void', low: '#000000', mid: '#000000', high: '#000000', hill: 1, shoulder: '#000000' },
+    mountains: null,
+    clouds: { color: '#b48cff', count: 10 },
+    stars: 'all',
+    planets: [
+      { kind: 'gas', colors: ['#ff7ae0', '#b44dff', '#ff9ad8', '#7a4dff', '#ffb0f0'], rings: ['#3de1ff', '#ffe066', '#ff7ae0', '#7dffb0'], dir: [-0.5, 0.35, -1], size: 520 },
+      { kind: 'gas', colors: ['#3de1ff', '#2a8aff', '#7dffe0', '#3d7bff'], dir: [0.6, -0.2, -1], size: 150 },
+    ],
+    weather: { type: 'sparkle', color: '#ffffff', count: 150, rainbow: true },
+    scenery: { near: ['starGem', 'spaceBuoy', 'floatRock'], far: ['floatRock', 'ringPlanetProp', 'starGem', 'floatRock'] },
+    posts: { type: 'starPost', spacing: 11 },
+    obstacles: {
+      block: ['asteroidRock', 'barrier', 'crates'],
+      low: ['lowBar', 'crate', 'rocks'],
+      high: ['rainbowArch', 'sign'],
+    },
+    special: 'driftRock',
+    locals: ['astronaut', 'ship', 'alien', 'ufo'],
+    neon: true,
+    rock: '#7a6a9a',
+    dust: '#ffd0ff',
+    ambience: 'rainbow',
+    challenge: { stat: 'driftRocks', target: 6, text: 'Jump over 6 drifting asteroids' },
+    lamps: false,
+  },
+
+  // A narrow metal trench: the walls are Track's building row, pushed right up
+  // against the road (buildingInset).
+  trench: {
+    id: 'trench',
+    name: 'TRENCH RUN',
+    title: 'Battle Station Trench',
+    blurb: 'Laser fire, twin-wing fighters and one very narrow trench.',
+    sky: { top: '#000004', mid: '#04050e', horizon: '#141826', bottom: '#0a0c14' },
+    sun: { color: '#ffffff', glow: '#9fb4ff', dir: [0.5, 0.45, -1], size: 0.02 },
+    fog: { color: '#10131c', near: 60, far: 230 },
+    hemi: { sky: '#c8d4f0', ground: '#2a2d38', intensity: 1.15 },
+    light: { color: '#e8f0ff', intensity: 2.2, dir: [0.35, 0.9, -0.3] },
+    road: { base: '#4a4e5a', speck: '#5a5f6c', line: '#ff4a3a', edge: '#ffb020', curb: ['#2a2d36', '#ffcc33'], glow: true, panels: true },
+    terrain: { profile: 'trench', low: '#5a5f6e', mid: '#6a707e', high: '#454a56', hill: 14, shoulder: '#3a3e48' },
+    mountains: { far: '#2a2e3a', near: '#3a3e4c', snow: false, scale: 0.45, skyline: true, windows: '#9fd3ff' },
+    clouds: { color: '#ffffff', count: 0 },
+    stars: true,
+    planets: [{ kind: 'gas', colors: ['#d8b070', '#b88a50', '#e8c890', '#a87a40', '#c8a060'], dir: [-0.4, 0.35, -1], size: 320 }],
+    weather: { type: 'embers', color: '#ffb060', count: 60 },
+    scenery: { near: [], far: [] },
+    buildings: ['trenchWallA', 'trenchWallB', 'trenchWallA', 'trenchWallC'],
+    buildingInset: 1.5,
+    obstacles: {
+      block: ['fuelTank', 'crates', 'barrier'],
+      low: ['laserFence', 'crate', 'lowBar'],
+      high: ['laserBar', 'pipeBar'],
+    },
+    special: 'laser',
+    locals: ['tieFighter'],
+    specialWeight: 2.2,
+    bend: 0.35,
+    neon: true,
+    dust: '#9aa0ae',
+    ambience: 'trench',
+    challenge: { stat: 'lasers', target: 10, text: 'Dodge 10 laser blasts' },
+    lamps: false,
   },
 };
 

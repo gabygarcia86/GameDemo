@@ -3,7 +3,7 @@
 An endless 3D downhill runner for desktop and mobile browsers. Your ninja
 bombs down a winding mountain road on a longboard or hoverboard: switch
 lanes, jump, slide, grind rails, hit ramps, and throw ninja stars at Angry
-Karens and rival ninjas. Every run picks one of ten environments at random.
+Karens and rival ninjas. Every run picks one of thirteen environments at random.
 
 Built with HTML, CSS, JavaScript ES modules and [Three.js](https://threejs.org)
 r170, which is included in `vendor/`. There's no build step and nothing to
@@ -127,6 +127,9 @@ Controls are forgiving:
 | Mars (Red Planet Rush)           | Red dunes, two moons, runaway rovers       | Green alien (beams down from a UFO), UFO (swoops down and hovers) | Jump 5 rovers   |
 | Volcano (Magma Mountain)         | Lava river, embers, fireballs crash into lanes (a glowing ring marks the spot) | Lava monster (bursts out of the ground or lumbers in) | Dodge 8 fireballs |
 | Downtown (Rush Hour Run)         | Skyscrapers, taxis, dumpsters, scaffolding | Street crowd* | Slide under 5 scaffolds |
+| Saturn (Ring Runner)             | Riding the icy rings, Saturn in the sky, asteroids crash into lanes (a glowing ring marks the spot) | Green alien (beams down from a UFO or leaps in), UFO (swoops down and hovers) | Dodge 8 falling asteroids |
+| Rainbow Road (Prism Highway)     | A colour-flowing rainbow road hanging in space, floating asteroids, star posts, drifting asteroids to jump | Astronaut, space fighter, green alien, UFO | Jump 6 drifting asteroids |
+| Trench Run (Battle Station Trench) | A narrow metal trench, laser bolts streak up the lanes at you, laser tripwires and beams | Twin-wing fighter (screams up the trench or dives in, firing harmless laser shots) | Dodge 10 laser blasts |
 
 Each environment has its own sky, lighting, fog, terrain, roadside props,
 weather particles, obstacle set and ambient soundscape. The same environment
@@ -209,7 +212,7 @@ skateboard_ninjas_2/
     ├── main.js           entry point (WebGL check)
     ├── Game.js           state machine, main loop, scoring events, saving
     ├── config.js         every tuning number (speeds, physics, scoring…)
-    ├── environments.js   the ten environments
+    ├── environments.js   the thirteen environments
     ├── cosmetics.js      colour swatches, patterns, stickers, unlock costs, default look
     ├── storage.js        save data + validation
     ├── Track.js          road, terrain, sky, mountains, scenery, weather, the road bend
@@ -260,7 +263,7 @@ the player, which keeps numbers small on very long runs.
 ### Testing helpers
 
 - `?env=snow` (or `sunset`, `daytime`, `night`, `beach`, `forest`, `moon`,
-  `mars`, `volcano`, `downtown`) forces that
+  `mars`, `volcano`, `downtown`, `saturn`, `rainbow`, `trench`) forces that
   environment for every run.
 - `?debug=1` draws collision boxes: yellow = jump, cyan = slide, magenta = go
   around, red = enemies.
@@ -293,4 +296,8 @@ licensed (`vendor/LICENSE-three.txt`). Music is from `assets/music/`.
 
 ## TODO
 
-- changing lanes is a stiff
+- Make the Treasure boxes shiny and look more special and rotate, with some sparkles coming out of it and shining light.
+- Fix on mobile, Mobile is auto jumping on rails instead of crashing.
+- When you purchase a color for a category, dont unlock that color for all categories, make it so the player has to individually purchase that color for each category. 
+- In the customizable section, add a new section for hat accessories that can be added to players ninja, Make a bunch fun hats that you can purchase and add on the character, include wizard hats, top hats, space helmets and about 15 others.
+- When restarting a new game, be sure that it always plays a new level. Try to avoid repeating a level until all levels have been played.

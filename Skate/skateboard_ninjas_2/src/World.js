@@ -3,7 +3,7 @@
 // generator), pooled meshes, collisions and passes, and reports what happened
 // as events for Game to score and react to.
 
-import { THREE, prefabMesh, GeoBuilder, MATS, setOutlinesVisible } from './gfx.js';
+import { THREE, prefabMesh, GeoBuilder, MATS, setOutlinesVisible, dotTexture } from './gfx.js';
 import { CONFIG, laneX } from './config.js';
 import {
   OBSTACLE_INFO, obstaclePrefab, piecePrefab, RAMP, RAIL, GAP, ICE, coinGeometry, powerupBuilder,
@@ -14,6 +14,15 @@ import { lerp, clamp } from './utils.js';
 const LANE = CONFIG.lanes.width;
 const FIREBALL_START = 85; // dRem where a fireball starts falling
 const FIREBALL_LAND = 22; // ...and where it hits the road
+// Things that fall out of the sky into a lane like the volcano's fireballs:
+// the landing burst and callout, and the trail colours.
+const FALLERS = {
+  fireball: { word: 'BOOM!', ink: ['#ffd23f', '#ff2e00'], burst: ['#ff4a1a', '#ffb020', '#ffd23f', '#2a2024', '#5a4a48'], trail: ['#ff6a1a', '#ffb020'], flicker: true },
+  asteroid: { word: 'KRAK!', ink: ['#e8f6ff', '#3a2a6a'], burst: ['#9ff3ff', '#e8f6ff', '#8a7e94', '#5a5264', '#c4b49a'], trail: ['#9ff3ff', '#ffffff'] },
+};
+// A trench laser bolt closes on you this many times faster than you ride
+// (see moveObstacle).
+const LASER_LEAD = 1.1;
 const VIS_AHEAD = CONFIG.road.ahead - 6;
 const VIS_BEHIND = 14;
 const P = CONFIG.player;
@@ -90,6 +99,9 @@ export class World {
     this.starGeo = shurikenGeo();
     this.paintMat = new THREE.MeshBasicMaterial({ color: '#c04dff' });
     this.paintGeo = new THREE.SphereGeometry(0.2, 12, 8);
+    // Fighters shoot (harmless) green laser bolts instead of paint.
+    this.boltMat = new THREE.MeshBasicMaterial({ color: '#3dff5a' });
+    this.boltGeo = new THREE.CapsuleGeometry(0.12, 1.1, 4, 8).rotateX(Math.PI / 2);
     this.debugBoxes = [];
     this.reset();
   }
@@ -133,8 +145,8 @@ export class World {
       e.segs = null;
     }
     if (e.ball) {
-      this.pool.release('p|fireballBall', e.ball);
-      this.pool.release('p|fireMarker', e.marker);
+      this.pool.release(`p|${e.type}Ball`, e.ball);
+      this.pool.release(`p|${e.type}Marker`, e.marker);
       e.ball = e.marker = null;
     }
   }
@@ -230,7 +242,20 @@ export class World {
     const env = this.env;
     switch (e.kind) {
       case 'obstacle':
-        return this.pool.get(e.key, () => prefabMesh(obstaclePrefab(e.type, e.span, env)));
+        return this.pool.get(e.key, () => {
+          const m = prefabMesh(obstaclePrefab(e.type, e.span, env), { cast: e.type !== 'laser' });
+          if (e.type === 'laser') {
+            // A big red glow (that shines through the fog) so the bolt reads
+            // from far down the trench.
+            const halo = new THREE.Sprite(new THREE.SpriteMaterial({
+              map: dotTexture(), color: '#ff2a2a', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false,
+            }));
+            halo.position.y = 1.1;
+            halo.scale.setScalar(3.6);
+            m.add(halo);
+          }
+          return m;
+        });
       case 'ramp':
         return this.pool.get(e.key, () => prefabMesh(piecePrefab('ramp', 1, env), { receive: true }));
       case 'gap':
@@ -321,11 +346,13 @@ export class World {
     return target;
   }
 
-  enemyThrow(enemy) {
-    const mesh = new THREE.Mesh(this.paintGeo, this.paintMat);
+  // A paint ball (ninjas) or a laser shot (laser: true, fighters). Both only
+  // splat the screen; neither can end the run.
+  enemyThrow(enemy, laser = false) {
+    const mesh = laser ? new THREE.Mesh(this.boltGeo, this.boltMat) : new THREE.Mesh(this.paintGeo, this.paintMat);
     this.root.add(mesh);
-    this.paints.push({ sx: enemy.x, sy: enemy.y + 1.5, sd: enemy.dist, t: 0, dur: 0.75, mesh, tx: null, td: null });
-    this.events.push({ type: 'enemyThrow', x: enemy.x, d: enemy.dist });
+    this.paints.push({ sx: enemy.x, sy: enemy.y + (laser ? 1.1 : 1.5), sd: enemy.dist, t: 0, dur: laser ? 0.4 : 0.75, mesh, tx: null, td: null, laser });
+    this.events.push({ type: 'enemyThrow', x: enemy.x, d: enemy.dist, laser });
   }
 
   updateProjectiles(dt, player, pDist, speed) {
@@ -385,13 +412,14 @@ export class World {
       const k = Math.min(1, p.t / p.dur);
       const x = lerp(p.sx, p.tx, k);
       const d = lerp(p.sd, p.td, k);
-      const y = lerp(p.sy, 1.4, k) + Math.sin(k * Math.PI) * 1.2;
+      const y = lerp(p.sy, 1.4, k) + (p.laser ? 0 : Math.sin(k * Math.PI) * 1.2);
+      const color = p.laser ? '#3dff5a' : '#c04dff';
       this.track.place(p.mesh, x, y, d);
-      if (Math.random() < 0.6) this.fx.glows.spawn(x, y, d, 0, 0, 0, 0.25, 0.16, '#c04dff', 0, 0);
+      if (Math.random() < 0.6) this.fx.glows.spawn(x, y, d, 0, 0, 0, 0.25, 0.16, color, 0, 0);
       if (k >= 1) {
         const hit = !player.crashed && Math.abs(player.x - p.tx) < 1.1 && player.sliding <= 0;
-        this.events.push({ type: hit ? 'splat' : 'paintMiss', x, d });
-        if (!hit) this.fx.splash(x, 0.1, d, speed * 0.5, '#c04dff');
+        this.events.push({ type: hit ? (p.laser ? 'zap' : 'splat') : 'paintMiss', x, d });
+        if (!hit) this.fx.splash(x, 0.1, d, speed * 0.5, color);
         this.root.remove(p.mesh);
         this.paints.splice(i, 1);
       }
@@ -471,12 +499,20 @@ export class World {
       }
       if (o.moving) this.moveObstacle(o, dt, pDist);
       if (near(o.dist)) {
-        if (!o.mesh) o.mesh = this.makeMesh(o);
+        if (!o.mesh) {
+          o.mesh = this.makeMesh(o);
+          if (o.type === 'laser') this.events.push({ type: 'laserFire', x: o.x, d: o.dist });
+        }
         this.track.place(o.mesh, o.x, o.by || 0, o.dist, false, o.yawExtra || 0);
         if (o.type === 'tumbleweed') o.mesh.rotation.z = o.spin;
         if (o.type === 'beachBall') o.mesh.rotation.x = o.spin;
-        o.mesh.position.y += o.type === 'tumbleweed' || o.type === 'beachBall' ? 0.45 : 0;
-        if (o.type === 'fireball') this.placeFireball(o, speed);
+        if (o.type === 'driftRock') {
+          o.mesh.rotation.x = o.spin;
+          o.mesh.rotation.z = o.spin * 0.6;
+        }
+        o.mesh.position.y += o.type === 'tumbleweed' || o.type === 'beachBall' || o.type === 'driftRock' ? 0.45 : 0;
+        if (FALLERS[o.type]) this.placeFaller(o, speed);
+        if (o.type === 'laser' && Math.random() < 0.8) this.fx.glows.spawn(o.x, 1.1, o.dist + 1.3, 0, 0, 0, 0.22, 0.32, '#ff3d3d', 0, 0);
       }
       if (player.crashed || o.hit || o.landed === false) continue;
       if (Math.abs(o.dist - pDist) < o.halfD + P.halfD && Math.abs(o.x - pX) < o.halfW + P.halfW) {
@@ -578,29 +614,43 @@ export class World {
       o.x = o.baseX + o.side * dRem * 0.09;
       o.by = Math.abs(Math.sin(dRem * 0.9 + o.phase)) * 0.05;
       o.yawExtra = o.side > 0 ? Math.PI : 0;
-    } else if (o.type === 'fireball') {
+    } else if (o.type === 'driftRock') {
+      // Drifts across the road like a tumbleweed, slowly tumbling.
+      o.x = o.baseX + o.side * dRem * 0.08;
+      o.by = 0.12 + Math.sin(this.track.time * 2 + o.phase) * 0.1;
+      o.spin += dt * 1.5 * o.side;
+    } else if (o.type === 'laser') {
+      // Streaks up its lane at you. Its position is tied to how far away you
+      // are, so it always meets you at the spot the generator picked.
+      o.home ??= o.dist;
+      o.dist = o.home + LASER_LEAD * (o.home - pDist);
+    } else if (FALLERS[o.type]) {
       // Falls out of the sky, speeding up, and always lands while you're still
       // FIREBALL_LAND metres away: it's in its lane long before you get there.
       o.fall = clamp((FIREBALL_START - dRem) / (FIREBALL_START - FIREBALL_LAND), 0, 1) ** 2;
       if (o.landed === undefined) o.landed = false;
       if (o.fall >= 1 && !o.landed) {
+        const F = FALLERS[o.type];
         o.landed = true;
-        this.fx.poof(o.x, 0, o.dist, 0, ['#ff4a1a', '#ffb020', '#ffd23f', '#2a2024', '#5a4a48']);
-        this.fx.word('BOOM!', o.x, 2.4, o.dist, '#ffd23f', '#ff2e00');
+        this.fx.poof(o.x, 0, o.dist, 0, F.burst);
+        this.fx.word(F.word, o.x, 2.4, o.dist, ...F.ink);
         this.events.push({ type: 'impact', x: o.x, d: o.dist });
       }
     }
   }
 
-  // The falling ball, the warning ring under it, and the burning crater.
-  placeFireball(o, speed) {
+  // The falling fireball (or asteroid), the warning ring under it, and the
+  // crater it leaves.
+  placeFaller(o, speed) {
+    const F = FALLERS[o.type];
     if (!o.ball) {
-      o.ball = this.pool.get('p|fireballBall', () => prefabMesh(piecePrefab('fireballBall', 1, this.env), { cast: false }));
-      o.marker = this.pool.get('p|fireMarker', () => prefabMesh(piecePrefab('fireMarker', 1, this.env), { cast: false }));
+      const ball = `${o.type}Ball`, marker = o.type === 'fireball' ? 'fireMarker' : `${o.type}Marker`;
+      o.ball = this.pool.get(`p|${o.type}Ball`, () => prefabMesh(piecePrefab(ball, 1, this.env), { cast: false }));
+      o.marker = this.pool.get(`p|${o.type}Marker`, () => prefabMesh(piecePrefab(marker, 1, this.env), { cast: false }));
     }
     const t = this.track.time;
     o.mesh.visible = o.landed;
-    o.mesh.scale.set(1, o.landed ? 0.85 + Math.sin(t * 13 + o.phase) * 0.15 : 1, 1);
+    o.mesh.scale.set(1, o.landed && F.flicker ? 0.85 + Math.sin(t * 13 + o.phase) * 0.15 : 1, 1);
     o.marker.visible = !o.landed;
     o.ball.visible = !o.landed;
     if (o.landed) return;
@@ -615,7 +665,7 @@ export class World {
     // Tilt the flame trail back along the way it came.
     o.ball.rotation.z += -o.side * 0.4;
     o.ball.rotation.x += -0.55;
-    if (Math.random() < 0.7) this.fx.glows.spawn(x, y + 0.6, d, 0, 1, speed * 0.2, 0.5, 0.45, Math.random() < 0.5 ? '#ff6a1a' : '#ffb020', 0, 0);
+    if (Math.random() < 0.7) this.fx.glows.spawn(x, y + 0.6, d, 0, 1, speed * 0.2, 0.5, 0.45, F.trail[Math.random() < 0.5 ? 0 : 1], 0, 0);
   }
 
   hitSomething(e, player, speed) {

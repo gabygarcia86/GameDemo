@@ -13,6 +13,9 @@ import { hash2 } from '../utils.js';
 
 const LANE = CONFIG.lanes.width;
 const INK = '#140c2b';
+// Obstacles light up at night and wherever the environment asks for neon.
+const neon = (env) => env.id === 'night' || !!env.neon;
+const RAINBOW = ['#ff2e55', '#ff8c1a', '#ffe066', '#3dff6a', '#3de1ff', '#3d7bff', '#b44dff'];
 
 const box = (w, h, d) => new THREE.BoxGeometry(w, h, d);
 const cyl = (rt, rb, h, seg = 10) => new THREE.CylinderGeometry(rt, rb, h, seg);
@@ -83,6 +86,18 @@ export const OBSTACLE_INFO = {
   rover: { cat: 'low', top: 0.95, halfD: 0.5, halfW: 0.6, moving: true },
   // Falls from the sky and leaves a burning crater (World.moveObstacle).
   fireball: { cat: 'block', top: 2.2, halfD: 0.8, halfW: 0.85, moving: true },
+  // Saturn: falls like a fireball and leaves a smoking crater.
+  asteroid: { cat: 'block', top: 2.2, halfD: 0.8, halfW: 0.85, moving: true },
+  iceBlock: { cat: 'block', top: 2.4, halfD: 0.6 },
+  // Rainbow road.
+  asteroidRock: { cat: 'block', top: 2.5, halfD: 0.8 },
+  driftRock: { cat: 'low', top: 0.95, halfD: 0.5, halfW: 0.55, moving: true },
+  rainbowArch: { cat: 'high', bottom: 1.25, top: 2.6, halfD: 0.2 },
+  // Trench run. The laser bolt streaks up its lane at you (World.moveObstacle).
+  laser: { cat: 'block', top: 2.2, halfD: 1.1, halfW: 0.6, moving: true },
+  laserFence: { cat: 'low', top: 0.8, halfD: 0.2 },
+  laserBar: { cat: 'high', bottom: 1.25, top: 1.85, halfD: 0.2 },
+  fuelTank: { cat: 'block', top: 2.3, halfD: 0.75 },
 };
 
 // Spans each obstacle can be built at (lanes wide).
@@ -90,6 +105,7 @@ export const OBSTACLE_SPANS = {
   barrier: [1, 2], lowBar: [1, 2, 3], log: [1, 3], snowdrift: [1, 3], roots: [1, 3],
   sign: [1, 3], pipeBar: [1, 3], banner: [1, 3], branch: [1, 3], surfRack: [1, 3],
   snowArch: [1, 3], neonSign: [1, 3], satellite: [1, 3], scaffold: [1, 3], rocks: [1], crates: [1], hay: [1],
+  rainbowArch: [1, 3], laserFence: [1, 3], laserBar: [1, 3],
 };
 export const spansFor = (type) => OBSTACLE_SPANS[type] || [1];
 
@@ -141,11 +157,11 @@ function buildingInto(b, w, h, d, wall, trim, seed, shop = null) {
   }
 }
 
-function lavaCracksInto(b, r, y, zScale = 1) {
+function lavaCracksInto(b, r, y, zScale = 1, colors = ['#ffb020', '#ff6a1a']) {
   for (let i = 0; i < 7; i++) {
     const a = hash2(i, 31) * Math.PI * 2;
     const t = (hash2(i, 32) - 0.5) * 1.2;
-    b.add(box(0.07, 0.5 + hash2(i, 33) * 0.5, 0.07), i % 2 ? '#ff6a1a' : '#ffb020', {
+    b.add(box(0.07, 0.5 + hash2(i, 33) * 0.5, 0.07), colors[i % 2], {
       pos: [Math.cos(a) * r * 0.92, y + t * r * 0.7, Math.sin(a) * r * 0.92 * zScale],
       rot: [hash2(i, 34) * 2, -a, hash2(i, 35) - 0.5],
       glow: true,
@@ -174,7 +190,7 @@ const OBSTACLE_BUILDERS = {
   barrier(span, env) {
     const b = new GeoBuilder();
     const w = spanWidth(span);
-    const night = env.id === 'night';
+    const night = neon(env);
     for (const s of [-1, 1]) {
       b.add(box(0.14, 2.25, 0.14), '#e9e9ef', { pos: [s * (w / 2 - 0.07), 1.12, 0] });
       b.add(box(0.5, 0.1, 0.5), '#3a3a44', { pos: [s * (w / 2 - 0.07), 0.05, 0] });
@@ -194,7 +210,7 @@ const OBSTACLE_BUILDERS = {
     crateInto(b, -0.2, 0.9, 0, 0.9, '#d39a4f');
     crateInto(b, 0.45, 0.9, -0.1, 0.65, '#b97d39');
     crateInto(b, -0.1, 1.8, 0.05, 0.6, '#c8893f');
-    if (env.id === 'night') b.add(box(0.5, 0.14, 0.02), '#ffe066', { pos: [-0.46, 0.45, 0.47], glow: true });
+    if (neon(env)) b.add(box(0.5, 0.14, 0.02), '#ffe066', { pos: [-0.46, 0.45, 0.47], glow: true });
     return b;
   },
 
@@ -298,7 +314,7 @@ const OBSTACLE_BUILDERS = {
 
   cones(span, env) {
     const b = new GeoBuilder();
-    const night = env.id === 'night';
+    const night = neon(env);
     for (const x of [-0.62, 0, 0.62]) {
       b.add(box(0.48, 0.06, 0.48), '#2a2a33', { pos: [x, 0.03, 0] });
       b.add(cone(0.22, 0.72, 10), '#ff7a1a', { pos: [x, 0.42, 0] });
@@ -320,7 +336,7 @@ const OBSTACLE_BUILDERS = {
       b.add(box(0.1, 0.85, 0.1), '#e9e9ef', { pos: [s * w / 2, 0.42, 0] });
       b.add(box(0.1, 0.06, 0.6), '#e9e9ef', { pos: [s * w / 2, 0.03, 0] });
     }
-    stripedBar(b, w, 0.26, 0.68, 0, '#ff2e55', '#ffffff', 0.4, env.id === 'night');
+    stripedBar(b, w, 0.26, 0.68, 0, '#ff2e55', '#ffffff', 0.4, neon(env));
     return b;
   },
 
@@ -459,7 +475,7 @@ const OBSTACLE_BUILDERS = {
   sign(span, env) {
     const b = new GeoBuilder();
     const w = spanWidth(span, 0.3);
-    const night = env.id === 'night';
+    const night = neon(env);
     for (const s of [-1, 1]) {
       b.add(box(0.12, 2.65, 0.12), '#e9e9ef', { pos: [s * w / 2, 1.32, 0] });
       b.add(box(0.5, 0.08, 0.5), '#3a3a44', { pos: [s * w / 2, 0.04, 0] });
@@ -491,7 +507,7 @@ const OBSTACLE_BUILDERS = {
       b.add(box(0.12, 1.55, 0.12), '#ffcc33', { pos: [x, 0.75, -0.3], rot: [-0.25, 0, 0] });
       for (let k = 0; k < 3; k++) b.add(box(0.13, 0.12, 0.13), INK, { pos: [x, 0.3 + k * 0.45, 0.3 - (0.3 + k * 0.45) * 0.25 + 0.06], rot: [0.25, 0, 0] });
     }
-    if (env.id === 'night') b.add(box(w, 0.06, 0.06), '#ffcc33', { pos: [0, 1.24, 0.12], glow: true });
+    if (neon(env)) b.add(box(w, 0.06, 0.06), '#ffcc33', { pos: [0, 1.24, 0.12], glow: true });
     return b;
   },
 
@@ -678,6 +694,155 @@ const OBSTACLE_BUILDERS = {
     b.add(box(0.5, 0.06, 0.05), INK, { pos: [0.1, 2.12, 0.54], rot: [0, 0, -0.6] });
     return b;
   },
+
+  // --- saturn
+  // A jagged block of ring ice with glinting crystals.
+  iceBlock() {
+    const b = new GeoBuilder();
+    b.add(rockGeo(1.1, 41), '#cfe8f8', { pos: [0, 1.1, 0], scale: [1, 1.2, 0.8] });
+    b.add(rockGeo(0.55, 42), '#a8d0ec', { pos: [0.8, 0.4, 0.25] });
+    b.add(rockGeo(0.45, 43), '#e8f6ff', { pos: [-0.8, 0.35, 0.2] });
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      b.add(cone(0.1, 0.5 + hash2(i, 44) * 0.5, 4), i % 2 ? '#ffffff' : '#bfe8ff', {
+        pos: [Math.cos(a) * 0.6, 1.4 + hash2(i, 45) * 0.8, 0.5 + Math.sin(a) * 0.2],
+        rot: [0.4, a, (hash2(i, 46) - 0.5) * 1.2],
+        glow: true,
+      });
+    }
+    return b;
+  },
+
+  // Where an asteroid came down: a smoking crater with the rock half buried.
+  // The falling rock and the warning ring are separate pieces (piecePrefab).
+  asteroid(span, env) {
+    const b = new GeoBuilder();
+    const rock = env.rock || '#8a8c95';
+    b.add(cyl(1.15, 1.25, 0.06, 14), '#1a1624', { pos: [0, 0.03, 0] });
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      b.add(rockGeo(0.3, i + 13), rock, { pos: [Math.cos(a) * 1.05, 0.12, Math.sin(a) * 1.05] });
+    }
+    b.add(rockGeo(0.95, 51), '#6e6478', { pos: [0, 0.75, 0], scale: [1, 1.1, 1] });
+    b.add(rockGeo(0.5, 52), '#5a5264', { pos: [0.55, 1.45, -0.1] });
+    lavaCracksInto(b, 0.9, 0.8, 1, ['#9ff3ff', '#e8f6ff']);
+    // Shards of ice thrown up by the impact.
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2 + 0.3;
+      b.add(cone(0.12, 0.7 + hash2(i, 53) * 0.6, 4), i % 2 ? '#e8f6ff' : '#9ff3ff', {
+        pos: [Math.cos(a) * 0.75, 0.5, Math.sin(a) * 0.75],
+        rot: [Math.sin(a) * 0.6, 0, -Math.cos(a) * 0.6],
+        glow: true,
+      });
+    }
+    return b;
+  },
+
+  // --- rainbow road
+  // A big asteroid hovering over the road, studded with glowing crystals.
+  asteroidRock(span, env) {
+    const b = new GeoBuilder();
+    const rock = env.rock || '#7c7f8a';
+    b.add(rockGeo(1.05, 81, 1), rock, { pos: [0, 1.35, 0], scale: [1.05, 1.1, 0.85] });
+    b.add(rockGeo(0.45, 82), rock, { pos: [0.85, 0.6, 0.3] });
+    b.add(rockGeo(0.35, 83), rock, { pos: [-0.8, 2.05, 0.2] });
+    for (let i = 0; i < 7; i++) {
+      const a = (i / 7) * Math.PI * 2;
+      b.add(cone(0.12, 0.45 + hash2(i, 84) * 0.4, 5), i % 2 ? '#5ff0ff' : '#ff7ae0', {
+        pos: [Math.cos(a) * 0.85, 1.35 + Math.sin(a) * 0.8, 0.45],
+        rot: [Math.PI / 2, 0, -a + Math.PI / 2],
+        glow: true,
+      });
+    }
+    b.add(tor(0.9, 0.05, 4, 24), '#ff7ae0', { pos: [0, 0.05, 0], rot: [Math.PI / 2, 0, 0], glow: true });
+    return b;
+  },
+
+  // A little asteroid drifting across the road at knee height: jump it.
+  // Built around its centre; World lifts and tumbles it.
+  driftRock(span, env) {
+    const b = new GeoBuilder();
+    const rock = env.rock || '#8a8c95';
+    b.add(rockGeo(0.5, 71, 1), rock, {});
+    b.add(rockGeo(0.22, 72), rock, { pos: [0.42, 0.2, 0.15] });
+    for (let i = 0; i < 5; i++) {
+      const a = (i / 5) * Math.PI * 2;
+      b.add(cone(0.08, 0.32, 4), i % 2 ? '#5ff0ff' : '#ffe066', { pos: [Math.cos(a) * 0.42, Math.sin(a) * 0.42, 0.2], rot: [0, 0, a - Math.PI / 2], glow: true });
+    }
+    return b;
+  },
+
+  // A rainbow strung between two glowing star posts: slide under.
+  rainbowArch(span) {
+    const b = new GeoBuilder();
+    const w = spanWidth(span, 0.2);
+    RAINBOW.forEach((c, i) => b.add(box(w, 0.17, 0.12), c, { pos: [0, 2.5 - i * 0.17, 0], glow: true }));
+    for (const s of [-1, 1]) {
+      b.add(cyl(0.07, 0.07, 2.6, 8), '#e9ecf2', { pos: [s * (w / 2 + 0.1), 1.3, 0] });
+      b.add(sph(0.22, 10, 8), '#ffe066', { pos: [s * (w / 2 + 0.1), 2.7, 0], glow: true });
+      // Fluffy clouds where the rainbow ends.
+      for (let k = 0; k < 3; k++) b.add(sph(0.32 - k * 0.05, 9, 7), '#ffffff', { pos: [s * (w / 2 - 0.15 - k * 0.3), 2.0 + (k % 2) * 0.2, 0.08] });
+    }
+    return b;
+  },
+
+  // --- trench run
+  // A laser bolt, long along the road, nose (+Z) first, at chest height. You
+  // mostly see it head-on, so it's fat, with a white-hot core, and it lights
+  // a red strip on the floor under it. World adds a glow halo.
+  laser() {
+    const b = new GeoBuilder();
+    b.add(new THREE.CapsuleGeometry(0.3, 1.9, 4, 12), '#ff2e2e', { pos: [0, 1.1, 0], rot: [Math.PI / 2, 0, 0], glow: true });
+    b.add(sph(0.19, 10, 8), '#fff0f0', { pos: [0, 1.1, 1.2], glow: true });
+    b.add(box(0.55, 0.02, 3.2), '#ff2e2e', { pos: [0, 0.03, 0], glow: true });
+    return b;
+  },
+
+  // Low laser tripwires between two emitters: jump them.
+  laserFence(span) {
+    const b = new GeoBuilder();
+    const w = spanWidth(span, 0.4);
+    for (const s of [-1, 1]) {
+      b.add(box(0.26, 0.95, 0.3), '#3a3e4a', { pos: [s * w / 2, 0.47, 0] });
+      b.add(box(0.28, 0.1, 0.32), '#ffcc33', { pos: [s * w / 2, 0.9, 0] });
+    }
+    for (const y of [0.32, 0.68]) {
+      b.add(box(w, 0.09, 0.09), '#ff2e2e', { pos: [0, y, 0], glow: true });
+      b.add(box(w, 0.035, 0.1), '#ffd0d0', { pos: [0, y, 0.01], glow: true });
+    }
+    return b;
+  },
+
+  // Laser beams across the trench at head height: slide under.
+  laserBar(span) {
+    const b = new GeoBuilder();
+    const w = spanWidth(span, 0.3);
+    for (const s of [-1, 1]) {
+      b.add(box(0.26, 2.1, 0.3), '#3a3e4a', { pos: [s * w / 2, 1.05, 0] });
+      b.add(box(0.3, 0.12, 0.34), '#ffcc33', { pos: [s * w / 2, 2.15, 0] });
+      for (const y of [1.45, 1.72]) b.add(box(0.3, 0.14, 0.34), '#ff2e2e', { pos: [s * w / 2, y, 0], glow: true });
+    }
+    for (const y of [1.45, 1.72]) {
+      b.add(box(w, 0.1, 0.1), '#ff2e2e', { pos: [0, y, 0], glow: true });
+      b.add(box(w, 0.04, 0.11), '#ffd0d0', { pos: [0, y, 0.01], glow: true });
+    }
+    return b;
+  },
+
+  // A pair of fuel tanks with hazard bands.
+  fuelTank() {
+    const b = new GeoBuilder();
+    b.add(box(1.9, 0.2, 1.4), '#3a3e48', { pos: [0, 0.1, 0] });
+    for (const x of [-0.45, 0.45]) {
+      b.add(cyl(0.48, 0.48, 1.7, 14), '#8a909e', { pos: [x, 1.05, 0] });
+      b.add(sph(0.48, 14, 8), '#8a909e', { pos: [x, 1.9, 0], scale: [1, 0.4, 1] });
+      for (const y of [0.55, 1.55]) b.add(cyl(0.5, 0.5, 0.16, 14), y < 1 ? '#ffcc33' : INK, { pos: [x, y, 0] });
+      b.add(box(0.36, 0.22, 0.04), '#e9ecf2', { pos: [x, 1.1, 0.48] });
+    }
+    b.add(cyl(0.06, 0.06, 1.0, 6), '#5a6170', { pos: [0, 1.95, 0], rot: [0, 0, Math.PI / 2] });
+    b.add(sph(0.08, 6, 4), '#ff3d3d', { pos: [0, 2.2, 0], glow: true });
+    return b;
+  },
 };
 
 // ---------------------------------------------------------- course pieces
@@ -703,7 +868,7 @@ function rampBuilder(env) {
   ];
   g.setAttribute('position', new THREE.Float32BufferAttribute(v, 3));
   g.computeVertexNormals();
-  const night = env.id === 'night';
+  const night = neon(env);
   const deck = env.id === 'snow' ? '#9fd3ff' : env.id === 'forest' ? '#b8844a' : '#3d7bff';
   b.add(g, deck);
   const slopeLen = Math.hypot(L, H);
@@ -728,7 +893,7 @@ function railSegBuilder(env) {
   b.add(cyl(0.07, 0.07, RAIL.segment + 0.02, 8), metal, { pos: [0, RAIL.top - 0.07, 0], rot: [Math.PI / 2, 0, 0] });
   b.add(cyl(0.05, 0.05, RAIL.top - 0.07, 6), '#5a6170', { pos: [0, (RAIL.top - 0.07) / 2, 0] });
   b.add(box(0.35, 0.05, 0.35), '#3a3a44', { pos: [0, 0.025, 0] });
-  if (env.id === 'night') b.add(box(0.03, 0.03, RAIL.segment), '#3de1ff', { pos: [0, RAIL.top - 0.15, 0.06], glow: true });
+  if (neon(env)) b.add(box(0.03, 0.03, RAIL.segment), '#3de1ff', { pos: [0, RAIL.top - 0.15, 0.06], glow: true });
   return b;
 }
 
@@ -751,7 +916,7 @@ function gapBuilder(span, env) {
     if (i % 2 === 0) b.add(rockGeo(0.14, i), '#3a3240', { pos: [x, 0.06, L / 2 + 0.08] });
   }
   // Hazard stripes on the near lip so it reads from far away.
-  stripedBar(b, w, 0.03, 0.03, L / 2 + 0.25, '#ffcc33', INK, 0.5, env.id === 'night');
+  stripedBar(b, w, 0.03, 0.03, L / 2 + 0.25, '#ffcc33', INK, 0.5, neon(env));
   return b;
 }
 
@@ -788,14 +953,26 @@ function fireballBallBuilder() {
   return b;
 }
 
-// Glowing target ring on the road where a fireball is about to land.
-function fireMarkerBuilder() {
+// A falling asteroid: tumbling rock with glowing ice cracks and a comet tail
+// pointing up the way it came.
+function asteroidBallBuilder() {
   const b = new GeoBuilder();
-  b.add(tor(1.05, 0.08, 4, 28), '#ff3d1a', { pos: [0, 0.04, 0], rot: [Math.PI / 2, 0, 0], glow: true });
-  b.add(tor(0.6, 0.05, 4, 20), '#ffb020', { pos: [0, 0.04, 0], rot: [Math.PI / 2, 0, 0], glow: true });
+  b.add(rockGeo(0.9, 61, 1), '#6e6478', {});
+  b.add(rockGeo(0.45, 62), '#5a5264', { pos: [0.5, 0.35, 0.3] });
+  lavaCracksInto(b, 0.85, 0, 1, ['#9ff3ff', '#e8f6ff']);
+  b.add(cone(0.75, 3.8, 8), '#9ff3ff', { pos: [0, 2.4, 0], glow: true });
+  b.add(cone(0.45, 2.4, 8), '#e8f6ff', { pos: [0, 1.6, 0], glow: true });
+  return b;
+}
+
+// Glowing target ring on the road where a fireball (or asteroid) is about to land.
+function fireMarkerBuilder(outer = '#ff3d1a', inner = '#ffb020') {
+  const b = new GeoBuilder();
+  b.add(tor(1.05, 0.08, 4, 28), outer, { pos: [0, 0.04, 0], rot: [Math.PI / 2, 0, 0], glow: true });
+  b.add(tor(0.6, 0.05, 4, 20), inner, { pos: [0, 0.04, 0], rot: [Math.PI / 2, 0, 0], glow: true });
   for (let i = 0; i < 4; i++) {
     const a = (i / 4) * Math.PI * 2 + Math.PI / 4;
-    b.add(box(0.5, 0.02, 0.1), '#ff3d1a', { pos: [Math.cos(a) * 0.35, 0.045, Math.sin(a) * 0.35], rot: [0, -a, 0], glow: true });
+    b.add(box(0.5, 0.02, 0.1), outer, { pos: [Math.cos(a) * 0.35, 0.045, Math.sin(a) * 0.35], rot: [0, -a, 0], glow: true });
   }
   return b;
 }
@@ -864,7 +1041,41 @@ export const SCENERY_INFO = {
   fern: { r: 0.7 }, mushroom: { r: 0.4 }, moonFlag: { r: 0.5 }, moonDish: { r: 1.4 }, lander: { r: 3 },
   marsSpire: { r: 1.5 }, bldgTall: { r: 6 }, bldgMid: { r: 6 }, bldgShop: { r: 6 }, hydrant: { r: 0.3 }, trashCan: { r: 0.4 },
   cityTree: { r: 1.2 }, parkingMeter: { r: 0.2 }, newsBox: { r: 0.4 }, roverProp: { r: 1 }, habitat: { r: 4.5 }, lavaRock: { r: 1.4 }, deadTree: { r: 1.2 }, lavaVent: { r: 1.2 },
+  // float: [min, max] height each one hangs at above (or below) the ground.
+  iceChunk: { r: 0.8 }, iceSpire: { r: 2.2 }, floatRock: { r: 1.6, float: [1.5, 8] },
+  spaceBuoy: { r: 0.6, float: [-3, 3] }, starGem: { r: 0.8, float: [-2, 5] }, ringPlanetProp: { r: 6, float: [-30, 20] },
+  starPost: { r: 0.3 }, trenchWallA: { r: 6 }, trenchWallB: { r: 6 }, trenchWallC: { r: 6 },
 };
+
+// One section of trench wall, 12.6 m long (the street-wall spacing in Track),
+// TRENCH_WALL.h tall, front face at +Z. Greebles, lights and pipes are hashed
+// from the seed so every variant looks different.
+const TRENCH_WALL = { len: 12.6, h: 14, d: 2 };
+function trenchWallInto(b, seed) {
+  const { len: L, h: H, d: D } = TRENCH_WALL;
+  const front = D / 2;
+  b.add(box(L + 0.04, H + 1, D), '#5e6372', { pos: [0, (H - 1) / 2, 0] }); // a metre of footing hides gaps on curves
+  for (const y of [3.2, 7.6, 11.4]) b.add(box(L + 0.04, 0.35, D + 0.5), '#474c5a', { pos: [0, y, 0.25] });
+  b.add(box(L + 0.04, 0.5, D + 0.6), '#3a3e4a', { pos: [0, H, 0.3] });
+  for (const x of [-L / 2 + 0.2, L / 2 - 0.2]) b.add(box(0.4, H, D + 0.3), '#4a4f5c', { pos: [x, H / 2, 0.15] });
+  for (let i = 0; i < 28; i++) {
+    const w = 0.4 + hash2(i, seed) * 2.2;
+    const h = 0.3 + hash2(i, seed + 1) * 1.6;
+    const x = (hash2(i, seed + 2) - 0.5) * (L - w - 0.8);
+    const y = 0.5 + hash2(i, seed + 3) * (H - 2);
+    const dz = 0.1 + hash2(i, seed + 4) * 0.35;
+    b.add(box(w, h, dz * 2), hash2(i, seed + 5) < 0.5 ? '#6e7484' : '#4e5362', { pos: [x, y, front] });
+  }
+  for (let i = 0; i < 10; i++) {
+    if (hash2(i, seed + 6) < 0.35) continue;
+    const x = (hash2(i, seed + 7) - 0.5) * (L - 1.5);
+    const y = 1 + hash2(i, seed + 8) * (H - 3);
+    b.add(box(0.8, 0.2, 0.06), hash2(i, seed + 9) < 0.5 ? '#ffe9b0' : '#9fd3ff', { pos: [x, y, front + 0.42], glow: true });
+  }
+  const py = 1.4 + hash2(seed, 10) * 1.2;
+  b.add(cyl(0.18, 0.18, L + 0.04, 8), '#7a8090', { pos: [0, py, front + 0.3], rot: [0, 0, Math.PI / 2] });
+  b.add(cyl(0.1, 0.1, L + 0.04, 6), '#8a909e', { pos: [0, py + 0.4, front + 0.25], rot: [0, 0, Math.PI / 2] });
+}
 
 function pineInto(b, h, green, cap) {
   b.add(cyl(0.18, 0.26, h * 0.3, 7), '#6b4423', { pos: [0, h * 0.15, 0] });
@@ -1275,6 +1486,114 @@ const SCENERY_BUILDERS = {
     for (const sd of [-1, 1]) b.add(box(0.04, 0.12, 0.4), '#1a1a22', { pos: [sd * 0.2, 0.06, 0] });
     return b;
   },
+
+  // --- saturn
+  iceChunk() {
+    const b = new GeoBuilder();
+    b.add(rockGeo(0.55, 31), '#cfe8f8', { pos: [0, 0.3, 0] });
+    b.add(rockGeo(0.3, 32), '#a8d0ec', { pos: [0.55, 0.15, 0.2] });
+    b.add(cone(0.08, 0.5, 4), '#ffffff', { pos: [-0.1, 0.75, 0.1], rot: [0.2, 0, 0.3], glow: true });
+    return b;
+  },
+  iceSpire() {
+    const b = new GeoBuilder();
+    const spikes = [[0, 0, 6.5, 0.9], [1.0, 0.4, 4.2, 0.6], [-0.9, 0.3, 3.6, 0.55], [0.3, -0.9, 3, 0.5], [-0.4, 0.9, 2.4, 0.4]];
+    spikes.forEach(([x, z, h, r], i) => {
+      b.add(cone(r, h, 5), i % 2 ? '#a8d0ec' : '#cfe8f8', { pos: [x, h / 2, z], rot: [z * 0.12, i, -x * 0.12] });
+      b.add(cone(r * 0.3, h * 0.25, 5), '#ffffff', { pos: [x * 1.02, h * 0.92, z * 1.02], rot: [z * 0.12, i, -x * 0.12], glow: true });
+    });
+    b.add(rockGeo(1.2, 33), '#b8c8d8', { pos: [0, 0.2, 0], scale: [1.3, 0.4, 1.3] });
+    return b;
+  },
+  // A lump of ring rubble hanging in the air with a few pebbles around it.
+  floatRock(env) {
+    const b = new GeoBuilder();
+    const c = env.rock || '#8a8c95';
+    b.add(rockGeo(1.1, 34, 1), c, { pos: [0, 0, 0], scale: [1.2, 0.9, 1] });
+    b.add(rockGeo(0.35, 35), c, { pos: [1.6, 0.4, 0.3] });
+    b.add(rockGeo(0.25, 36), c, { pos: [-1.4, -0.3, 0.6] });
+    b.add(rockGeo(0.2, 37), c, { pos: [0.3, 1.1, -0.9] });
+    if (env.id === 'rainbow') for (let i = 0; i < 4; i++) b.add(cone(0.1, 0.5, 4), i % 2 ? '#5ff0ff' : '#ff7ae0', { pos: [Math.cos(i * 1.6) * 0.9, 0.5, Math.sin(i * 1.6) * 0.7], rot: [Math.sin(i * 1.6) * 0.6, 0, -Math.cos(i * 1.6) * 0.6], glow: true });
+    return b;
+  },
+
+  // --- rainbow road
+  spaceBuoy() {
+    const b = new GeoBuilder();
+    b.add(sph(0.4, 12, 8), '#e9ecf2', {});
+    b.add(tor(0.48, 0.06, 6, 20), '#ff3df0', { rot: [Math.PI / 2, 0, 0], glow: true });
+    b.add(cyl(0.03, 0.03, 0.9, 4), '#c9ccd6', { pos: [0, 0.75, 0] });
+    b.add(sph(0.1, 8, 6), '#ffe066', { pos: [0, 1.22, 0], glow: true });
+    b.add(cone(0.2, 0.4, 8), '#9aa0ae', { pos: [0, -0.5, 0], rot: [Math.PI, 0, 0] });
+    return b;
+  },
+  // A big glowing five-pointed star.
+  starGem() {
+    const b = new GeoBuilder();
+    const s = new THREE.Shape();
+    for (let i = 0; i < 10; i++) {
+      const r = i % 2 ? 0.38 : 0.9;
+      const a = (i / 10) * Math.PI * 2 + Math.PI / 2;
+      if (i === 0) s.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+      else s.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+    }
+    const g = new THREE.ExtrudeGeometry(s, { depth: 0.3, bevelEnabled: false });
+    g.translate(0, 0, -0.15);
+    b.add(g, '#ffe066', { pos: [0, 1, 0], glow: true });
+    b.add(sph(0.25, 10, 8), '#ffffff', { pos: [0, 1, 0], scale: [1, 1, 0.9], glow: true });
+    return b;
+  },
+  // A small ringed planet drifting far off the road.
+  ringPlanetProp() {
+    const b = new GeoBuilder();
+    b.add(sph(4, 18, 12), '#7a4dff', {});
+    b.add(sph(4.05, 18, 12), '#b44dff', { scale: [1, 0.35, 1] });
+    b.add(tor(6.5, 0.5, 4, 36), '#3de1ff', { rot: [Math.PI / 2 - 0.35, 0, 0.2], scale: [1, 1, 0.2], glow: true });
+    b.add(tor(7.6, 0.35, 4, 36), '#ff7ae0', { rot: [Math.PI / 2 - 0.35, 0, 0.2], scale: [1, 1, 0.2], glow: true });
+    return b;
+  },
+  // Road-edge post: a rainbow-striped pole topped with a glowing star.
+  starPost() {
+    const b = new GeoBuilder();
+    RAINBOW.forEach((c, i) => b.add(cyl(0.07, 0.07, 0.2, 8), c, { pos: [0, 0.1 + i * 0.2, 0], glow: true }));
+    b.add(sph(0.16, 10, 8), '#ffffff', { pos: [0, 1.6, 0], glow: true });
+    for (let i = 0; i < 5; i++) {
+      const a = (i / 5) * Math.PI * 2;
+      b.add(cone(0.08, 0.28, 4), '#ffe066', { pos: [Math.sin(a) * 0.2, 1.6 + Math.cos(a) * 0.2, 0], rot: [0, 0, -a], glow: true });
+    }
+    return b;
+  },
+
+  // --- trench run (lines the trench via Track's building row)
+  trenchWallA() {
+    const b = new GeoBuilder();
+    trenchWallInto(b, 11);
+    return b;
+  },
+  // ...with a gun turret poking out over the road.
+  trenchWallB() {
+    const b = new GeoBuilder();
+    trenchWallInto(b, 23);
+    const f = TRENCH_WALL.d / 2;
+    b.add(box(2.4, 1.6, 0.6), '#3a3e4a', { pos: [1.5, 9.4, f + 0.3] });
+    b.add(sph(0.85, 12, 8), '#6e7484', { pos: [1.5, 9.4, f + 0.6], scale: [1, 0.8, 0.8] });
+    for (const x of [1.15, 1.85]) {
+      b.add(cyl(0.1, 0.1, 1.4, 8), '#2a2d36', { pos: [x, 9.5, f + 1.3], rot: [Math.PI / 2, 0, 0] });
+      b.add(sph(0.12, 8, 6), '#3dff5a', { pos: [x, 9.5, f + 2.0], glow: true });
+    }
+    return b;
+  },
+  // ...with glowing vents and a suspiciously important-looking exhaust port.
+  trenchWallC() {
+    const b = new GeoBuilder();
+    trenchWallInto(b, 37);
+    const f = TRENCH_WALL.d / 2;
+    for (const x of [-4, -2.6, 2.6, 4]) b.add(box(1, 0.5, 0.06), '#ff8a1a', { pos: [x, 0.6, f + 0.02], glow: true });
+    b.add(box(2.2, 2.2, 0.3), '#2a2d36', { pos: [-1.5, 5.2, f + 0.12] });
+    b.add(box(1.4, 1.4, 0.32), '#0a0b10', { pos: [-1.5, 5.2, f + 0.13] });
+    b.add(tor(0.55, 0.06, 4, 18), '#ffb020', { pos: [-1.5, 5.2, f + 0.3], glow: true });
+    return b;
+  },
 };
 
 // ------------------------------------------------------------------ cache
@@ -1302,6 +1621,8 @@ export function piecePrefab(kind, span, env) {
       : kind === 'ice' ? iceBuilder(span)
       : kind === 'fireballBall' ? fireballBallBuilder()
       : kind === 'fireMarker' ? fireMarkerBuilder()
+      : kind === 'asteroidBall' ? asteroidBallBuilder()
+      : kind === 'asteroidMarker' ? fireMarkerBuilder('#5ff0ff', '#b48cff')
       : chestBuilder();
     cache.set(key, b.build());
   }

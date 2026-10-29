@@ -47,6 +47,8 @@ export const LAVA_LINES = ['ROOAARR!', 'HOT HOT HOT!', 'FEEL THE BURN!', "YOU'RE
 export const ASTRONAUT_KO = ['LIFTOFF!', 'HOUSTON...', 'ZERO G!', 'SPACED!'];
 export const UFO_KO = ['CRASH LANDED!', 'ABDUCTED!', 'SAUCER SMASH!', 'ZORP-KO!'];
 export const SHIP_KO = ['SHOT DOWN!', 'KABOOM!', 'EJECT!', 'MAYDAY!'];
+export const TIE_LINES = ['STAY ON TARGET!', 'TARGET THE NINJA!', "HE'S TOO FAST!", 'CLOSE THE TRENCH!', 'ALL WINGS, ATTACK!', 'NO SKATING IN THE TRENCH!'];
+export const TIE_KO = ['SPLASHED!', 'SPUN OUT!', "TIE'D UP!", 'WINGED!'];
 export const LAVA_KO = ['COOLED OFF!', 'SIZZLE!', 'ROCK SOLID!', 'EXTINGUISHED!'];
 export const OFFICER_KO = ['TICKETED!', 'CITED!', 'TOWED!', 'VOID!'];
 export const MIME_KO = ['...POP!', 'BOX BROKEN!', 'MIMED OUT!', '(SILENT BONK)'];
@@ -55,10 +57,21 @@ export const PIGEON_KO = ['FEATHERS!', 'SCATTER!', 'COO-KO!', 'FLAP OFF!'];
 const KO_WORDS = {
   karen: KAREN_KO, ninja: NINJA_KO, bear: BEAR_KO, yeti: YETI_KO, rockAlien: ROCK_ALIEN_KO, alien: ALIEN_KO, scooter: SCOOTER_KO,
   parkingOfficer: OFFICER_KO, mime: MIME_KO, hotdog: HOTDOG_KO, pigeons: PIGEON_KO,
-  astronaut: ASTRONAUT_KO, ufo: UFO_KO, ship: SHIP_KO, lavaMonster: LAVA_KO, bigfoot: BIGFOOT_KO,
+  astronaut: ASTRONAUT_KO, ufo: UFO_KO, ship: SHIP_KO, lavaMonster: LAVA_KO, bigfoot: BIGFOOT_KO, tieFighter: TIE_KO,
 };
 
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
+
+// Swerving through a list of lanes as p goes 0..1, settling in the last one a
+// little early. Returns x and a lean into the swerve.
+function weave(path, p) {
+  const n = path.length - 1;
+  if (n <= 0) return { x: laneX(path[0]), lean: 0 };
+  const f = Math.min(n, p * n * 1.15);
+  const i = Math.min(n - 1, Math.floor(f));
+  const k = smoothstep(0, 1, f - i);
+  return { x: lerp(laneX(path[i]), laneX(path[i + 1]), k), lean: (path[i + 1] - path[i]) * Math.sin(k * Math.PI) * -0.35 };
+}
 
 class EnemyBase {
   constructor(scene) {
@@ -487,16 +500,7 @@ export class ScooterRider extends EnemyBase {
       // the final lane by dRem 24.
       const p = smoothstep(84, 24, dRem);
       this.dist = this.baseDist + (1 - p) * WEAVE_RUN;
-      const n = this.path.length - 1;
-      let x = laneX(this.path[0]);
-      if (n > 0) {
-        const f = Math.min(n, p * n * 1.15);
-        const i = Math.min(n - 1, Math.floor(f));
-        const k = smoothstep(0, 1, f - i);
-        x = lerp(laneX(this.path[i]), laneX(this.path[i + 1]), k);
-        lean = (this.path[i + 1] - this.path[i]) * Math.sin(k * Math.PI) * -0.35;
-      }
-      this.x = x;
+      ({ x: this.x, lean } = weave(this.path, p));
       if (p < 1) mode = 'ride';
     } else if (this.behavior === 'cross') {
       // Zips across the street and brakes in its lane.
@@ -593,14 +597,17 @@ export class Townsperson extends EnemyBase {
   }
 }
 
-// Flying craft: the Mars UFO and the moon space fighter. They swoop down out
-// of the sky and hover low in the lane reserved for them.
+// Flying craft: the UFO, the space fighter and the trench's twin-wing fighter.
+// They swoop down out of the sky (or scream up the trench) and hover low in
+// the lane reserved for them. shoots: fires harmless laser shots on the way in.
 const CRAFTS = {
   ufo: { top: 1.35, halfW: 0.95, halfD: 0.95, hover: 0.35, lines: UFO_LINES, ko: ['#7be35a', '#3a0a5a'] },
   ship: { top: 1.25, halfW: 1.0, halfD: 1.2, hover: 0.4, lines: SHIP_LINES, ko: ['#ffb020', '#14162b'] },
+  tieFighter: { top: 2.4, halfW: 1.05, halfD: 0.6, hover: 0.25, lines: TIE_LINES, ko: ['#3dff5a', '#14162b'], shoots: true },
 };
 export const CRAFT_KINDS = Object.keys(CRAFTS);
 const SWOOP_RUN = 30; // how far up the road a swooping craft starts
+const STRAFE_RUN = 40; // how far up the trench a strafing fighter starts
 
 export class Craft extends EnemyBase {
   constructor(scene, outline, kind) {
@@ -623,19 +630,30 @@ export class Craft extends EnemyBase {
     this.line = pick(info.lines);
     this.saidLine = false;
     this.side = spec.side || (Math.random() < 0.5 ? -1 : 1);
+    this.path = spec.path || [this.lane];
     this.y = info.hover;
+    this.shots = 0;
+    this.shotCd = 0.3 + Math.random() * 0.4;
     if (this.behavior === 'swoop') {
       this.x = this.side * 10;
       this.y = 16;
       this.dist = spec.dist + SWOOP_RUN;
+    } else if (this.behavior === 'strafe') {
+      this.x = laneX(this.path[0]);
+      this.y = info.hover + 2.5;
+      this.dist = spec.dist + STRAFE_RUN;
+    } else if (this.behavior === 'dive') {
+      this.y = info.hover + 18;
+      this.dist = spec.dist + SWOOP_RUN;
     }
   }
 
-  update(dt, pDist) {
+  update(dt, pDist, speed, world) {
     const dRem = this.baseDist - pDist;
     this.t += dt;
     this.active = dRem < CONFIG.road.ahead;
-    const hover = CRAFTS[this.kind].hover;
+    const info = CRAFTS[this.kind];
+    const hover = info.hover;
     let bank = Math.sin(this.t * 1.7) * 0.06;
     let dive = 0;
     this.yaw = 0;
@@ -650,8 +668,32 @@ export class Craft extends EnemyBase {
         bank += -this.side * Math.sin(p * Math.PI) * 0.7;
         dive = Math.sin(p * Math.PI) * 0.8;
       }
+    } else if (this.behavior === 'strafe') {
+      // Screams up the trench straight at you, jinking from lane to lane, and
+      // drops into a hover in its lane by dRem 30.
+      const p = smoothstep(96, 30, dRem);
+      const w = weave(this.path, p);
+      this.x = w.x;
+      this.y = hover + (1 - p) * 2.5;
+      this.dist = this.baseDist + (1 - p) * STRAFE_RUN;
+      bank += w.lean * 2;
+    } else if (this.behavior === 'dive') {
+      // Drops nose-first out of the sky straight into its lane.
+      const p = smoothstep(80, 34, dRem);
+      const k = 1 - p;
+      this.y = hover + k * k * 18;
+      this.dist = this.baseDist + k * SWOOP_RUN;
+      dive = Math.sin(p * Math.PI) * 0.9;
     } else {
       this.y = hover;
+    }
+    if (info.shoots && world && this.alive && !this.dying && dRem < 50 && dRem > 18 && this.shots < 2) {
+      this.shotCd -= dt;
+      if (this.shotCd <= 0) {
+        this.shotCd = 0.7;
+        this.shots++;
+        world.enemyThrow(this, true);
+      }
     }
     this.collidable = this.y < 1.2;
     this.rig.animate(dt, { bank, dive, beamTo: this.y + 0.5 });

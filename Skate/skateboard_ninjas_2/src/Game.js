@@ -38,6 +38,9 @@ const CRASH_REASONS = {
   rockAlien: ['That rock had a face.', 'Moon rocks: harder than they look.', 'Houston, we have a problem.'],
   alien: ['Abducted at full speed.', 'Take me to your leader... ouch.', 'A close encounter of the painful kind.'],
   fireball: ['Toasted!', 'Well done. Extra crispy.', 'The floor is literally lava.'],
+  asteroid: ['Flattened by a falling asteroid.', 'You saw the ring. You ignored the ring.', 'That rock came a long way to hit you.'],
+  laser: ['Blasted! Should have changed lanes.', 'Lasers: they do not stop for ninjas.', 'Pew pew... ouch.'],
+  tieFighter: ['Rammed by a twin-wing fighter.', 'Those wings are sharper than they look.', 'Shot down in the trench.'],
   parkingOfficer: ['Ticketed for reckless skating.', 'The fine is your whole run.', 'Should have fed the meter.'],
   mime: ['That invisible wall was very real.', '...', 'Trapped in the box with them.'],
   hotdog: ['Covered in mustard.', 'You got relished.', 'Hot dog stand: 1, Ninja: 0.'],
@@ -61,10 +64,13 @@ const OBSTACLE_NAMES = {
   beachBall: 'a beach ball', sign: 'a road sign', pipeBar: 'a pipe', banner: 'a banner', branch: 'a branch', surfRack: 'a surf rack',
   snowArch: 'a snowy log', neonSign: 'a neon sign', satellite: 'a crashed satellite', rover: 'a runaway rover',
   taxi: 'a taxi', dumpster: 'a dumpster', trashBags: 'some trash bags', scaffold: 'scaffolding',
+  iceBlock: 'a block of ring ice', asteroidRock: 'a floating asteroid', driftRock: 'a drifting asteroid', rainbowArch: 'a rainbow',
+  fuelTank: 'a fuel tank', laserFence: 'a laser tripwire', laserBar: 'a laser beam',
 };
 const KO_CALLOUTS = {
   karen: 'KAREN POPPED!', ninja: 'NINJA DOWN!', bear: 'BEAR DOWN!', yeti: 'YETI TAMED!', rockAlien: 'ROCK ALIEN SMASHED!', alien: 'ALIEN ZAPPED!', scooter: 'SCOOTER SCRAPPED!',
   astronaut: 'ASTRONAUT LAUNCHED!', ufo: 'UFO DOWNED!', ship: 'FIGHTER DOWN!', lavaMonster: 'LAVA MONSTER COOLED!', bigfoot: 'BIGFOOT SPOTTED!',
+  tieFighter: 'TWIN-WING DOWN!',
   parkingOfficer: 'TICKET VOIDED!', mime: 'MIME SILENCED!', hotdog: 'HOT DOG STAND DOWN!', pigeons: 'PIGEONS SCATTERED!',
 };
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
@@ -75,7 +81,7 @@ export class Game {
     this.settings = this.save.settings;
     const params = new URLSearchParams(location.search);
     if (params.has('debug')) CONFIG.debug = true;
-    // ?env=snow (or sunset, daytime, night, beach, forest) forces one environment.
+    // ?env=snow (or any other id from environments.js) forces one environment.
     this.forcedEnv = params.get('env');
     this.ui = new UI();
     this.audio = new AudioManager(this.settings);
@@ -686,11 +692,14 @@ export class Game {
         case 'avoid':
           st.avoided++;
           if (e.objType === 'fireball') st.fireballs++;
+          if (e.objType === 'asteroid') st.asteroids++;
+          if (e.objType === 'laser') st.lasers++;
           if (e.how === 'jump') {
             st.jumpOvers++;
             if (e.objType === 'hay') st.hay++;
             if (e.objType === 'tumbleweed') st.tumbleweeds++;
             if (e.objType === 'rover') st.rovers++;
+            if (e.objType === 'driftRock') st.driftRocks++;
             this.award(S.jumpOver, null);
           } else if (e.how === 'slide') {
             st.slideUnders++;
@@ -751,11 +760,22 @@ export class Game {
           this.audio.play(e.kind);
           break;
         case 'enemyThrow':
-          this.audio.play('enemyThrow');
+          this.audio.play(e.laser ? 'laser' : 'enemyThrow');
+          break;
+        case 'laserFire':
+          this.audio.play('laser');
           break;
         case 'impact':
           this.audio.play('impact');
           if (this.settings.shake) this.cam.shake(0.22);
+          break;
+        case 'zap':
+          // A fighter's shot: a flash and a scare, nothing worse.
+          st.splats++;
+          this.audio.play('zap');
+          this.fx.flash('#3dff5a', 0.3);
+          if (this.settings.shake) this.cam.shake(0.12);
+          this.ui.callout('SCORCHED!', 'bad');
           break;
         case 'splat':
           st.splats++;

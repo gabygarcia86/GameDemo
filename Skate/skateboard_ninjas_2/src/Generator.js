@@ -21,6 +21,7 @@ const BEAST_MOVES = {
   parkingOfficer: ['cross'], mime: ['cross'], hotdog: ['cross'], pigeons: ['flock'],
   bigfoot: ['cross', 'charge'],
   astronaut: ['hop', 'cross'], ufo: ['swoop'], ship: ['swoop'], lavaMonster: ['rise', 'cross'],
+  tieFighter: ['strafe', 'dive'],
 };
 
 // name, minimum distance, weight(difficulty)
@@ -477,10 +478,11 @@ export class Generator {
     const rows = this.rng.int(2, 3);
     for (let i = 0; i < rows; i++) {
       const specs = [null, null, null];
-      if (sp === 'fireball') {
-        // Fireballs crash into one or two lanes; the ring shows where.
+      if (sp === 'fireball' || sp === 'asteroid' || sp === 'laser') {
+        // Fireballs and asteroids crash into one or two lanes (the ring shows
+        // where); laser bolts streak up one or two lanes.
         const lanes = this.pickLanes(this.rng.chance(0.35 + k * 0.4) ? 2 : 1);
-        for (const l of lanes) specs[l] = { cat: 'block', type: 'fireball', extra: { side: this.rng.chance(0.5) ? 1 : -1 } };
+        for (const l of lanes) specs[l] = { cat: 'block', type: sp, extra: { side: this.rng.chance(0.5) ? 1 : -1 } };
         const free = this.row(at, specs);
         if (free.length) this.coinLine(this.rng.pick(free), at - 4, at + 2);
       } else if (sp === 'branch' || sp === 'neonSign' || sp === 'satellite' || sp === 'scaffold') {
@@ -494,7 +496,8 @@ export class Generator {
           this.row(at, specs);
         }
       } else {
-        // Tumbleweeds, hay bales, beach balls, rovers: jumpable, one or two lanes.
+        // Tumbleweeds, hay bales, beach balls, rovers, drifting asteroids:
+        // jumpable, one or two lanes.
         const lanes = this.pickLanes(this.rng.chance(0.4 + k * 0.3) ? 2 : 1);
         for (const l of lanes) {
           const side = l === 0 ? 1 : l === 2 ? -1 : this.rng.chance(0.5) ? 1 : -1;

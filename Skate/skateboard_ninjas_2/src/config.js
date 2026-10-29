@@ -79,6 +79,7 @@ export const CONFIG = {
     astronaut: 200,
     ufo: 250,
     ship: 250,
+    tieFighter: 250,
     lavaMonster: 300,
     bigfoot: 300,
     ball: 80,

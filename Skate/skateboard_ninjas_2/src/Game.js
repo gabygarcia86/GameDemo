@@ -211,17 +211,27 @@ export class Game {
     });
     ui.bindSettings(this.settings, (k) => this.onSettingChanged(k));
 
-    // Drag to spin the ninja on the customize screen.
-    this.canvas.addEventListener('pointerdown', (e) => {
-      this.audio.unlock();
-      if (this.state === 'customize') this.drag = { x: e.clientX };
+    // Drag to spin the ninja on the customize screen. The screen overlay sits
+    // above the canvas, so listen on it, starting only from the open area
+    // around the panel (the panel keeps its own taps and scrolling).
+    const czScreen = document.getElementById('customize');
+    czScreen.addEventListener('pointerdown', (e) => {
+      if (this.state !== 'customize' || e.target.closest('.custom-panel')) return;
+      this.drag = { x: e.clientX, id: e.pointerId };
+      czScreen.setPointerCapture?.(e.pointerId);
+      czScreen.classList.add('dragging');
     });
     window.addEventListener('pointermove', (e) => {
-      if (!this.drag) return;
+      if (!this.drag || e.pointerId !== this.drag.id) return;
       this.cam.orbitTarget -= (e.clientX - this.drag.x) * 0.012;
       this.drag.x = e.clientX;
     });
-    window.addEventListener('pointerup', () => (this.drag = null));
+    const endDrag = () => {
+      this.drag = null;
+      czScreen.classList.remove('dragging');
+    };
+    window.addEventListener('pointerup', endDrag);
+    window.addEventListener('pointercancel', endDrag);
     // Any first interaction unlocks audio (browser autoplay rules).
     const unlock = () => {
       this.audio.unlock();

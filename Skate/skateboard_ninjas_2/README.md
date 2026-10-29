@@ -278,5 +278,4 @@ licensed (`vendor/LICENSE-three.txt`). Music is from `assets/music/`.
 - Fix feet so there on top of the board
 - Purchased customization be more patterns and fun designs, stickers fun emojis added to gear to back
 - Hover board neon lights be more dynamic or cooler lighting
-- Drag preview ninja not working
 - Don't auto grind, make them have to jump on it or they bail if they hit it

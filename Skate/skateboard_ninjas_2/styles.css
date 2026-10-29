@@ -540,7 +540,9 @@ h3 {
 
 /* ---------- customize ---------- */
 
-.customize { background: linear-gradient(90deg, rgba(20, 12, 43, 0.82), rgba(20, 12, 43, 0.1) 60%); justify-content: flex-start; align-items: stretch; }
+.customize { background: linear-gradient(90deg, rgba(20, 12, 43, 0.82), rgba(20, 12, 43, 0.1) 60%); justify-content: flex-start; align-items: stretch; touch-action: none; cursor: grab; }
+.customize.dragging { cursor: grabbing; }
+.customize .custom-panel { touch-action: pan-y; cursor: auto; }
 .custom-panel {
   margin: auto auto auto max(0px, min(4vw, 60px));
   width: min(100%, 460px);

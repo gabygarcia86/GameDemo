@@ -146,7 +146,9 @@ export class NinjaRig {
       thigh.add(knee);
       mesh(cap(0.09, LEG * 0.55), M.suit, knee, [0, -LEG * 0.48, 0]);
       mesh(new THREE.CylinderGeometry(0.095, 0.095, 0.06, 10), M.accent, knee, [0, -LEG * 0.82, 0]).userData.noOutline = true;
-      const foot = mesh(new THREE.BoxGeometry(0.17, 0.1, 0.3), M.shoe, knee, [0, -LEG - 0.02, 0.05]);
+      // The sole sits on the IK foot point (plus a hair for the deck's top
+      // surface), so a foot placed on the deck stands on it instead of in it.
+      const foot = mesh(new THREE.BoxGeometry(0.17, 0.1, 0.3), M.shoe, knee, [0, -LEG + 0.07, 0.05]);
       foot.userData.keep = true; // rotated by setLeg
       this.legs.push({ thigh, knee, foot, side: s });
     }

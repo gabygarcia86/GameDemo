@@ -107,7 +107,7 @@ Controls are forgiving:
 - **Distance**: 1 point per metre.
 - **Actions** build a combo: knockouts, near misses, jumping over or sliding
   under things, tricks, ramps, grinds, power-ups, and every 10 coins in a streak.
-- **Combo multiplier**: +0.5 every 5 actions, up to ×5. It applies to action and
+- **Combo multiplier**: +0.5 every 5 actions, up to ×10. It applies to action and
   coin points, and drops if you go 3.5 s without an action.
 - **Coins**: everything you collect is banked at the end of a run. You also get
   a score bonus (1 coin per 2,500 points) and any mission and challenge rewards.
@@ -280,4 +280,3 @@ licensed (`vendor/LICENSE-three.txt`). Music is from `assets/music/`.
 - Hover board neon lights be more dynamic or cooler lighting
 - Drag preview ninja not working
 - Don't auto grind, make them have to jump on it or they bail if they hit it
-- Multiplier can get up to 10x

@@ -82,7 +82,7 @@ export const CONFIG = {
     powerup: 50,
     comboWindow: 3.5,     // seconds to land another action before the combo drops
     comboPerStep: 5,      // combo count needed for each +0.5 multiplier
-    multiplierCap: 5,
+    multiplierCap: 10,
     coinStreakStep: 10,   // every 10 coins in a row adds one to the combo
     scorePerBonusCoin: 2500, // bonus coins at game over: 1 per this many points
   },

@@ -2,8 +2,8 @@
 // swatches, game over, stats, settings and the confirm dialog. Game.js owns
 // the logic; this module only reads state and reports clicks.
 
-import { FREE_SWATCHES, PREMIUM_SWATCHES, NINJA_PARTS, BOARD_PARTS, PATTERNS, STICKERS, unlockIdFor } from './cosmetics.js';
-import { patternThumb, stickerThumb } from './models/decals.js';
+import { FREE_SWATCHES, PREMIUM_SWATCHES, NINJA_PARTS, BOARD_PARTS, PATTERNS, STICKERS, EFFECTS, unlockIdFor } from './cosmetics.js';
+import { patternThumb, stickerThumb, effectThumb } from './models/decals.js';
 import { ENV_LIST } from './environments.js';
 import { formatInt } from './utils.js';
 
@@ -226,6 +226,7 @@ export class UI {
       this.decalRow({ key: 'pattern', label: 'Suit pattern' }, PATTERNS),
       this.decalRow({ key: 'stickerFront', label: 'Chest sticker' }, STICKERS),
       this.decalRow({ key: 'stickerBack', label: 'Back sticker' }, STICKERS),
+      this.decalRow({ key: 'trail', label: 'Effect' }, EFFECTS),
     );
     this.thumbColors = null;
     this.buildBoardRows(save);
@@ -321,7 +322,8 @@ export class UI {
         b.dataset.cost = String(item.cost);
         b.dataset.unlock = unlockIdFor(part.key, item.id);
       }
-      if (part.key !== 'pattern' && item.id !== 'none') b.style.backgroundImage = `url(${stickerThumb(item.id)})`;
+      if (item.id !== 'none' && part.key === 'trail') b.style.backgroundImage = `url(${effectThumb(item.id)})`;
+      else if (item.id !== 'none' && part.key !== 'pattern') b.style.backgroundImage = `url(${stickerThumb(item.id)})`;
       b.addEventListener('click', () => {
         this.onClick();
         const save = this.czSave;

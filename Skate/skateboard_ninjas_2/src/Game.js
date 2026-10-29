@@ -351,7 +351,10 @@ export class Game {
     this.input.playing = false;
     this.ui.showHud(false);
     this.ui.buildCustomize(this.save, {
-      pick: (key, value) => this.setLook({ ...this.save.look, [key]: value }),
+      pick: (key, value) => {
+        this.setLook({ ...this.save.look, [key]: value });
+        if (key === 'trail' && value === 'fart') this.audio.play('fart');
+      },
       board: (type) => this.setLook({ ...this.save.look, board: type }),
       neon: (on) => this.setLook({ ...this.save.look, neon: on }),
       buy: (item, key, value) => this.buy(item, key, value),
@@ -389,7 +392,8 @@ export class Game {
       return;
     }
     const where = item.kind === 'pattern' ? 'Wear it with any suit colour.'
-      : item.kind ? 'Stick it on your chest or your back.'
+      : item.kind === 'trail' ? 'Your ninja will never smell the same again.'
+        : item.kind ? 'Stick it on your chest or your back.'
         : 'You can use it on any part.';
     const ok = await this.ui.confirm(`Unlock ${item.name} for ${formatInt(item.cost)} coins? ${where}`, 'UNLOCK');
     if (!ok) return;
@@ -397,6 +401,7 @@ export class Game {
     this.save.data.unlocked.push(item.unlockId);
     this.audio.play('buy');
     this.setLook({ ...this.save.look, [key]: value });
+    if (key === 'trail' && value === 'fart') this.audio.play('fart');
   }
 
   openSettings(from) {
@@ -765,6 +770,30 @@ export class Game {
     this.world.events.length = 0;
   }
 
+  updateFart(dt) {
+    this.fartTimer = (this.fartTimer ?? 1) - dt;
+    if (this.fartTimer < -0.35) {
+      this.fartTimer = 1.6 + Math.random() * 1.6;
+      if (this.state === 'customize') this.audio.play('fart');
+    }
+    if (this.fartTimer > 0) return;
+    // The ninja rides sideways with their back to the left, hips above the deck.
+    const p = this.player;
+    const x = p.x - 0.3;
+    const y = p.boardTop + 0.5;
+    const greens = ['#7ed957', '#a6ff6b', '#4f9e3c', '#c6ff9a'];
+    // Mid-run the cloud is smaller and fades sooner so it never hides the road.
+    const run = this.state === 'playing' || this.state === 'intro';
+    for (let i = 0; i < 2; i++) {
+      this.particles.dots.spawn(
+        x + (Math.random() - 0.5) * 0.1, y + (Math.random() - 0.5) * 0.12, this.dist,
+        -1.2 - Math.random() * 1.2, 0.2 + Math.random() * 0.5, this.speed - (run ? 0.8 : 1.5) - Math.random() * (run ? 1 : 2),
+        (run ? 0.55 : 1.1) + Math.random() * (run ? 0.3 : 0.6), (run ? 0.2 : 0.28) + Math.random() * 0.15, greens[(Math.random() * greens.length) | 0],
+        -0.6, 2.2, run ? 1.1 : 1.8,
+      );
+    }
+  }
+
   startCrash() {
     if (this.state !== 'playing') return;
     this.state = 'crashing';
@@ -917,6 +946,12 @@ export class Game {
     if (showroom) this.player.animateShowroom(vdt);
     else this.player.animate(vdt, this.speed);
     this.particles.update(vdt, this.track, this.speed);
+
+    // Fart cloud: every couple of seconds a burst of green gas from the backside.
+    if (!paused && !this.player.crashed && this.player.look.trail === 'fart'
+      && (this.state === 'playing' || this.state === 'intro' || this.state === 'menu' || this.state === 'customize')) {
+      this.updateFart(vdt);
+    }
 
     // Hoverboard exhaust / snow spray.
     if (!paused && !this.player.crashed && (this.state === 'playing' || this.state === 'intro' || this.state === 'menu')) {

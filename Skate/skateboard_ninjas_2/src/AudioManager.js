@@ -20,7 +20,7 @@ export const SOUND_FILES = {
   mission: null, buy: null, bump: null, pop: null, chest: null, slide: null, combo: null,
   error: null, enemyThrow: null, fall: null, nearMiss: null, bear: null, yeti: null,
   rockAlien: null, alien: null, impact: null, backflip: null, scooter: null,
-  parkingOfficer: null, mime: null, hotdog: null, pigeons: null,
+  parkingOfficer: null, mime: null, hotdog: null, pigeons: null, fart: null,
 };
 
 // Browsers can't list a folder, so the songs are named here.
@@ -556,6 +556,12 @@ const SYNTH = {
     // Coo-coo, then a flurry of wings.
     for (let i = 0; i < 2; i++) a.tone({ type: 'sine', freq: 420, end: 330, dur: 0.18, gain: 0.07, delay: i * 0.22, vibrato: 18 });
     for (let i = 0; i < 6; i++) a.noise({ dur: 0.04, gain: 0.08, type: 'bandpass', freq: 1400, q: 1.5, delay: 0.45 + i * 0.05 });
+  },
+  fart: (a) => {
+    // A wobbly low "pfffrrt".
+    const f = 90 + Math.random() * 40;
+    a.tone({ type: 'sawtooth', freq: f, end: f * 0.7, dur: 0.45, gain: 0.08, vibrato: 35, filter: { type: 'lowpass', freq: 500 } });
+    a.noise({ dur: 0.4, gain: 0.06, type: 'lowpass', freq: 380, end: 160 });
   },
   backflip: (a) => {
     a.tone({ type: 'triangle', freq: 300, end: 900, dur: 0.35, gain: 0.12 });

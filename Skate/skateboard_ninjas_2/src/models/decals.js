@@ -485,6 +485,25 @@ export function stickerTexture(id) {
   return stickerTexCache.get(id);
 }
 
+// Menu tile for an effect: a puffy green cloud.
+export function effectThumb(id) {
+  const c = newCanvas(96);
+  const ctx = c.getContext('2d');
+  if (id === 'fart') {
+    for (const [x, y, r, col] of [[34, 58, 22, '#4f9e3c'], [60, 52, 24, '#7ed957'], [46, 36, 20, '#a6ff6b'], [70, 30, 14, '#c6ff9a']]) {
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, TAU);
+      ctx.fill();
+    }
+    ctx.fillStyle = INK;
+    ctx.font = `900 18px ${BOLD_FONT}`;
+    ctx.textAlign = 'center';
+    ctx.fillText('PFFT', 50, 86);
+  }
+  return c.toDataURL();
+}
+
 export function stickerThumb(id) {
   return stickerCanvas(id).toDataURL();
 }

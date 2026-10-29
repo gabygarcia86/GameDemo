@@ -165,7 +165,10 @@ preview; drag it to spin your ninja.
   Cool, LOL, Pizza, Taco, Poop, Unicorn, Shark, Dragon and Crown, plus drawn
   badges: BOSS, Shuriken, Yin Yang, Shinobi (忍), Crossed Katanas and Flaming
   Skull. Buy a sticker once and it works on either spot.
-- **Randomize** only picks from colours, patterns and stickers you own.
+- **Effect: Fart Cloud** (10,000 coins): every couple of seconds a burst of
+  green gas puffs out of your ninja's backside, with sound on the customize
+  screen. Switch it off any time with the empty tile.
+- **Randomize** only picks from colours, patterns, stickers and effects you own.
 
 ## Settings
 
@@ -291,6 +294,6 @@ licensed (`vendor/LICENSE-three.txt`). Music is from `assets/music/`.
 ## TODO
 
 - changing lanes is a stiff
-- Mars level add ufos
-- Moon level add space ships and astronauts 
-- Volcano level add lava monster
+- Mars level add ufo enemies
+- Moon level add space ships and astronauts enemies
+- Volcano level add lava monster enemy 

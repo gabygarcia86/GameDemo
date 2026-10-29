@@ -92,14 +92,21 @@ export const STICKERS = [
   { id: 'flamingSkull', name: 'Flaming Skull', cost: 400 },
 ];
 
-// Keys in the look that hold a pattern or sticker id, and what they pick from.
-export const DECAL_KEYS = { pattern: PATTERNS, stickerFront: STICKERS, stickerBack: STICKERS };
+// Special effects. The fart cloud puffs green gas from the ninja's backside.
+export const EFFECTS = [
+  { id: 'none', name: 'None', cost: 0 },
+  { id: 'fart', name: 'Fart Cloud', cost: 10000 },
+];
+
+// Keys in the look that hold a pattern, sticker or effect id, and what they pick from.
+export const DECAL_KEYS = { pattern: PATTERNS, stickerFront: STICKERS, stickerBack: STICKERS, trail: EFFECTS };
 // Unlock ids live in save.unlocked next to the colour ids.
-export const unlockIdFor = (key, id) => `${key === 'pattern' ? 'pat' : 'stk'}:${id}`;
+export const unlockIdFor = (key, id) => `${key === 'pattern' ? 'pat' : key === 'trail' ? 'fx' : 'stk'}:${id}`;
 export const ALL_UNLOCK_IDS = [
   ...PREMIUM_SWATCHES.map((p) => p.id),
   ...PATTERNS.filter((p) => p.cost).map((p) => unlockIdFor('pattern', p.id)),
   ...STICKERS.filter((p) => p.cost).map((p) => unlockIdFor('sticker', p.id)),
+  ...EFFECTS.filter((p) => p.cost).map((p) => unlockIdFor('trail', p.id)),
 ];
 export function ownsDecal(unlocked, key, id) {
   const item = DECAL_KEYS[key]?.find((p) => p.id === id);
@@ -120,6 +127,7 @@ export const DEFAULT_LOOK = {
   pattern: 'none',
   stickerFront: 'none',
   stickerBack: 'none',
+  trail: 'none',
 };
 
 export const BOARD_TYPES = ['longboard', 'hoverboard'];

@@ -455,6 +455,7 @@ export class Game {
     this.pausedFrom = this.state;
     this.state = 'paused';
     this.input.playing = false;
+    this.ui.renderPauseMissions(this.missions.runStatus(this.scoring));
     this.ui.showScreen('pause');
     this.audio.setDuck(0.4);
     this.audio.setLoops({ board: this.player.look.board, speed: 0, grounded: false, grinding: false, level: 0 });

@@ -178,21 +178,35 @@ export class UI {
     $('menu-coins').textContent = formatInt(save.data.coins);
     $('menu-best').textContent = formatInt(save.stats.bestScore);
     $('menu-best-dist').textContent = formatInt(save.stats.bestDistance);
-    const list = $('mission-list');
+    this.renderMissionList($('mission-list'), missions.list.map((m) => ({
+      text: missions.describe(m), reward: m.reward, progress: missions.progressOf(m), target: m.target,
+    })));
+  }
+
+  // Pause screen: missions with this run's progress, plus the level challenge.
+  renderPauseMissions(items) {
+    this.renderMissionList($('pause-mission-list'), items);
+  }
+
+  // items: [{ text, reward, progress, target, done?, challenge? }]
+  renderMissionList(list, items) {
     list.textContent = '';
-    for (const m of missions.list) {
-      const p = Math.min(m.target, missions.progressOf(m));
+    for (const it of items) {
+      const p = Math.min(it.target, it.progress);
+      const done = it.done || p >= it.target;
       const li = document.createElement('li');
+      li.classList.toggle('done', done);
+      li.classList.toggle('challenge', !!it.challenge);
       const text = document.createElement('span');
-      text.textContent = missions.describe(m);
+      text.textContent = `${done ? '✓ ' : ''}${it.challenge ? 'Challenge: ' : ''}${it.text}`;
       const reward = document.createElement('span');
       reward.className = 'reward';
-      reward.textContent = `+${m.reward}`;
+      reward.textContent = `+${it.reward}`;
       li.append(text, reward);
       if (p > 0) {
         const bar = document.createElement('span');
         bar.className = 'bar';
-        bar.innerHTML = `<i style="width:${((p / m.target) * 100).toFixed(0)}%"></i>`;
+        bar.innerHTML = `<i style="width:${((p / it.target) * 100).toFixed(0)}%"></i>`;
         li.append(bar);
       }
       list.append(li);

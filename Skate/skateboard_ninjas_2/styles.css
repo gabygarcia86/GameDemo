@@ -264,6 +264,9 @@ h3 {
   border-radius: 10px;
 }
 .missions li.done { background: rgba(77, 255, 154, 0.16); }
+.missions li.challenge { box-shadow: inset 3px 0 0 var(--cyan); }
+.pause-missions { margin: 4px 0 6px; }
+.pause-missions h3 { margin: 0 0 6px; }
 .missions .reward { font: 900 12px/1 var(--font-display); color: var(--yellow); align-self: center; }
 .missions .bar { grid-column: 1 / -1; height: 5px; background: rgba(255, 255, 255, 0.12); border-radius: 3px; overflow: hidden; }
 .missions .bar i { display: block; height: 100%; background: var(--green); }

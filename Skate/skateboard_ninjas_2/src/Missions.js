@@ -62,6 +62,17 @@ export class Missions {
 
   // ---- during a run
 
+  // Missions plus the level challenge, with progress including this run.
+  runStatus(scoring) {
+    const items = this.list.map((m) => ({
+      text: this.describe(m), reward: m.reward, target: m.target,
+      progress: this.progressOf(m, scoring), done: this.done?.has(m),
+    }));
+    const c = this.challenge;
+    if (c) items.push({ text: c.text, reward: CHALLENGE_REWARD, target: c.target, progress: scoring.value(c.stat), done: this.challengeDone, challenge: true });
+    return items;
+  }
+
   begin(env) {
     this.done = new Set();
     this.challenge = env.challenge;

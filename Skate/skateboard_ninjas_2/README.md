@@ -281,4 +281,3 @@ licensed (`vendor/LICENSE-three.txt`). Music is from `assets/music/`.
 - Drag preview ninja not working
 - Don't auto grind, make them have to jump on it or they bail if they hit it
 - Multiplier can get up to 10x
-- In pause menu, add missions to the menu for visibility 

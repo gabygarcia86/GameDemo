@@ -23,7 +23,7 @@ export const SOUND_FILES = {
 };
 
 // Browsers can't list a folder, so the songs are named here.
-export const MUSIC_TRACKS = Array.from({ length: 10 }, (_, i) => `assets/music/Song${String(i + 1).padStart(2, '0')}.mp3`);
+export const MUSIC_TRACKS = Array.from({ length: 11 }, (_, i) => `assets/music/Song${String(i + 1).padStart(2, '0')}.mp3`);
 
 export class AudioManager {
   constructor(settings) {

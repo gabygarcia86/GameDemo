@@ -6,15 +6,15 @@ folder is where your own files go if you want to replace any of that.
 
 ## Music (`music/`)
 
-`Song01.mp3` to `Song10.mp3` play in random order, one after another, on the
+`Song01.mp3` to `Song11.mp3` play in random order, one after another, on the
 menus and during runs. Browsers can't list a folder, so the files are named in
 `MUSIC_TRACKS` in `src/AudioManager.js`:
 
 ```js
-export const MUSIC_TRACKS = Array.from({ length: 10 }, (_, i) => `assets/music/Song${String(i + 1).padStart(2, '0')}.mp3`);
+export const MUSIC_TRACKS = Array.from({ length: 11 }, (_, i) => `assets/music/Song${String(i + 1).padStart(2, '0')}.mp3`);
 ```
 
-To add songs, name them `Song11.mp3` and up and raise `length`. Or replace
+To add songs, name them `Song12.mp3` and up and raise `length`. Or replace
 the line with your own list, e.g.
 `['assets/music/intro.mp3', 'assets/music/boss.mp3']`. If a file is missing,
 the player skips it.

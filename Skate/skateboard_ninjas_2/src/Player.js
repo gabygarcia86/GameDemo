@@ -32,6 +32,7 @@ export class Player {
 
     this.board = new Board(look.board, outlines);
     this.visual.add(this.board.root);
+    this.group.add(this.board.ground);
 
     this.rider = new THREE.Group();
     this.visual.add(this.rider);
@@ -442,10 +443,18 @@ export class Player {
 
   // ---------------------------------------------------------- animation
 
+  // Tilt the things lying on the road (blob shadow, hoverboard glow) to the
+  // road's slope; the player itself stays upright.
+  setGroundPitch(pitch) {
+    this.board.ground.rotation.x = pitch;
+    this.shadow.rotation.x = -Math.PI / 2 + pitch;
+  }
+
   animate(dt, speed, mode = 'run') {
     const rig = this.rig;
     const t = this.time;
     this.board.update(dt, this.crashed ? 0 : speed, this.airborne);
+    this.board.ground.visible = !this.crashed && !this.falling;
     rig.updateTails(dt, this.crashed ? 2 : speed);
     this.applyRainbow(t);
 

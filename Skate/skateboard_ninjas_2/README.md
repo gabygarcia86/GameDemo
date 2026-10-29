@@ -277,4 +277,3 @@ licensed (`vendor/LICENSE-three.txt`). Music is from `assets/music/`.
 
 - changing lanes is a stiff
 - Purchased customization be more patterns and fun designs, stickers fun emojis added to gear to back
-- Hover board neon lights be more dynamic or cooler lighting

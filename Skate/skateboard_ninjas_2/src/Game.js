@@ -901,6 +901,7 @@ export class Game {
     }
     this.track.update(vdt, this.dist, this.speed, this.camera);
     this.track.place(this.player.group, this.player.x, 0, this.dist);
+    this.player.setGroundPitch(this.track.pitchAt(this.dist));
     if (showroom) this.player.animateShowroom(vdt);
     else this.player.animate(vdt, this.speed);
     this.particles.update(vdt, this.track, this.speed);
@@ -909,7 +910,11 @@ export class Game {
     if (!paused && !this.player.crashed && (this.state === 'playing' || this.state === 'intro' || this.state === 'menu')) {
       const look = this.player.look;
       if (look.board === 'hoverboard' && Math.random() < 0.8) {
-        const c = look.neon ? (look.trim === 'rainbow' ? '#3de1ff' : look.trim) : look.wheels === 'rainbow' ? '#ff2e7e' : look.wheels;
+        // Sparks in both board colours (pads and neon trim), now and then white-hot.
+        const pad = `#${this.player.board.mats.glowPad.color.getHexString()}`;
+        const trim = `#${this.player.board.mats.glowTrim.color.getHexString()}`;
+        const r = Math.random();
+        const c = r < 0.12 ? '#ffffff' : look.neon && r < 0.56 ? trim : pad;
         this.particles.trail(this.player.x, this.player.y + 0.22, this.dist - 0.4, this.speed, c, true);
       } else if (look.board === 'longboard' && this.player.grounded && (this.env.id === 'snow' || this.env.id === 'beach') && Math.random() < 0.5) {
         this.particles.trail(this.player.x, 0.05, this.dist - 0.5, this.speed, this.env.id === 'snow' ? '#ffffff' : '#f3dc9e', false);

@@ -3,7 +3,8 @@
 // glowing eyes, for the rival ninjas. Facing +Z in its own space; the player
 // turns it sideways to stand on the board.
 
-import { THREE, toon, addOutlines, bakeRig } from '../gfx.js';
+import { THREE, toon, toonGradient, addOutlines, bakeRig } from '../gfx.js';
+import { patternTexture, stickerTexture } from './decals.js';
 
 const INK = '#140c2b';
 const SKIN = '#f2c29a';
@@ -76,6 +77,18 @@ export class NinjaRig {
     mesh(new THREE.BoxGeometry(0.12, 0.1, 0.06), M.accent, this.torso, [0.08, 0.08, 0.2], [0, 0, 0.5]);
     // Chest wrap: a diagonal accent strip.
     mesh(new THREE.BoxGeometry(0.07, 0.62, 0.05), M.accent, this.torso, [0, 0.38, 0.19], [0, 0, 0.6]).userData.noOutline = true;
+    // Sticker slots on the chest and back (the player's ninja only).
+    this.stickers = {};
+    if (!this.evil) {
+      for (const [key, y, z, rotY, size] of [['stickerFront', 0.44, 0.232, 0, 0.31], ['stickerBack', 0.42, -0.232, Math.PI, 0.38]]) {
+        const mat = new THREE.MeshToonMaterial({ gradientMap: toonGradient(), transparent: true, alphaTest: 0.35 });
+        const m = mesh(new THREE.PlaneGeometry(size, size), mat, this.torso, [0, y, z], [0, rotY, 0]);
+        m.castShadow = false;
+        m.userData.noOutline = true;
+        m.visible = false;
+        this.stickers[key] = m;
+      }
+    }
 
     // Head
     this.head = new THREE.Group();
@@ -159,6 +172,27 @@ export class NinjaRig {
       if (c[k] && c[k] !== 'rainbow') this.mats[k].color.set(c[k]);
     }
     if (c.eyes && this.mats.eye) this.mats.eye.color.set(c.eyes);
+    this.setDecals(c);
+  }
+
+  // Suit pattern (a texture painted in the suit colours) and stickers.
+  setDecals(look) {
+    const suit = this.mats.suit;
+    const pattern = look.pattern && look.pattern !== 'none' ? patternTexture(look.pattern, look.suit, look.accent) : null;
+    if (suit.map !== pattern) {
+      suit.map = pattern;
+      suit.needsUpdate = true;
+    }
+    // The texture carries the colour; rainbow suits still tint it every frame.
+    if (pattern && look.suit !== 'rainbow') suit.color.set('#ffffff');
+    for (const [key, m] of Object.entries(this.stickers)) {
+      const id = look[key];
+      m.visible = !!id && id !== 'none';
+      if (m.visible && m.material.map !== stickerTexture(id)) {
+        m.material.map = stickerTexture(id);
+        m.material.needsUpdate = true;
+      }
+    }
   }
 
   // Simple two-bone IK: put the foot `drop` below the hip and `dx` to the side.

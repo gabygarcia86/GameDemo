@@ -351,10 +351,10 @@ export class Game {
     this.input.playing = false;
     this.ui.showHud(false);
     this.ui.buildCustomize(this.save, {
-      pick: (key, color) => this.setLook({ ...this.save.look, [key]: color }),
+      pick: (key, value) => this.setLook({ ...this.save.look, [key]: value }),
       board: (type) => this.setLook({ ...this.save.look, board: type }),
       neon: (on) => this.setLook({ ...this.save.look, neon: on }),
-      buy: (premium, key) => this.buy(premium, key),
+      buy: (item, key, value) => this.buy(item, key, value),
     });
     this.ui.showScreen('customize');
     this.toShowroom(0.82);
@@ -380,19 +380,23 @@ export class Game {
     if (this.state === 'customize') this.ui.refreshCustomize(this.save);
   }
 
-  async buy(premium, key) {
+  // item: { name, cost, unlockId, kind? }; value is what to put on `key` once bought.
+  async buy(item, key, value) {
     const coins = this.save.data.coins;
-    if (coins < premium.cost) {
+    if (coins < item.cost) {
       this.audio.play('error');
-      await this.ui.confirm(`${premium.name} costs ${formatInt(premium.cost)} coins. You have ${formatInt(coins)}. Go collect some more!`, 'OK');
+      await this.ui.confirm(`${item.name} costs ${formatInt(item.cost)} coins. You have ${formatInt(coins)}. Go collect some more!`, 'OK');
       return;
     }
-    const ok = await this.ui.confirm(`Unlock ${premium.name} for ${formatInt(premium.cost)} coins? You can use it on any part.`, 'UNLOCK');
+    const where = item.kind === 'pattern' ? 'Wear it with any suit colour.'
+      : item.kind ? 'Stick it on your chest or your back.'
+        : 'You can use it on any part.';
+    const ok = await this.ui.confirm(`Unlock ${item.name} for ${formatInt(item.cost)} coins? ${where}`, 'UNLOCK');
     if (!ok) return;
-    this.save.data.coins -= premium.cost;
-    this.save.data.unlocked.push(premium.id);
+    this.save.data.coins -= item.cost;
+    this.save.data.unlocked.push(item.unlockId);
     this.audio.play('buy');
-    this.setLook({ ...this.save.look, [key]: premium.color });
+    this.setLook({ ...this.save.look, [key]: value });
   }
 
   openSettings(from) {

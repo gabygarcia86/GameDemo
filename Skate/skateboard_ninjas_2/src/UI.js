@@ -2,7 +2,8 @@
 // swatches, game over, stats, settings and the confirm dialog. Game.js owns
 // the logic; this module only reads state and reports clicks.
 
-import { FREE_SWATCHES, PREMIUM_SWATCHES, NINJA_PARTS, BOARD_PARTS } from './cosmetics.js';
+import { FREE_SWATCHES, PREMIUM_SWATCHES, NINJA_PARTS, BOARD_PARTS, PATTERNS, STICKERS, unlockIdFor } from './cosmetics.js';
+import { patternThumb, stickerThumb } from './models/decals.js';
 import { ENV_LIST } from './environments.js';
 import { formatInt } from './utils.js';
 
@@ -215,12 +216,18 @@ export class UI {
 
   // ---------------------------------------------------------- customize
 
-  // handlers: { pick(key, color), buy(premium, key), board(type), neon(on) }
+  // handlers: { pick(key, value), buy(item, key, value), board(type), neon(on) }
   buildCustomize(save, handlers) {
     this.czHandlers = handlers;
     const ninja = $('cz-ninja');
     ninja.textContent = '';
     for (const part of NINJA_PARTS) ninja.append(this.swatchRow(part, save));
+    ninja.append(
+      this.decalRow({ key: 'pattern', label: 'Suit pattern' }, PATTERNS),
+      this.decalRow({ key: 'stickerFront', label: 'Chest sticker' }, STICKERS),
+      this.decalRow({ key: 'stickerBack', label: 'Back sticker' }, STICKERS),
+    );
+    this.thumbColors = null;
     this.buildBoardRows(save);
     for (const b of document.querySelectorAll('[data-board]')) {
       b.onclick = () => {
@@ -272,10 +279,13 @@ export class UI {
       else b.style.background = color;
       b.setAttribute('aria-label', premium ? premium.name : color);
       b.title = premium ? `${premium.name} (${premium.cost} coins)` : color;
-      if (premium) b.dataset.cost = String(premium.cost);
+      if (premium) {
+        b.dataset.cost = String(premium.cost);
+        b.dataset.unlock = premium.id;
+      }
       b.addEventListener('click', () => {
         this.onClick();
-        if (premium && !save.data.unlocked.includes(premium.id)) this.czHandlers.buy(premium, part.key);
+        if (premium && !save.data.unlocked.includes(premium.id)) this.czHandlers.buy({ ...premium, unlockId: premium.id }, part.key, color);
         else this.czHandlers.pick(part.key, color);
       });
       opts.append(b);
@@ -286,14 +296,64 @@ export class UI {
     return row;
   }
 
+  // A row of square tiles for patterns or stickers. Thumbnails are filled in
+  // by refreshCustomize (patterns follow the current suit colours).
+  decalRow(part, items) {
+    const row = document.createElement('div');
+    row.className = 'cz-row';
+    const label = document.createElement('span');
+    label.className = 'cz-label';
+    label.textContent = part.label;
+    const opts = document.createElement('div');
+    opts.className = 'cz-options';
+    opts.setAttribute('role', 'radiogroup');
+    opts.setAttribute('aria-label', part.label);
+    opts.dataset.key = part.key;
+    for (const item of items) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'swatch tile';
+      b.dataset.color = item.id;
+      if (item.id === 'none') b.classList.add('none');
+      b.setAttribute('aria-label', item.name);
+      b.title = item.cost ? `${item.name} (${item.cost} coins)` : item.name;
+      if (item.cost) {
+        b.dataset.cost = String(item.cost);
+        b.dataset.unlock = unlockIdFor(part.key, item.id);
+      }
+      if (part.key !== 'pattern' && item.id !== 'none') b.style.backgroundImage = `url(${stickerThumb(item.id)})`;
+      b.addEventListener('click', () => {
+        this.onClick();
+        const save = this.czSave;
+        if (item.cost && !save.data.unlocked.includes(b.dataset.unlock)) {
+          this.czHandlers.buy({ name: item.name, cost: item.cost, unlockId: b.dataset.unlock, kind: part.key }, part.key, item.id);
+        } else {
+          this.czHandlers.pick(part.key, item.id);
+        }
+      });
+      opts.append(b);
+    }
+    row.append(label, opts);
+    return row;
+  }
+
   refreshCustomize(save) {
+    this.czSave = save;
+    // Pattern thumbnails are drawn in the current suit and accent colours.
+    const colors = `${save.look.suit}|${save.look.accent}`;
+    if (this.thumbColors !== colors) {
+      this.thumbColors = colors;
+      for (const b of document.querySelectorAll('#customize .cz-options[data-key="pattern"] .tile:not(.none)')) {
+        b.style.backgroundImage = `url(${patternThumb(b.dataset.color, save.look.suit, save.look.accent)})`;
+      }
+    }
     if (this.builtBoard !== save.look.board) this.buildBoardRows(save);
     $('cz-coins').textContent = formatInt(save.data.coins);
     for (const opts of document.querySelectorAll('#customize .cz-options[data-key]')) {
       const key = opts.dataset.key;
       for (const b of opts.children) {
         b.setAttribute('aria-pressed', String(save.look[key] === b.dataset.color));
-        const locked = !!b.dataset.cost && !save.data.unlocked.includes(PREMIUM_SWATCHES.find((p) => p.color === b.dataset.color)?.id);
+        const locked = !!b.dataset.unlock && !save.data.unlocked.includes(b.dataset.unlock);
         b.classList.toggle('locked', locked);
       }
     }

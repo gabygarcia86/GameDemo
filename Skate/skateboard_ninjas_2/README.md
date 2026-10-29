@@ -158,7 +158,14 @@ preview; drag it to spin your ninja.
 - 16 colours are free. 8 premium colours cost coins: Gold, Neon Lime, Hot
   Magenta, Chrome, Galaxy, Lava, Mint, and an animated Rainbow. Once unlocked, a
   colour works on every part.
-- **Randomize** only picks from colours you own.
+- **Suit patterns** (150 to 600 coins), painted in your suit and accent colours:
+  Racing Stripes, Polka Dots, Checkerboard, Starry Night, Camo, Tiger Stripes,
+  Lightning, Flames, Skulls, Cyber Circuit, Dragon Scales and Galaxy.
+- **Stickers** for the chest and the back (free to 400 coins): emoji like Too
+  Cool, LOL, Pizza, Taco, Poop, Unicorn, Shark, Dragon and Crown, plus drawn
+  badges: BOSS, Shuriken, Yin Yang, Shinobi (忍), Crossed Katanas and Flaming
+  Skull. Buy a sticker once and it works on either spot.
+- **Randomize** only picks from colours, patterns and stickers you own.
 
 ## Settings
 
@@ -200,7 +207,7 @@ skateboard_ninjas_2/
     ├── Game.js           state machine, main loop, scoring events, saving
     ├── config.js         every tuning number (speeds, physics, scoring…)
     ├── environments.js   the ten environments
-    ├── cosmetics.js      colour swatches, unlock costs, default look
+    ├── cosmetics.js      colour swatches, patterns, stickers, unlock costs, default look
     ├── storage.js        save data + validation
     ├── Track.js          road, terrain, sky, mountains, scenery, weather, the road bend
     ├── World.js          obstacles, enemies, coins, power-ups, collisions, projectiles
@@ -284,4 +291,6 @@ licensed (`vendor/LICENSE-three.txt`). Music is from `assets/music/`.
 ## TODO
 
 - changing lanes is a stiff
-- Purchased customization be more patterns and fun designs, stickers fun emojis added to gear to back
+- Mars level add ufos
+- Moon level add space ships and astronauts 
+- Volcano level add lava monster

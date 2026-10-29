@@ -2,7 +2,7 @@
 // and missions. Everything loaded is validated so a corrupted or old save
 // can never break the game; anything invalid falls back to its default.
 
-import { COLOR_KEYS, DEFAULT_LOOK, BOARD_TYPES, isValidSwatch, PREMIUM_SWATCHES } from './cosmetics.js';
+import { COLOR_KEYS, DEFAULT_LOOK, BOARD_TYPES, isValidSwatch, PREMIUM_SWATCHES, ALL_UNLOCK_IDS, DECAL_KEYS, ownsDecal } from './cosmetics.js';
 
 const KEY = 'skateboardNinjas2.save';
 const VERSION = 1;
@@ -66,7 +66,7 @@ function sanitize(raw) {
 
   d.coins = Math.floor(num(raw.coins));
   if (Array.isArray(raw.unlocked)) {
-    const ids = new Set(PREMIUM_SWATCHES.map((p) => p.id));
+    const ids = new Set(ALL_UNLOCK_IDS);
     d.unlocked = raw.unlocked.filter((id) => ids.has(id));
   }
 
@@ -76,6 +76,10 @@ function sanitize(raw) {
   }
   if (BOARD_TYPES.includes(look.board)) d.look.board = look.board;
   if (typeof look.neon === 'boolean') d.look.neon = look.neon;
+  // Patterns and stickers: must exist and be owned.
+  for (const key of Object.keys(DECAL_KEYS)) {
+    if (typeof look[key] === 'string' && ownsDecal(d.unlocked, key, look[key])) d.look[key] = look[key];
+  }
   // A premium colour that isn't unlocked (edited save) goes back to default.
   for (const k of COLOR_KEYS) {
     const p = PREMIUM_SWATCHES.find((s) => s.color === d.look[k]);
